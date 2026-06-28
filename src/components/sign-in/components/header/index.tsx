@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { View } from "react-native";
 
-export default function TitleCard() {
+export default function Header() {
   return (
     <View className="items-center">
       <Text className="text-[48px] font-sans-bold">umbii</Text>
