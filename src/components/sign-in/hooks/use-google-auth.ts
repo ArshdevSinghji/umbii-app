@@ -1,12 +1,13 @@
+import { signInAction } from "@/features/user/sign-in/sign-in.action";
+import { eventBus } from "@/lib/event-bus";
+import { saveToken } from "@/lib/token";
+import { useAppDispatch } from "@/store/hooks";
 import {
   GoogleSignin,
   isErrorWithCode,
   isSuccessResponse,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import { useAppDispatch } from "@/store/hooks";
-import { signInAction } from "@/features/user/sign-in/sign-in.action";
-import { saveToken } from "@/lib/token";
 import { useState } from "react";
 
 GoogleSignin.configure({
@@ -16,7 +17,7 @@ GoogleSignin.configure({
 export function useGoogleAuth() {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const signInWithGoogle = async () => {
     setIsLoading(true);
     try {
@@ -29,11 +30,13 @@ export function useGoogleAuth() {
           username: user.name ?? user.email.split("@")[0],
           email: user.email,
           imageUrl: user.photo ?? undefined,
-        }
+        };
 
         const res = await dispatch(signInAction(payload));
-        if(signInAction.fulfilled.match(res)) {
-          await saveToken(res.payload.token);
+        if (signInAction.fulfilled.match(res)) {
+          const { token } = res.payload;
+          await saveToken(token);
+          eventBus.emit("auth:signin", { token });
         }
       }
     } catch (error) {

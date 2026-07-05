@@ -1,14 +1,10 @@
-import { Text } from "@/components/ui/text";
-import { Stack } from "expo-router";
-import { View } from "react-native";
+import HomeDashboard from "@/components/dashboard/home-dashboard";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
   return (
-    <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1">
-        <Text>Welcome to the Home Screen</Text>
-      </View>
-    </>
+    <SafeAreaView className="flex-1 pt-8 px-4 bg-background">
+      <HomeDashboard />
+    </SafeAreaView>
   );
 }

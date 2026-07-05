@@ -10,7 +10,12 @@ const initialState: UserState = {
 const userSlice = createSlice({
   name: "user",
   initialState,
-  reducers: {},
+  reducers: {
+    clearUser: (state) => {
+      state.user = {} as IUser;
+      state.isLoading = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(signInAction.pending, (state) => {
@@ -18,7 +23,7 @@ const userSlice = createSlice({
       })
       .addCase(signInAction.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.data;
+        state.user = action.payload;
       })
       .addCase(signInAction.rejected, (state) => {
         state.isLoading = false;
@@ -26,5 +31,5 @@ const userSlice = createSlice({
   },
 });
 
-export const {} = userSlice.actions;
+export const { clearUser } = userSlice.actions;
 export const userReducer = userSlice.reducer;

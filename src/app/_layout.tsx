@@ -1,6 +1,5 @@
-import { eventBus } from "@/lib/event-bus";
 import { NAV_THEME } from "@/lib/theme";
-import { getToken } from "@/lib/token";
+import { useAuth } from "@/lib/use-auth";
 import StoreProvider from "@/store/store-provider";
 import { PortalHost } from "@rn-primitives/portal";
 import { useFonts } from "expo-font";
@@ -13,7 +12,8 @@ import {
 } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 
 export default function RootLayout() {
@@ -21,63 +21,45 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
-  const [token, setToken] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { token, isLoading: authLoading } = useAuth();
 
-  const [loaded, error] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     "Caudex-Regular": require("../../assets/fonts/Caudex-Regular.ttf"),
     "Caudex-Bold": require("../../assets/fonts/Caudex-Bold.ttf"),
     "Caudex-Italic": require("../../assets/fonts/Caudex-Italic.ttf"),
     "Caudex-BoldItalic": require("../../assets/fonts/Caudex-BoldItalic.ttf"),
   });
 
-  // load token on mount
-  useEffect(() => {
-    getToken().then((t) => {
-      setToken(t);
-      setAuthLoading(false);
-    });
-  }, []);
+  const appReady = (fontsLoaded || !!fontError) && !authLoading;
 
+  // splash + theme
   useEffect(() => {
-    const handler = () => {
-      setToken(null);
-      router.replace("/(sign-in)");
-    };
-    eventBus.on("auth:unauthorized", handler);
-    return () => {
-      eventBus.off("auth:unauthorized", handler);
-    };
-  }, []);
-
-  useEffect(() => {
-    if ((loaded || error) && !authLoading) {
-      SplashScreen.hideAsync();
-    }
+    if (!appReady) return;
+    SplashScreen.hideAsync();
     setColorScheme("light");
-  }, [loaded, error, authLoading]);
+  }, [appReady]);
 
+  // route protection — single effect, single source of truth
   useEffect(() => {
-    if (authLoading || (!loaded && !error)) return;
+    if (!appReady) return;
 
     const inAuthGroup = segments[0] === "(sign-in)";
 
-    if (!token && !inAuthGroup) {
-      router.replace("/(sign-in)");
-    } else if (token && inAuthGroup) {
-      router.replace("/(tabs)/home");
-    }
-  }, [token, authLoading, loaded, error, segments]);
+    if (!token && !inAuthGroup) router.replace("/(sign-in)");
+    else if (token && inAuthGroup) router.replace("/(tabs)/home");
+  }, [token, appReady, segments]);
 
-  if ((!loaded && !error) || authLoading) return null;
+  if (!appReady) return null;
 
   return (
-    <StoreProvider>
-      <ThemeProvider value={NAV_THEME["light"]}>
-        <StatusBar style="dark" />
-        <Stack />
-        <PortalHost />
-      </ThemeProvider>
-    </StoreProvider>
+    <SafeAreaProvider>
+      <StoreProvider>
+        <ThemeProvider value={NAV_THEME["light"]}>
+          <StatusBar style="dark" />
+          <Stack />
+          <PortalHost />
+        </ThemeProvider>
+      </StoreProvider>
+    </SafeAreaProvider>
   );
 }
