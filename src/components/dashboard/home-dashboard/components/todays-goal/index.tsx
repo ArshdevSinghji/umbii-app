@@ -3,10 +3,10 @@ import { CircularProgress } from "@/components/ui/circular-progress";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { cn } from "@/lib/utils";
 import { Drumstick, Flame, Ham, Milk } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { View } from "react-native";
+import GoalProgress from "./goal-progress";
 
 export default function TodaysGoal() {
   const { colorScheme } = useColorScheme();
@@ -72,41 +72,5 @@ export default function TodaysGoal() {
         />
       </View>
     </Card>
-  );
-}
-
-interface IProps {
-  left: number;
-  value: number;
-  label: string;
-  color: string;
-  bgColor?: string;
-  icon: React.ReactNode;
-}
-
-function GoalProgress({
-  left,
-  value,
-  label,
-  color,
-  bgColor = "bg-primary",
-  icon,
-}: IProps) {
-  return (
-    <View className="items-center gap-3">
-      <View className="items-center">
-        <Text className="font-sans-bold">{left}g</Text>
-        <Text className="text-sm font-sans-bold leading-none">{label}</Text>
-      </View>
-      <CircularProgress
-        value={value}
-        max={100}
-        color={color}
-        strokeWidth={8}
-        trackStrokeWidth={4}
-      >
-        <View className={cn(bgColor, "p-1", "rounded-full")}>{icon}</View>
-      </CircularProgress>
-    </View>
   );
 }
