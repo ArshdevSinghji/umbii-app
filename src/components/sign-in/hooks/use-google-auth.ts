@@ -4,24 +4,37 @@ import {
   isSuccessResponse,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { auth } from "../../../../firebaseConfig";
+import { useAppDispatch } from "@/store/hooks";
+import { signInAction } from "@/features/user/sign-in/sign-in.action";
+import { saveToken } from "@/lib/token";
+import { useState } from "react";
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
 });
 
 export function useGoogleAuth() {
+  const dispatch = useAppDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  
   const signInWithGoogle = async () => {
+    setIsLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signOut();
       const response = await GoogleSignin.signIn();
-
       if (isSuccessResponse(response)) {
-        const { idToken } = response.data;
-        const credential = GoogleAuthProvider.credential(idToken);
-        await signInWithCredential(auth, credential);
-        console.log("Signed in successfully");
+        const { user } = response.data;
+        const payload = {
+          username: user.name ?? user.email.split("@")[0],
+          email: user.email,
+          imageUrl: user.photo ?? undefined,
+        }
+
+        const res = await dispatch(signInAction(payload));
+        if(signInAction.fulfilled.match(res)) {
+          await saveToken(res.payload.token);
+        }
       }
     } catch (error) {
       if (isErrorWithCode(error)) {
@@ -39,8 +52,10 @@ export function useGoogleAuth() {
             console.error(error);
         }
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return { signInWithGoogle };
+  return { signInWithGoogle, isLoading };
 }
