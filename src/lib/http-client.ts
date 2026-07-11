@@ -1,13 +1,20 @@
 import { eventBus } from './event-bus';
 import { deleteToken, getToken } from './token';
 
+export type ApiResponse<T> = {
+  message: string;
+  data: T;
+};
+
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: Record<string, unknown>;
   headers?: Record<string, string>;
+  params?: Record<string, string | number | boolean | undefined>;
 };
+
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const token = await getToken();
@@ -21,7 +28,16 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  let url = `${BASE_URL}${endpoint}`;
+  if (options.params) {
+    const queryString = Object.entries(options.params)
+      .filter(([_, value]) => value !== undefined)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+      .join('&');
+    if (queryString) url += `?${queryString}`;
+  }
+
+  const response = await fetch(url, {
     method: options.method ?? 'GET',
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,

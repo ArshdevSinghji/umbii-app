@@ -30,7 +30,7 @@ export function ProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Avatar alt={`${user.username || "User"}'s avatar`} className="border border-border">
+        <Avatar alt={`${user.username || "User"}'s avatar`} className="border border-primary">
           <AvatarImage
             source={{
               uri: user.imageUrl ?? "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e53521c4600805ff88b3bb5_peep-16.png",
