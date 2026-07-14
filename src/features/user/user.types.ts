@@ -32,7 +32,7 @@ export interface IFoodLog {
   id: number;
   rawInputText: string;
   createdAt: string;
-  details: IFoodLogDetail;
+  details: IFoodLogDetail[];
 }
 
 export interface UserState {

@@ -1,108 +1,83 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { useListFoodLogsHook } from "@/features/user/list-food-logs/list-food-logs.hook";
-import { useAppSelector } from "@/store/hooks";
+import { useUserActionsHook } from "@/features/user/user.hook";
+import { CategorizedSection, categorizeFoodLogs } from "@/lib/meal-sections";
 import BottomSheetLib from "@expo/ui/community/bottom-sheet";
 import { Flame } from "lucide-react-native";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
-
-const DUMMY_DATA  = {
-  message: "Food logs successfully fetched.",
-  data: [
-    {
-      id: 3,
-      rawInputText: "I had 4 eggs.",
-      createdAt: "2026-07-11T13:35:12.436025",
-      details: [
-        {
-          id: 4,
-          name: "Eggs",
-          servingQuantity: "4.0",
-          servingUnit: "pieces",
-          calories: "300.0",
-          protein: "24.0",
-          carbs: "2.4",
-          fats: "20.0",
-          fiber: "0.0",
-          sugar: "2.4",
-          sodium: "260.0",
-          createdAt: "2026-07-11T13:35:12.53326",
-          updatedAt: "2026-07-11T13:35:12.53326",
-        },
-      ],
-    },
-  ],
-};
+import TodaysMealsSkeleton from "./loading";
+import MealSheetContent from "./meal-sheet-content";
 
 export default function TodaysMeals() {
+  const { isLoading, listFoodLogs } = useUserActionsHook();
   const sheetRef = useRef<BottomSheetLib>(null);
 
-  const { user } = useAppSelector((state) => state.userSlice);
-  const { listFoodLogs } = useListFoodLogsHook({
-    userId: user.id,
-    runOnLoad: true,
-  });
+  const [selectedSection, setSelectedSection] = useState<CategorizedSection | null>(null);
+  const sections = categorizeFoodLogs(listFoodLogs ?? []).filter(
+    (section) => section.logs.length > 0,
+  );
+
+  const handleSectionPress = (section: CategorizedSection) => {
+    setSelectedSection(section);
+    sheetRef.current?.present();
+  };
 
   return (
     <View className="mt-8">
       <Text className="font-sans-bold text-lg mb-8">Today's meals</Text>
 
-      <Pressable onPress={() => sheetRef.current?.present()}>
-        <Card className="gap-3">
-          <CardHeader>
-            <Text className="font-sans-bold">Breakfast</Text>
-          </CardHeader>
-          <CardContent className="flex-row justify-between items-center">
-            <View className="flex-row gap-1">
-              <View className="p-1 bg-muted justify-center rounded-full">
-                <Flame size={16} fill={"#FF5A00"} />
-              </View>
-              <Text>460-465 Kcal</Text>
-            </View>
-            <View className="flex-row">
-              <Avatar
-                alt="@mrzachnugent"
-                className="border-background web:border-0 web:ring-2 web:ring-background -mr-2 border-2"
-              >
-                <AvatarImage
-                  source={{ uri: "https://github.com/mrzachnugent.png" }}
-                />
-                <AvatarFallback>
-                  <Text>ZN</Text>
-                </AvatarFallback>
-              </Avatar>
-              <Avatar
-                alt="@leerob"
-                className="border-background web:border-0 web:ring-2 web:ring-background -mr-2 border-2"
-              >
-                <AvatarImage
-                  source={{ uri: "https://github.com/leerob.png" }}
-                />
-                <AvatarFallback>
-                  <Text>LR</Text>
-                </AvatarFallback>
-              </Avatar>
-              <Avatar
-                alt="@evilrabbit"
-                className="border-background web:border-0 web:ring-2 web:ring-background -mr-2 border-2"
-              >
-                <AvatarImage
-                  source={{ uri: "https://github.com/evilrabbit.png" }}
-                />
-                <AvatarFallback>
-                  <Text>ER</Text>
-                </AvatarFallback>
-              </Avatar>
-            </View>
+      {isLoading ? (
+        <TodaysMealsSkeleton />
+      ) : sections.length === 0 ? (
+        <Card className="py-6">
+          <CardContent className="items-center">
+            <Text className="font-sans-bold text-base">
+              No meals logged
+            </Text>
+            <Text className="text-muted-foreground text-center text-sm">
+              Start tracking your meals to see calories and nutrition
+              breakdowns.
+            </Text>
           </CardContent>
         </Card>
-      </Pressable>
+      ) : (
+        <View className="gap-3">
+          {sections.map((section) => (
+            <Pressable
+              key={section.label}
+              onPress={() => handleSectionPress(section)}
+            >
+              <Card className="gap-2 py-4">
+                <CardHeader className="px-4">
+                  <Text className="font-sans-bold">{section.label}</Text>
+                </CardHeader>
+                <CardContent className="flex-row justify-between items-center px-4">
+                  <View className="flex-row gap-2">
+                    <View
+                      style={{ backgroundColor: "#FFF4ED" }}
+                      className="p-1 rounded-full"
+                    >
+                      <Flame size={16} color="#FF5A00" fill="#FF5A00" />
+                    </View>
+                    <Text className="font-sans-bold">
+                      {`${section.totalCalories.toFixed(0)} Kcal`}
+                    </Text>
+                  </View>
+                  <Text className="text-muted-foreground text-xs">
+                    {section.logs.length}{" "}
+                    {section.logs.length === 1 ? "entry" : "entries"}
+                  </Text>
+                </CardContent>
+              </Card>
+            </Pressable>
+          ))}
+        </View>
+      )}
 
       <BottomSheet ref={sheetRef} snapPoints={["50%", "90%"]}>
-        <Text>Sheet content here</Text>
+        <MealSheetContent section={selectedSection!} />
       </BottomSheet>
     </View>
   );

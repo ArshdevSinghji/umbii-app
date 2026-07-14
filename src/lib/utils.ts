@@ -27,6 +27,7 @@ export function getCurrentWeek() {
     return {
       week: days[date.getDay()],
       date: date.getDate(),
+      fullDate: date.toISOString().split("T")[0],
       isToday: offset === 0,
     };
   });

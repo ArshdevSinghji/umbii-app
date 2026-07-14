@@ -7,6 +7,7 @@ interface IProps {
   left: number;
   value: number;
   label: string;
+  max?: number;
   color: string;
   bgColor?: string;
   icon: React.ReactNode;
@@ -16,6 +17,7 @@ export default function GoalProgress({
   left,
   value,
   label,
+  max = 100,
   color,
   bgColor = "bg-primary",
   icon,
@@ -28,7 +30,7 @@ export default function GoalProgress({
       </View>
       <CircularProgress
         value={value}
-        max={100}
+        max={max}
         color={color}
         strokeWidth={8}
         trackStrokeWidth={4}

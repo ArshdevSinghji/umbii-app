@@ -1,23 +1,51 @@
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { getCurrentWeek } from "@/lib/utils";
-import { View } from "react-native";
+import { THEME } from "@/lib/theme";
+import { cn, getCurrentWeek } from "@/lib/utils";
+import { CircleCheck } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
+import { Pressable, View } from "react-native";
 
-export default function WeekDays() {
+interface IProps {
+  date: string;
+  handleDatePress: (date: string) => void;
+}
+
+export default function WeekDays({ date, handleDatePress }: IProps) {
+  const { colorScheme } = useColorScheme();
+  const theme = THEME[colorScheme ?? "light"];
+
   return (
     <View className="flex-row gap-1 mt-8">
       {getCurrentWeek().map((day) => (
-        <Card
-          key={day.week}
-          className="shadow-none rounded-3xl items-center gap-2 py-2 border-muted bg-muted flex-1"
+        <Pressable
+          onPress={() => handleDatePress(day.fullDate)}
+          key={day.date}
+          className="flex-1"
         >
-          <Text className="text-xs font-sans-bold">{day.week}</Text>
-          <View className={`${day.isToday ? "bg-primary" : "bg-card"} rounded-full w-8 h-8 justify-center items-center`}>
-            <Text className={`${day.isToday && "text-primary-foreground"} font-sans-bold text-sm`}>
-              {day.date}
-            </Text>
-          </View>
-        </Card>
+          <Card className="rounded-3xl items-center gap-2 py-2 bg-muted">
+            <Text className="text-xs font-sans-bold">{day.week}</Text>
+            <View
+              className={cn(
+                "rounded-full w-8 h-8 justify-center items-center relative",
+                day.fullDate === date ? "bg-primary" : "bg-card",
+              )}
+            >
+              <Text
+                className={cn(
+                  "font-sans-bold text-sm",
+                  day.fullDate === date && "text-primary-foreground",
+                )}
+              >
+                {day.date}
+              </Text>
+
+              <View className="absolute top-0 -right-0.5">
+                <CircleCheck size={12} fill={theme.chart2} color={theme.primaryForeground}/>
+              </View>
+            </View>
+          </Card>
+        </Pressable>
       ))}
     </View>
   );
