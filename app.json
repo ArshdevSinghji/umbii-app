@@ -39,6 +39,12 @@
           }
         }
       ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Umbii to access your microphone to log meals by voice."
+        }
+      ],
       "expo-font",
       "expo-secure-store"
     ],

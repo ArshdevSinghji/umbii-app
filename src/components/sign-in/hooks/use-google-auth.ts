@@ -59,6 +59,6 @@ export function useGoogleAuth() {
       setIsLoading(false);
     }
   };
-
   return { signInWithGoogle, isLoading };
+
 }

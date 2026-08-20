@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { cn, getCurrentWeek } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { getCurrentWeek } from "@/utils/get-current-week";
 import { CircleCheck } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";

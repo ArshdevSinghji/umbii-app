@@ -2,8 +2,6 @@ import { Card } from "@/components/ui/card";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
-import { useUserActionsHook } from "@/features/user/user.hook";
-import { calculateNutrition } from "@/lib/calculate-nutrition";
 import { THEME } from "@/lib/theme";
 import { Drumstick, Flame, Ham, Milk } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
@@ -11,6 +9,8 @@ import { useMemo } from "react";
 import { View } from "react-native";
 import GoalProgress from "./goal-progress";
 import TodaysGoalSkeleton from "./loading";
+import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
+import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 
 const DUMMY_GOAL = {
   calories: 1600,
@@ -23,7 +23,7 @@ export default function TodaysGoal() {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
 
-  const { isLoading, listFoodLogs } = useUserActionsHook();
+  const { isLoading, listFoodLogs } = useFoodLogsActionsHook();
 
   const nutrition = useMemo(() => {
     const allDetails = listFoodLogs.flatMap((log) => log.details);

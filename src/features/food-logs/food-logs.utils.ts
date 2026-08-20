@@ -1,6 +1,31 @@
-import { IFoodLog } from "@/features/user/user.types";
+import { IFoodLog } from "@/features/food-logs/food-logs.types";
+import { IFoodLogDetail } from "@/features/food-logs/food-logs.types";
 
-export type MealSectionLabel =
+const calculateNutrition = (data: IFoodLogDetail[]) =>
+  data.reduce(
+    (acc, detail) => {
+      acc.calories += Number(detail.calories ?? 0);
+      acc.protein += parseFloat(detail.protein ?? "0");
+      acc.carbs += parseFloat(detail.carbs ?? "0");
+      acc.fats += parseFloat(detail.fats ?? "0");
+      acc.fiber += parseFloat(detail.fiber ?? "0");
+      acc.sugar += parseFloat(detail.sugar ?? "0");
+      acc.sodium += parseFloat(detail.sodium ?? "0");
+
+      return acc;
+    },
+    {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+    },
+  );
+
+type MealSectionLabel =
   | "Breakfast"
   | "Morning Snack"
   | "Lunch"
@@ -19,13 +44,13 @@ const SECTIONS: {
   { label: "Dinner", startHour: 18, endHour: 24 },
 ];
 
-export type CategorizedSection = {
+type CategorizedSection = {
   label: MealSectionLabel;
   logs: IFoodLog[];
   totalCalories: number;
 };
 
-export function categorizeFoodLogs(logs: IFoodLog[]): CategorizedSection[] {
+function categorizeFoodLogs(logs: IFoodLog[]): CategorizedSection[] {
   return SECTIONS.map((section) => {
     const sectionLogs = logs.filter((log) => {
       const hour = new Date(log.createdAt).getHours();
@@ -48,3 +73,10 @@ export function categorizeFoodLogs(logs: IFoodLog[]): CategorizedSection[] {
     };
   });
 }
+
+export {
+  calculateNutrition,
+  CategorizedSection,
+  categorizeFoodLogs,
+  MealSectionLabel,
+};

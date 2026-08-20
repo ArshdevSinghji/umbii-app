@@ -1,17 +1,17 @@
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { useUserActionsHook } from "@/features/user/user.hook";
-import { CategorizedSection, categorizeFoodLogs } from "@/lib/meal-sections";
 import BottomSheetLib from "@expo/ui/community/bottom-sheet";
 import { Flame } from "lucide-react-native";
 import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import TodaysMealsSkeleton from "./loading";
 import MealSheetContent from "./meal-sheet-content";
+import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
+import { CategorizedSection, categorizeFoodLogs } from "@/features/food-logs/food-logs.utils";
 
 export default function TodaysMeals() {
-  const { isLoading, listFoodLogs } = useUserActionsHook();
+  const { isLoading, listFoodLogs } = useFoodLogsActionsHook();
   const sheetRef = useRef<BottomSheetLib>(null);
 
   const [selectedSection, setSelectedSection] = useState<CategorizedSection | null>(null);
@@ -77,7 +77,7 @@ export default function TodaysMeals() {
       )}
 
       <BottomSheet ref={sheetRef} snapPoints={["50%", "90%"]}>
-        <MealSheetContent section={selectedSection!} />
+        <MealSheetContent key={selectedSection?.label} section={selectedSection!} />
       </BottomSheet>
     </View>
   );

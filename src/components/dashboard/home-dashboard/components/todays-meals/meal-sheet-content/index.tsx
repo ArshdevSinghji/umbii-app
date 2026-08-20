@@ -1,6 +1,6 @@
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
-import { CategorizedSection } from "@/lib/meal-sections";
+import { CategorizedSection } from "@/features/food-logs/food-logs.utils";
 import { THEME } from "@/lib/theme";
 import {
   Activity,

@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Text } from "@/components/ui/text";
-import { getInitials } from "@/lib/utils";
 import { useAppSelector } from "@/store/hooks";
+import { getInitials } from "@/utils/get-initials";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function ProfileDropdown() {
