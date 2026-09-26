@@ -4,6 +4,16 @@ export enum FoodLogActionTypes {
   GENERATE_FOOD_LOGS = "food-logs/generate-food-logs",
 }
 
+export interface NutritionValues {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+}
+
 export interface IFoodLogDetail {
   id: number;
   name: string;
@@ -30,7 +40,7 @@ export interface IFoodLog {
 export interface GenerateFoodLogsDetails {
   remark: string;
   rawInputText: string;
-  details: Omit<IFoodLogDetail, 'id' | 'createdAt' | 'updatedAt'>[];
+  details: Omit<IFoodLogDetail, "id" | "createdAt" | "updatedAt">[];
 }
 
 export interface FoodLogState {

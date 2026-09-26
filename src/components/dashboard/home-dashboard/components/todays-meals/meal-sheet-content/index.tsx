@@ -12,6 +12,7 @@ import {
   Wheat,
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
+import React from "react";
 import { View } from "react-native";
 
 interface IProps {
@@ -39,7 +40,7 @@ export default function MealSheetContent({ section }: IProps) {
       {section.logs.map((log) => (
         <View key={log.id} className="gap-2">
           {log.details.map((detail, index) => (
-            <>
+            <React.Fragment key={detail.id}>
               <View key={detail.id} className="pb-2">
                 <View className="flex-row justify-between items-center">
                   <View>
@@ -102,7 +103,7 @@ export default function MealSheetContent({ section }: IProps) {
               {index < log.details.length - 1 && (
                 <Separator className="bg-accent-foreground/30" />
               )}
-            </>
+            </React.Fragment>
           ))}
         </View>
       ))}

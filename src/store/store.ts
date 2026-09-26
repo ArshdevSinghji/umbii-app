@@ -12,6 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { userReducer } from '@/features/user/user.slice';
 import { foodLogsReducer } from '@/features/food-logs/food-logs.slice';
+import { nutritionTargetReducer } from '@/features/nutrition-target/nutrition-target.slice';
 
 const userPersistConfig = {
   key: 'user',
@@ -22,6 +23,7 @@ const userPersistConfig = {
 const rootReducer = combineReducers({
   userSlice: persistReducer(userPersistConfig, userReducer),
   foodLogsSlice: foodLogsReducer,
+  nutritionTargetSlice: nutritionTargetReducer,
 });
 
 export const store = configureStore({
