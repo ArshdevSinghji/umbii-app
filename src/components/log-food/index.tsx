@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import FoodInput from "./food-input/index,";
+import FoodInput from "./food-input";
 
 export default function LogFoodComponent() {
   return (

@@ -3,5 +3,5 @@ import { NutritionTargetRequest, NutritionTargetResponse } from "./create-nutrit
 
 export const createNutritionTargetService = async (request: NutritionTargetRequest) => {
   const { userId, ...rest } = request;
-  return await http.post<ApiResponse<NutritionTargetResponse>>(`/users/${userId}/nutrition-targets`, { ...rest });
+  return await http.post<ApiResponse<NutritionTargetResponse>>(`/users/${userId}/nutrition-target`, { ...rest });
 };

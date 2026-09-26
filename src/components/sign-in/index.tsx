@@ -1,7 +1,7 @@
 import { Image, View } from "react-native";
 import { Text } from "../ui/text";
-import Header from "./components/header";
-import SignInButton from "./components/sign-in-button";
+import Header from "./header";
+import SignInButton from "./sign-in-button";
 
 export default function SignInComponent() {
   return (

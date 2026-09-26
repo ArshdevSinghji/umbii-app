@@ -1,4 +1,4 @@
-import HomeDashboard from "@/components/dashboard/home-dashboard";
+import HomeDashboard from "@/components/home";
 import { FLOATING_TAB_BAR_CLEARANCE } from "@/lib/floating-tab-bar";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

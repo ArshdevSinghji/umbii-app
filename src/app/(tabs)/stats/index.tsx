@@ -1,4 +1,4 @@
-import GoalProgress from "@/components/goal-progress";
+import GoalProgress from "@/components/stats";
 import { FLOATING_TAB_BAR_CLEARANCE } from "@/lib/floating-tab-bar";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
