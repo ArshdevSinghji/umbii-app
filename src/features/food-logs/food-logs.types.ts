@@ -2,6 +2,7 @@ export enum FoodLogActionTypes {
   LIST_FOOD_LOGS = "food-logs/list-food-logs",
   CREATE_FOOD_LOGS = "food-logs/create-food-logs",
   GENERATE_FOOD_LOGS = "food-logs/generate-food-logs",
+  GET_FOOD_LOG = "food-logs/get-food-log",
 }
 
 export interface NutritionValues {
@@ -47,4 +48,6 @@ export interface FoodLogState {
   isLoading: boolean;
   listFoodLogs: IFoodLog[];
   generatedFoodLogsDetails: GenerateFoodLogsDetails;
+  selectedFoodLog: IFoodLog | null;
+  isFoodLogLoading: boolean;
 }

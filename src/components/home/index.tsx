@@ -15,7 +15,7 @@ export default function HomeDashboard() {
 
   const handleDatePress = (selectedDate: string) => setDate(selectedDate);
 
-  useEffect(() => { fetchFoodLogs(user.id, date) }, [user.id, date]);
+  useEffect(() => { fetchFoodLogs(user.id, { date }) }, [user.id, date]);
 
   return (
     <View>

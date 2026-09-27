@@ -13,6 +13,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 
@@ -52,14 +53,16 @@ export default function RootLayout() {
   if (!appReady) return null;
 
   return (
-    <SafeAreaProvider>
-      <StoreProvider>
-        <ThemeProvider value={NAV_THEME["light"]}>
-          <StatusBar style="dark" />
-          <Stack />
-          <PortalHost />
-        </ThemeProvider>
-      </StoreProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StoreProvider>
+          <ThemeProvider value={NAV_THEME["light"]}>
+            <StatusBar style="dark" />
+            <Stack />
+            <PortalHost />
+          </ThemeProvider>
+        </StoreProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

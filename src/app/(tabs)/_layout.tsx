@@ -7,9 +7,26 @@ import { THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { Stack } from "expo-router";
 import { Tabs, type BottomTabBarProps } from "expo-router/js-tabs";
-import { ChartPie, Home, Mic, Utensils } from "lucide-react-native";
+import {
+  ChartPie,
+  Home,
+  Rows3,
+  Utensils,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
+
+const TABS: {
+  name: string;
+  title: string;
+  icon: LucideIcon;
+}[] = [
+  { name: "home", title: "Home", icon: Home },
+  { name: "breakdown", title: "Breakdown", icon: Rows3 },
+  { name: "log-food", title: "Log Food", icon: Utensils },
+  { name: "stats", title: "Stats", icon: ChartPie },
+];
 
 function FloatingTabBar({
   state,
@@ -32,9 +49,6 @@ function FloatingTabBar({
     <View
       style={{
         position: "absolute",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
         start: 24,
         end: 24,
         bottom: insets.bottom + FLOATING_TAB_BAR_BOTTOM_MARGIN,
@@ -42,7 +56,6 @@ function FloatingTabBar({
     >
       <View
         style={{
-          flex: 1,
           flexDirection: "row",
           height: FLOATING_TAB_BAR_HEIGHT,
           borderRadius: FLOATING_TAB_BAR_HEIGHT / 2,
@@ -50,6 +63,7 @@ function FloatingTabBar({
           borderColor: theme.border,
           backgroundColor: theme.card,
           paddingHorizontal: 6,
+          paddingVertical: 6,
           ...shadow,
         }}
       >
@@ -95,25 +109,6 @@ function FloatingTabBar({
           );
         })}
       </View>
-
-      <Pressable
-        onPress={() => {
-          const logFoodRoute = state.routes.find((r) => r.name === "log-food");
-          if (logFoodRoute) {
-            navigation.navigate(logFoodRoute.name, logFoodRoute.params);
-          }
-        }}
-        className="items-center justify-center rounded-full"
-        style={{
-          width: FLOATING_TAB_BAR_HEIGHT,
-          height: FLOATING_TAB_BAR_HEIGHT,
-          borderRadius: FLOATING_TAB_BAR_HEIGHT / 2,
-          backgroundColor: theme.foreground,
-          ...shadow,
-        }}
-      >
-        <Mic color={theme.background} size={22} />
-      </Pressable>
     </View>
   );
 }
@@ -126,31 +121,18 @@ export default function TabsLayout() {
         tabBar={(props) => <FloatingTabBar {...props} />}
         screenOptions={{ headerShown: false }}
       >
-        <Tabs.Screen
-          name="home"
-          options={{
-            title: "Home",
-            tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
-          name="log-food"
-          options={{
-            title: "Log Food",
-            tabBarIcon: ({ color, size }) => (
-              <Utensils color={color} size={size} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="stats"
-          options={{
-            title: "Stats",
-            tabBarIcon: ({ color, size }) => (
-              <ChartPie color={color} size={size} />
-            ),
-          }}
-        />
+        {TABS.map(({ name, title, icon: Icon }) => (
+          <Tabs.Screen
+            key={name}
+            name={name}
+            options={{
+              title,
+              tabBarIcon: ({ color, size }) => (
+                <Icon color={color} size={size} />
+              ),
+            }}
+          />
+        ))}
       </Tabs>
     </>
   );
