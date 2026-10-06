@@ -6,6 +6,7 @@ import { NutritionTargetState } from "./nutrition-target.types";
 
 const initialState: NutritionTargetState = {
   isLoading: false,
+  isReportLoading: false,
   nutritionTarget: null,
   report: null,
 };
@@ -37,14 +38,14 @@ const nutritionTargetSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(getNutritionTargetReportAction.pending, (state) => {
-        state.isLoading = true;
+        state.isReportLoading = true;
       })
       .addCase(getNutritionTargetReportAction.fulfilled, (state, action) => {
-        state.isLoading = false;
+        state.isReportLoading = false;
         state.report = action.payload;
       })
       .addCase(getNutritionTargetReportAction.rejected, (state) => {
-        state.isLoading = false;
+        state.isReportLoading = false;
       });
   },
 });

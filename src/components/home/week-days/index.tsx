@@ -36,13 +36,16 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
 
   const completedDates = report?.completedDates ?? [];
   const notCompleteDates = report?.notCompleteDates ?? [];
+  const missedDates = report?.missedDates ?? [];
 
   return (
     <View className="flex-row gap-1 mt-8">
       {week.map((day) => {
         const isSelected = day.fullDate === date;
         const isCompleted = completedDates.includes(day.fullDate);
-        const isNotCompleted = notCompleteDates.includes(day.fullDate);
+        const isNotCompleted =
+          notCompleteDates.includes(day.fullDate) ||
+          missedDates.includes(day.fullDate);
 
         return (
           <Pressable

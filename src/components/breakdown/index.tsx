@@ -9,14 +9,19 @@ import {
 } from "@/utils/get-date-range-for-period";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
+import AdherenceCalendar from "./adherence-calendar";
 import CalorieSummary from "./calorie-summary";
 import BreakdownHeader from "./header";
 import DailyBreakdownSkeleton from "./loading";
 import NutrientsList from "./nutrients-list";
 import PeriodFilter, { StatsPeriod } from "./period-filter";
 
+const TODAY = new Date().toISOString().split("T")[0];
+
 export default function DailyBreakdown() {
   const [period, setPeriod] = useState<StatsPeriod>("day");
+  const [selectedDate, setSelectedDate] = useState(TODAY);
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
   const { user } = useAppSelector((state) => state.userSlice);
   const {
@@ -30,13 +35,14 @@ export default function DailyBreakdown() {
     fetchNutritionTarget,
   } = useNutritionTargetActionsHook();
 
-  const { startDate, endDate } = getDateRangeForPeriod(period);
+  const referenceDate = period === "day" ? new Date(selectedDate) : new Date();
+  const { startDate, endDate } = getDateRangeForPeriod(period, referenceDate);
   const days = getDaysInRange(startDate, endDate);
 
   useEffect(() => {
     if (!user.id) return;
-    fetchNutritionTarget(user.id);
-  }, [user.id]);
+    fetchNutritionTarget(user.id, period === "day" ? selectedDate : undefined);
+  }, [user.id, period, selectedDate]);
 
   useEffect(() => {
     if (!user.id) return;
@@ -45,21 +51,17 @@ export default function DailyBreakdown() {
 
   const isLoading = isFoodLogsLoading || isTargetLoading;
 
-  const handleCalendarPress = () => {
-    // TODO: wire up date selection for the breakdown page.
+  const handlePeriodChange = (newPeriod: StatsPeriod) => {
+    setPeriod(newPeriod);
+    if (newPeriod === "day") {
+      setSelectedDate(TODAY);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <View>
-        <BreakdownHeader onCalendarPress={handleCalendarPress} />
-        <PeriodFilter value={period} onChange={setPeriod} />
-        <View className="mt-4">
-          <DailyBreakdownSkeleton />
-        </View>
-      </View>
-    );
-  }
+  const handleSelectDate = (date: string) => {
+    setSelectedDate(date);
+    setPeriod("day");
+  };
 
   const total = calculateNutrition(listFoodLogs.flatMap((log) => log.details));
   const average: NutritionValues = {
@@ -84,20 +86,33 @@ export default function DailyBreakdown() {
 
   return (
     <View>
-      <BreakdownHeader onCalendarPress={handleCalendarPress} />
-      <PeriodFilter value={period} onChange={setPeriod} />
+      <BreakdownHeader onCalendarPress={() => setIsCalendarVisible(true)} />
+      <PeriodFilter value={period} onChange={handlePeriodChange} />
 
       <View className="gap-4 mt-4">
-        <CalorieSummary
-          dailyAverage={average.calories}
-          totalCalories={total.calories}
-          caloriesTarget={target.calories}
-          protein={average.protein}
-          carbs={average.carbs}
-          fats={average.fats}
-        />
-        <NutrientsList consumed={average} target={target} />
+        {isLoading ? (
+          <DailyBreakdownSkeleton />
+        ) : (
+          <>
+            <CalorieSummary
+              dailyAverage={average.calories}
+              totalCalories={total.calories}
+              caloriesTarget={target.calories}
+              protein={average.protein}
+              carbs={average.carbs}
+              fats={average.fats}
+            />
+            <NutrientsList consumed={average} target={target} />
+          </>
+        )}
       </View>
+
+      <AdherenceCalendar
+        visible={isCalendarVisible}
+        selectedDate={selectedDate}
+        onClose={() => setIsCalendarVisible(false)}
+        onSelectDate={handleSelectDate}
+      />
     </View>
   );
 }

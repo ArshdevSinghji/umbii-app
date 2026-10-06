@@ -9,6 +9,7 @@ export enum NutritionTargetActionTypes {
 
 export interface NutritionTargetState {
   isLoading: boolean;
+  isReportLoading: boolean;
   nutritionTarget: NutritionTargetResponse | null;
   report: NutritionTargetReportResponse | null;
 }

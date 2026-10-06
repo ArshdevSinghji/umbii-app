@@ -10,4 +10,5 @@ export interface GetNutritionTargetReportRequest {
 export interface NutritionTargetReportResponse {
   completedDates: string[];
   notCompleteDates: string[];
+  missedDates: string[];
 }

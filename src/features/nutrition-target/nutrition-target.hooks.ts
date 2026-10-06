@@ -6,7 +6,9 @@ import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-t
 
 export function useNutritionTargetActionsHook() {
   const dispatch = useAppDispatch();
-  const { isLoading, nutritionTarget, report } = useAppSelector((state) => state.nutritionTargetSlice);
+  const { isLoading, isReportLoading, nutritionTarget, report } = useAppSelector(
+    (state) => state.nutritionTargetSlice,
+  );
 
   const createNutritionTarget = async (userId: number, values: NutritionValues) => {
     await dispatch(creareNutritionTargetAction({ userId, ...values })).unwrap();
@@ -34,6 +36,7 @@ export function useNutritionTargetActionsHook() {
 
   return {
     isLoading,
+    isReportLoading,
     nutritionTarget,
     report,
     createNutritionTarget,
