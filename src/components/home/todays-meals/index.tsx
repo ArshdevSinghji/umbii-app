@@ -57,7 +57,11 @@ export default function TodaysMeals() {
             const totalCalories = calculateNutrition(log.details).calories;
 
             return (
-              <Pressable key={log.id} onPress={() => handleLogPress(log)}>
+              <Pressable
+                key={log.id}
+                onPress={() => handleLogPress(log)}
+                className="active:opacity-70"
+              >
                 <Card className="gap-2 py-4">
                   <CardHeader className="px-4">
                     <Text className="font-sans-bold" numberOfLines={1}>

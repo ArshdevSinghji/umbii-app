@@ -39,7 +39,7 @@ export default function GoalProgress() {
     router.push({ pathname: "/health-details", params: { mode } });
 
   const renderContent = () => {
-    if (isInitialLoad) return <GoalProgressSkeleton />;
+    if (isInitialLoad) return <GoalProgressSkeleton hasHeight={!!user.height} />;
 
     if (!latest) {
       return <WeightEmptyState onGetStarted={() => openHealthDetails("start")} />;

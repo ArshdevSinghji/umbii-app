@@ -1,5 +1,6 @@
 export enum FoodLogActionTypes {
   LIST_FOOD_LOGS = "food-logs/list-food-logs",
+  LIST_RECENT_FOOD_LOGS = "food-logs/list-recent-food-logs",
   CREATE_FOOD_LOGS = "food-logs/create-food-logs",
   GENERATE_FOOD_LOGS = "food-logs/generate-food-logs",
   GET_FOOD_LOG = "food-logs/get-food-log",
@@ -50,4 +51,7 @@ export interface FoodLogState {
   generatedFoodLogsDetails: GenerateFoodLogsDetails;
   selectedFoodLog: IFoodLog | null;
   isFoodLogLoading: boolean;
+  // Last 7 days for the Log Food page; separate from `listFoodLogs`,
+  // which Home/Breakdown fill per date.
+  recentFoodLogs: IFoodLog[];
 }

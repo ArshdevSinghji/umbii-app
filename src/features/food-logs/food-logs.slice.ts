@@ -4,6 +4,7 @@ import { FoodLogState, GenerateFoodLogsDetails } from "./food-logs.types";
 import { getFoodLogAction } from "./get-food-log/get-food-log.action";
 import { listFoodLogsAction } from "./list-food-logs/list-food-logs.action";
 import { generateFoodLogsAction } from "./generate-food-logs/generate-food-logs.action";
+import { listRecentFoodLogsAction } from "./list-recent-food-logs/list-recent-food-logs.action";
 
 const initialState: FoodLogState = {
   isLoading: false,
@@ -11,6 +12,7 @@ const initialState: FoodLogState = {
   generatedFoodLogsDetails: {} as GenerateFoodLogsDetails,
   selectedFoodLog: null,
   isFoodLogLoading: false,
+  recentFoodLogs: [],
 };
 
 const foodLogsSlice = createSlice({
@@ -57,6 +59,11 @@ const foodLogsSlice = createSlice({
       })
       .addCase(getFoodLogAction.rejected, (state) => {
         state.isFoodLogLoading = false;
+      })
+      // No loading flag: the page shows its skeleton only on first load,
+      // and refreshes after logging a meal shouldn't flash it.
+      .addCase(listRecentFoodLogsAction.fulfilled, (state, action) => {
+        state.recentFoodLogs = action.payload;
       });
   },
 });

@@ -14,6 +14,7 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import GenerateMealSheet from "./generate-meal-sheet";
+import { Text } from "@/components/ui/text";
 
 export default function FoodInput() {
   const { colorScheme } = useColorScheme();
@@ -96,7 +97,7 @@ export default function FoodInput() {
                 value={log}
                 placeholder="What did you eat?"
                 onChangeText={setLog}
-                className="min-h-10 flex-1 border-0 bg-transparent px-2 py-0 font-sans"
+                className="min-h-10 flex-1 border-0 bg-transparent dark:bg-transparent px-2 py-0 font-sans"
               />
 
               {log.length === 0 ? (
