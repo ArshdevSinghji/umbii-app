@@ -1,26 +1,26 @@
-import { DUMMY_HEIGHT_CM } from "@/components/stats/dummy-data";
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/ui/loading";
 import { Text } from "@/components/ui/text";
+import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View } from "react-native";
 import HealthDetailsHeader from "./header";
 import {
   HealthDetailsField,
   HealthDetailsMode,
   HealthDetailsValues,
+  HEIGHT_RANGE,
   MODE_FIELDS,
   WEIGHT_RANGE,
   getHealthDetailsSchema,
 } from "./health-details.schema";
 import { useSaveHealthDetails } from "./hooks/use-save-health-details";
-import HeightField from "./height-field";
 import MeasurementField from "./measurement-field";
 
 const DEFAULT_WEIGHT = 70;
+const DEFAULT_HEIGHT = 170;
 
 const COPY: Record<HealthDetailsMode, { title: string; description: string }> = {
   start: {
@@ -35,29 +35,35 @@ const COPY: Record<HealthDetailsMode, { title: string; description: string }> = 
     title: "Set your goal weight",
     description: "Slide to the weight you're aiming for.",
   },
+  height: {
+    title: "Update your height",
+    description: "We use it to work out your BMI.",
+  },
 };
 
 // Height has its own field (cm / ft toggle).
 const FIELDS: Record<
-  Exclude<HealthDetailsField, "height">,
+  HealthDetailsField,
   { label: string; unit: string; range: typeof WEIGHT_RANGE }
 > = {
   currentWeight: { label: "Current weight", unit: "kg", range: WEIGHT_RANGE },
   targetWeight: { label: "Goal weight", unit: "kg", range: WEIGHT_RANGE },
+  height: { label: "Height", unit: "cm", range: HEIGHT_RANGE },
 };
 
 interface IProps {
   mode: HealthDetailsMode;
 }
 
-export default function HealthDetails({ mode }: IProps) {
+export default function HealthDetailsForm({ mode }: IProps) {
   const router = useRouter();
+  const { user } = useAppSelector((state) => state.userSlice);
   const { latest, isSaving, save } = useSaveHealthDetails(mode);
 
   const [values, setValues] = useState<HealthDetailsValues>(() => ({
     currentWeight: latest ? parseFloat(latest.currentWeight) : DEFAULT_WEIGHT,
     targetWeight: latest ? parseFloat(latest.targetWeight) : DEFAULT_WEIGHT,
-    height: DUMMY_HEIGHT_CM,
+    height: user.height ?? DEFAULT_HEIGHT,
   }));
   const [errors, setErrors] = useState<Partial<Record<HealthDetailsField, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -97,11 +103,9 @@ export default function HealthDetails({ mode }: IProps) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 32 }}
-        keyboardShouldPersistTaps="handled"
-      >
+    // Fills the screen so the Save button rests at the bottom on short pages.
+    <View className="flex-1 justify-between gap-8">
+      <View className="gap-8">
         <HealthDetailsHeader
           title={COPY[mode].title}
           description={COPY[mode].description}
@@ -109,27 +113,18 @@ export default function HealthDetails({ mode }: IProps) {
           disabled={isSaving}
         />
 
-        {MODE_FIELDS[mode].map((field) =>
-          field === "height" ? (
-            <HeightField
-              key={field}
-              value={values.height}
-              onChange={handleChange("height")}
-              error={errors.height}
-            />
-          ) : (
-            <MeasurementField
-              key={field}
-              {...FIELDS[field]}
-              value={values[field]}
-              onChange={handleChange(field)}
-              error={errors[field]}
-            />
-          ),
-        )}
-      </ScrollView>
+        {MODE_FIELDS[mode].map((field) => (
+          <MeasurementField
+            key={field}
+            {...FIELDS[field]}
+            value={values[field]}
+            onChange={handleChange(field)}
+            error={errors[field]}
+          />
+        ))}
+      </View>
 
-      <View className="gap-2 px-4 pb-4 pt-2">
+      <View className="gap-2">
         {submitError && (
           <Text className="text-center text-sm text-destructive">{submitError}</Text>
         )}
@@ -137,6 +132,6 @@ export default function HealthDetails({ mode }: IProps) {
           <Loading isLoading={isSaving} text="Save" />
         </Button>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

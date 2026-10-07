@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import BmiCard from "./bmi-card";
-import { DUMMY_HEIGHT_CM } from "./dummy-data";
 import WeightEmptyState from "./empty-state";
 import StatsHeader from "./header";
 import GoalProgressSkeleton from "./loading";
@@ -36,10 +35,6 @@ export default function GoalProgress() {
     // TODO: open goal progress options menu.
   };
 
-  const handleUpdateHeight = () => {
-    // TODO: open height input sheet.
-  };
-
   const openHealthDetails = (mode: HealthDetailsMode) =>
     router.push({ pathname: "/health-details", params: { mode } });
 
@@ -67,8 +62,8 @@ export default function GoalProgress() {
         <WeightChart journals={listWeightJournals} />
         <BmiCard
           weight={parseFloat(latest.currentWeight)}
-          height={DUMMY_HEIGHT_CM}
-          onUpdateHeight={handleUpdateHeight}
+          height={user.height ?? null}
+          onUpdateHeight={() => openHealthDetails("height")}
         />
       </View>
     );

@@ -1,3 +1,4 @@
+import { useUserActionsHook } from "@/features/user/user.hook";
 import { useWeightJournalsActionsHook } from "@/features/weight-journals/weight-journals.hooks";
 import { isLoggedToday } from "@/features/weight-journals/weight-journals.utils";
 import { useAppSelector } from "@/store/hooks";
@@ -7,17 +8,33 @@ const toApiWeight = (weight: number) => weight.toFixed(1);
 
 export function useSaveHealthDetails(mode: HealthDetailsMode) {
   const { user } = useAppSelector((state) => state.userSlice);
-  const { isSaving, listWeightJournals, createWeightJournal, updateWeightJournal } =
+  const { isSaving: isSavingWeight, listWeightJournals, createWeightJournal, updateWeightJournal } =
     useWeightJournalsActionsHook();
+  const { isUpdating: isSavingHeight, updateHeight } = useUserActionsHook();
 
   // API returns newest first.
   const latest = listWeightJournals[0] ?? null;
 
-  const save = async ({ currentWeight, targetWeight }: HealthDetailsValues) => {
-    // TODO: send `height` once the backend stores it.
+  const save = async ({ currentWeight, targetWeight, height }: HealthDetailsValues) => {
+    if (mode === "height") {
+      await updateHeight(height);
+      return;
+    }
 
+    // Writes today's weight entry: updates it if one exists, otherwise creates
+    // one. Safe to repeat, so a retry after a partial failure can't duplicate it.
+    const saveTodaysWeight = (weight: string, target: string) =>
+      latest && isLoggedToday(latest)
+        ? updateWeightJournal(user.id, latest.id, weight, target)
+        : createWeightJournal(user.id, weight, target);
+
+    // First entry: weight and height go out together. Height is a PUT, so
+    // resending it on retry is harmless too.
     if (mode === "start" || !latest) {
-      await createWeightJournal(user.id, toApiWeight(currentWeight), toApiWeight(targetWeight));
+      await Promise.all([
+        saveTodaysWeight(toApiWeight(currentWeight), toApiWeight(targetWeight)),
+        updateHeight(height),
+      ]);
       return;
     }
 
@@ -26,13 +43,9 @@ export function useSaveHealthDetails(mode: HealthDetailsMode) {
       return;
     }
 
-    // Weight: correct today's entry, otherwise log a new one with the same goal.
-    if (isLoggedToday(latest)) {
-      await updateWeightJournal(user.id, latest.id, toApiWeight(currentWeight), latest.targetWeight);
-    } else {
-      await createWeightJournal(user.id, toApiWeight(currentWeight), latest.targetWeight);
-    }
+    // Weight: keep the current goal.
+    await saveTodaysWeight(toApiWeight(currentWeight), latest.targetWeight);
   };
 
-  return { latest, isSaving, save };
+  return { latest, isSaving: isSavingWeight || isSavingHeight, save };
 }

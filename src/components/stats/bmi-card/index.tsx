@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
+import { THEME } from "@/lib/theme";
 import { calculateBmi, getBmiCategory } from "@/utils/calculate-bmi";
+import { Pencil } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { useBmiColors } from "../hooks/use-bmi-colors";
 import BmiLegend from "./bmi-legend";
@@ -15,6 +18,8 @@ interface IProps {
 
 export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
   const getColor = useBmiColors();
+  const { colorScheme } = useColorScheme();
+  const theme = THEME[colorScheme ?? "light"];
 
   if (!height) {
     return (
@@ -41,9 +46,15 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
         <Pressable
           onPress={onUpdateHeight}
           hitSlop={8}
-          className="rounded-full bg-muted px-3 py-1"
+          accessibilityRole="button"
+          accessibilityLabel="Edit height"
+          className="flex-row items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 active:opacity-70"
         >
-          <Text className="text-xs font-sans-bold">{height} cm</Text>
+          <Text className="text-xs text-muted-foreground">Height</Text>
+          <Text className="text-xs font-sans-bold">
+            {Number(height.toFixed(1))} cm
+          </Text>
+          <Pencil size={12} color={theme.foreground} />
         </Pressable>
       </View>
 

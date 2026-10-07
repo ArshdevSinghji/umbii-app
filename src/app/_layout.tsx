@@ -14,7 +14,10 @@ import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
 import "../global.css";
 
 export default function RootLayout() {
@@ -54,7 +57,8 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
+      {/* Real insets from the first frame, so screens don't jump once they arrive. */}
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <StoreProvider>
           <ThemeProvider value={NAV_THEME["light"]}>
             <StatusBar style="dark" />

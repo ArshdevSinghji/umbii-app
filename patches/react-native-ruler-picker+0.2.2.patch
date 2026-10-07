@@ -103,11 +103,12 @@ index eed0f9e..a7bcdf7 100644
  //# sourceMappingURL=RulerPickerItem.d.ts.map
 \ No newline at end of file
 diff --git a/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx b/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
-index 8d1f0d1..ce6f78f 100644
+index 8d1f0d1..116da43 100644
 --- a/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
 +++ b/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
 @@ -1,6 +1,7 @@
- import React, { useCallback, useEffect, useRef } from 'react';
+-import React, { useCallback, useEffect, useRef } from 'react';
++import React, { useCallback, useEffect, useMemo, useRef } from 'react';
  import {
    Dimensions,
 +  PixelRatio,
@@ -170,7 +171,7 @@ index 8d1f0d1..ce6f78f 100644
    min,
    max,
    step = 1,
-@@ -134,18 +144,31 @@ export const RulerPicker = ({
+@@ -134,18 +144,44 @@ export const RulerPicker = ({
    shortStepHeight = 20,
    longStepHeight = 40,
    stepWidth = 2,
@@ -190,6 +191,8 @@ index 8d1f0d1..ce6f78f 100644
    onValueChangeEnd,
  }: RulerPickerProps) => {
 -  const itemAmount = (max - min) / step;
+-  const arrData = Array.from({ length: itemAmount + 1 }, (_, index) => index);
+-  const listRef = useRef<FlashList<typeof arrData>>(null);
 +  // Each step owns a slot snapped to whole device pixels. Unrounded slots
 +  // (e.g. 1 + 6 = 7dp on a 2.625x screen) get rounded per item by the list,
 +  // and that error accumulates across hundreds of steps.
@@ -198,13 +201,25 @@ index 8d1f0d1..ce6f78f 100644
 +
 +  // Round, not floor: (74 - 30) / 0.1 is 439.999... in floating point.
 +  const itemAmount = Math.round((max - min) / step);
-   const arrData = Array.from({ length: itemAmount + 1 }, (_, index) => index);
--  const listRef = useRef<FlashList<typeof arrData>>(null);
++  const arrData = useMemo(
++    () => Array.from({ length: itemAmount + 1 }, (_, index) => index),
++    [itemAmount]
++  );
++  const snapOffsets = useMemo(
++    () => arrData.map((index) => index * itemWidth),
++    [arrData, itemWidth]
++  );
++
++  const initialIndex = Math.min(
++    itemAmount,
++    Math.max(0, Math.round((initialValue - min) / step))
++  );
++  const hasScrolledToInitial = useRef(false);
 +  const listRef = useRef<FlashListRef<number>>(null);
  
    const stepTextRef = useRef<TextInput>(null);
    const prevValue = useRef<string>(initialValue.toFixed(fractionDigits));
-@@ -158,8 +181,8 @@ export const RulerPicker = ({
+@@ -158,8 +194,8 @@ export const RulerPicker = ({
      ({ value }) => {
        const newStep = calculateCurrentValue(
          value,
@@ -215,7 +230,7 @@ index 8d1f0d1..ce6f78f 100644
          min,
          max,
          step,
-@@ -173,7 +196,7 @@ export const RulerPicker = ({
+@@ -173,7 +209,7 @@ export const RulerPicker = ({
  
        prevValue.current = newStep;
      },
@@ -224,7 +239,7 @@ index 8d1f0d1..ce6f78f 100644
    );
  
    useEffect(() => {
-@@ -200,8 +223,8 @@ export const RulerPicker = ({
+@@ -200,8 +236,8 @@ export const RulerPicker = ({
    );
  
    const renderSeparator = useCallback(
@@ -235,7 +250,7 @@ index 8d1f0d1..ce6f78f 100644
    );
  
    const renderItem: ListRenderItem<unknown> = useCallback(
-@@ -210,23 +233,39 @@ export const RulerPicker = ({
+@@ -210,23 +246,39 @@ export const RulerPicker = ({
          <RulerPickerItem
            isLast={index === arrData.length - 1}
            index={index}
@@ -275,7 +290,7 @@ index 8d1f0d1..ce6f78f 100644
      ]
    );
  
-@@ -234,8 +273,8 @@ export const RulerPicker = ({
+@@ -234,8 +286,8 @@ export const RulerPicker = ({
      (event: NativeSyntheticEvent<NativeScrollEvent>) => {
        const newStep = calculateCurrentValue(
          event.nativeEvent.contentOffset.x || event.nativeEvent.contentOffset.y,
@@ -286,7 +301,7 @@ index 8d1f0d1..ce6f78f 100644
          min,
          max,
          step,
-@@ -250,8 +289,7 @@ export const RulerPicker = ({
+@@ -250,113 +302,78 @@ export const RulerPicker = ({
      },
      [
        fractionDigits,
@@ -296,17 +311,26 @@ index 8d1f0d1..ce6f78f 100644
        max,
        min,
        onValueChangeEnd,
-@@ -259,104 +297,66 @@ export const RulerPicker = ({
+       step,
      ]
    );
-   function onContentSizeChange() {
+-  function onContentSizeChange() {
 -    const initialIndex = Math.floor((initialValue - min) / step);
-+    const initialIndex = Math.round((initialValue - min) / step);
-     listRef.current?.scrollToOffset({
+-    listRef.current?.scrollToOffset({
 -      offset: initialIndex * (stepWidth + gapBetweenSteps),
-+      offset: initialIndex * itemWidth,
-       animated: false,
-     });
+-      animated: false,
+-    });
++  // `initialScrollIndex` makes the list render its first batch around the
++  // starting value; this one-off correction then lands it exactly (the side
++  // spacing means the target step sits mid-screen, not at the left edge).
++  // Only once, so later re-layouts can't snap the picker back.
++  function onContentSizeChange(contentWidth: number) {
++    if (hasScrolledToInitial.current) return;
++    const offset = initialIndex * itemWidth;
++    // Wait until the content is wide enough, or the scroll gets clamped short.
++    if (contentWidth < offset + width) return;
++    hasScrolledToInitial.current = true;
++    listRef.current?.scrollToOffset({ offset, animated: false });
    }
  
 +  const listHeight =
@@ -393,6 +417,8 @@ index 8d1f0d1..ce6f78f 100644
 -            >
 -              {unit}
 -            </Text>
+-          )}
+-        </View>
 +    <View style={{ width }}>
 +      {/* Value sits above the steps instead of floating over them. */}
 +      <View pointerEvents="none" style={styles.displayTextContainer}>
@@ -418,10 +444,8 @@ index 8d1f0d1..ce6f78f 100644
 +          ListFooterComponent={renderSeparator}
 +          onScroll={scrollHandler}
 +          onMomentumScrollEnd={onMomentumScrollEnd}
-+          snapToOffsets={arrData.map(
-+            (_, index) => index * itemWidth
-           )}
--        </View>
++          snapToOffsets={snapOffsets}
++          initialScrollIndex={initialIndex}
 +          onContentSizeChange={onContentSizeChange}
 +          snapToAlignment="start"
 +          decelerationRate={decelerationRate}
@@ -453,7 +477,7 @@ index 8d1f0d1..ce6f78f 100644
          />
        </View>
      </View>
-@@ -364,17 +364,12 @@ export const RulerPicker = ({
+@@ -364,17 +381,12 @@ export const RulerPicker = ({
  };
  
  const styles = StyleSheet.create({
