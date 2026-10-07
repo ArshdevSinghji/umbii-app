@@ -15,7 +15,10 @@ export interface IWeightJournal {
 }
 
 export interface WeightJournalState {
+  // List fetch only — drives the initial skeleton.
   isLoading: boolean;
+  // Create / update / delete — drives sheet buttons, never the skeleton.
+  isSaving: boolean;
   listWeightJournals: IWeightJournal[];
   selectedWeightJournal: IWeightJournal | null;
 }

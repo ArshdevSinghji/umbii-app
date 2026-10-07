@@ -7,12 +7,23 @@ import { updateWeightJournalAction } from "./update-weight-journal/update-weight
 
 export function useWeightJournalsActionsHook() {
   const dispatch = useAppDispatch();
-  const { listWeightJournals, selectedWeightJournal, isLoading } = useAppSelector(
+  const { listWeightJournals, selectedWeightJournal, isLoading, isSaving } = useAppSelector(
     (state) => state.weightJournalsSlice,
   );
 
-  const fetchWeightJournals = async (userId: number) => {
-    await dispatch(listWeightJournalsAction({ userId })).unwrap();
+  const fetchWeightJournals = async (
+    userId: number,
+    params?: { startDate?: string; endDate?: string },
+  ) => {
+    await dispatch(
+      listWeightJournalsAction({
+        userId,
+        params: {
+          "dateRange.startDate": params?.startDate,
+          "dateRange.endDate": params?.endDate,
+        },
+      }),
+    ).unwrap();
   };
 
   const createWeightJournal = async (userId: number, currentWeight: string, targetWeight: string) => {
@@ -38,6 +49,7 @@ export function useWeightJournalsActionsHook() {
 
   return {
     isLoading,
+    isSaving,
     listWeightJournals,
     selectedWeightJournal,
     fetchWeightJournals,

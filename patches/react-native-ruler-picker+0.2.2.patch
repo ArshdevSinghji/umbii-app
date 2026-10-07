@@ -1,0 +1,647 @@
+diff --git a/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPicker.d.ts b/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPicker.d.ts
+index c756239..e888ba7 100644
+--- a/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPicker.d.ts
++++ b/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPicker.d.ts
+@@ -1,6 +1,6 @@
+ import { TextStyle } from 'react-native';
+ import { RulerPickerItemProps } from './RulerPickerItem';
+-export type RulerPickerTextProps = Pick<TextStyle, 'color' | 'fontSize' | 'fontWeight'>;
++export type RulerPickerTextProps = Pick<TextStyle, 'color' | 'fontSize' | 'fontWeight' | 'fontFamily'>;
+ export type RulerPickerProps = {
+     /**
+      * Width of the ruler picker
+@@ -8,8 +8,8 @@ export type RulerPickerProps = {
+      */
+     width?: number;
+     /**
+-     * Height of the ruler picker
+-     * @default 500
++     * @deprecated Ignored. The picker sizes itself from the value text,
++     * step heights and labels.
+      */
+     height?: number;
+     /**
+@@ -54,6 +54,12 @@ export type RulerPickerProps = {
+      * @default 80
+      */
+     indicatorHeight?: number;
++    /**
++     * Width of the indicator
++     *
++     * @default stepWidth
++     */
++    indicatorWidth?: number;
+     /**
+      * Color of the center line
+      *
+@@ -94,5 +100,5 @@ export type RulerPickerProps = {
+      */
+     onValueChangeEnd?: (value: string) => void;
+ } & Partial<RulerPickerItemProps>;
+-export declare const RulerPicker: ({ width, height, min, max, step, initialValue, fractionDigits, unit, indicatorHeight, gapBetweenSteps, shortStepHeight, longStepHeight, stepWidth, indicatorColor, shortStepColor, longStepColor, valueTextStyle, unitTextStyle, decelerationRate, onValueChange, onValueChangeEnd, }: RulerPickerProps) => JSX.Element;
++export declare const RulerPicker: ({ width, min, max, step, initialValue, fractionDigits, unit, indicatorHeight, gapBetweenSteps, shortStepHeight, longStepHeight, stepWidth, indicatorWidth, indicatorColor, shortStepColor, longStepColor, longStepEvery, stepAlignment, showLabels, labelTextStyle, labelFractionDigits, valueTextStyle, unitTextStyle, decelerationRate, onValueChange, onValueChangeEnd, }: RulerPickerProps) => JSX.Element;
+ //# sourceMappingURL=RulerPicker.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts b/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts
+index eed0f9e..a7bcdf7 100644
+--- a/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts
++++ b/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts
+@@ -1,4 +1,6 @@
+ import React from 'react';
++import { TextStyle } from 'react-native';
++export type RulerPickerLabelTextProps = Pick<TextStyle, 'color' | 'fontSize' | 'fontWeight' | 'fontFamily'>;
+ export type RulerPickerItemProps = {
+     /**
+      * Gap between steps
+@@ -36,11 +38,46 @@ export type RulerPickerItemProps = {
+      * @default 'gray'
+      */
+     longStepColor: string;
++    /**
++     * Every how many steps a long step is drawn (counted from `min`)
++     *
++     * @default 10
++     */
++    longStepEvery: number;
++    /**
++     * Which edge the steps grow from: 'top' hangs them from the top,
++     * 'bottom' stands them on a shared baseline.
++     *
++     * @default 'bottom'
++     */
++    stepAlignment: 'top' | 'bottom';
++    /**
++     * Show the value under every long step
++     *
++     * @default false
++     */
++    showLabels: boolean;
++    /**
++     * Text style of the labels under long steps
++     */
++    labelTextStyle?: RulerPickerLabelTextProps;
++    /**
++     * Number of digits after the decimal point in labels
++     *
++     * @default 0
++     */
++    labelFractionDigits: number;
+ };
++export declare const LABEL_GAP = 6;
++export declare const LABEL_WIDTH = 48;
++export declare const getLabelHeight: (labelTextStyle?: RulerPickerLabelTextProps) => number;
+ type Props = {
+     index: number;
+     isLast: boolean;
++    min: number;
++    step: number;
++    itemWidth: number;
+ } & RulerPickerItemProps;
+-export declare const RulerPickerItem: React.MemoExoticComponent<({ isLast, index, gapBetweenSteps, shortStepHeight, longStepHeight, stepWidth, shortStepColor, longStepColor, }: Props) => JSX.Element>;
++export declare const RulerPickerItem: React.MemoExoticComponent<({ index, min, step, itemWidth, shortStepHeight, longStepHeight, stepWidth, shortStepColor, longStepColor, longStepEvery, stepAlignment, showLabels, labelTextStyle, labelFractionDigits, }: Props) => JSX.Element>;
+ export {};
+ //# sourceMappingURL=RulerPickerItem.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx b/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
+index 8d1f0d1..116da43 100644
+--- a/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
++++ b/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
+@@ -1,6 +1,7 @@
+-import React, { useCallback, useEffect, useRef } from 'react';
++import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+ import {
+   Dimensions,
++  PixelRatio,
+   StyleSheet,
+   TextStyle,
+   View,
+@@ -12,16 +13,20 @@ import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+ 
+ import {
+   AnimatedFlashList,
+-  FlashList,
++  FlashListRef,
+   ListRenderItem,
+ } from '@shopify/flash-list';
+ 
+-import { RulerPickerItem, RulerPickerItemProps } from './RulerPickerItem';
++import {
++  RulerPickerItem,
++  RulerPickerItemProps,
++  getLabelHeight,
++} from './RulerPickerItem';
+ import { calculateCurrentValue } from '../utils/';
+ 
+ export type RulerPickerTextProps = Pick<
+   TextStyle,
+-  'color' | 'fontSize' | 'fontWeight'
++  'color' | 'fontSize' | 'fontWeight' | 'fontFamily'
+ >;
+ 
+ const { width: windowWidth } = Dimensions.get('window');
+@@ -33,8 +38,8 @@ export type RulerPickerProps = {
+    */
+   width?: number;
+   /**
+-   * Height of the ruler picker
+-   * @default 500
++   * @deprecated Ignored. The picker sizes itself from the value text,
++   * step heights and labels.
+    */
+   height?: number;
+   /**
+@@ -79,6 +84,12 @@ export type RulerPickerProps = {
+    * @default 80
+    */
+   indicatorHeight?: number;
++  /**
++   * Width of the indicator
++   *
++   * @default stepWidth
++   */
++  indicatorWidth?: number;
+   /**
+    * Color of the center line
+    *
+@@ -122,7 +133,6 @@ export type RulerPickerProps = {
+ 
+ export const RulerPicker = ({
+   width = windowWidth,
+-  height = 500,
+   min,
+   max,
+   step = 1,
+@@ -134,18 +144,44 @@ export const RulerPicker = ({
+   shortStepHeight = 20,
+   longStepHeight = 40,
+   stepWidth = 2,
++  indicatorWidth = stepWidth,
+   indicatorColor = 'black',
+   shortStepColor = 'lightgray',
+   longStepColor = 'darkgray',
++  longStepEvery = 10,
++  stepAlignment = 'bottom',
++  showLabels = false,
++  labelTextStyle,
++  labelFractionDigits = 0,
+   valueTextStyle,
+   unitTextStyle,
+   decelerationRate = 'normal',
+   onValueChange,
+   onValueChangeEnd,
+ }: RulerPickerProps) => {
+-  const itemAmount = (max - min) / step;
+-  const arrData = Array.from({ length: itemAmount + 1 }, (_, index) => index);
+-  const listRef = useRef<FlashList<typeof arrData>>(null);
++  // Each step owns a slot snapped to whole device pixels. Unrounded slots
++  // (e.g. 1 + 6 = 7dp on a 2.625x screen) get rounded per item by the list,
++  // and that error accumulates across hundreds of steps.
++  const itemWidth = PixelRatio.roundToNearestPixel(stepWidth + gapBetweenSteps);
++  const sideSpacing = PixelRatio.roundToNearestPixel(width / 2 - itemWidth / 2);
++
++  // Round, not floor: (74 - 30) / 0.1 is 439.999... in floating point.
++  const itemAmount = Math.round((max - min) / step);
++  const arrData = useMemo(
++    () => Array.from({ length: itemAmount + 1 }, (_, index) => index),
++    [itemAmount]
++  );
++  const snapOffsets = useMemo(
++    () => arrData.map((index) => index * itemWidth),
++    [arrData, itemWidth]
++  );
++
++  const initialIndex = Math.min(
++    itemAmount,
++    Math.max(0, Math.round((initialValue - min) / step))
++  );
++  const hasScrolledToInitial = useRef(false);
++  const listRef = useRef<FlashListRef<number>>(null);
+ 
+   const stepTextRef = useRef<TextInput>(null);
+   const prevValue = useRef<string>(initialValue.toFixed(fractionDigits));
+@@ -158,8 +194,8 @@ export const RulerPicker = ({
+     ({ value }) => {
+       const newStep = calculateCurrentValue(
+         value,
+-        stepWidth,
+-        gapBetweenSteps,
++        itemWidth,
++        0,
+         min,
+         max,
+         step,
+@@ -173,7 +209,7 @@ export const RulerPicker = ({
+ 
+       prevValue.current = newStep;
+     },
+-    [fractionDigits, gapBetweenSteps, stepWidth, max, min, onValueChange, step]
++    [fractionDigits, itemWidth, max, min, onValueChange, step]
+   );
+ 
+   useEffect(() => {
+@@ -200,8 +236,8 @@ export const RulerPicker = ({
+   );
+ 
+   const renderSeparator = useCallback(
+-    () => <View style={{ width: width * 0.5 - stepWidth * 0.5 }} />,
+-    [stepWidth, width]
++    () => <View style={{ width: sideSpacing }} />,
++    [sideSpacing]
+   );
+ 
+   const renderItem: ListRenderItem<unknown> = useCallback(
+@@ -210,23 +246,39 @@ export const RulerPicker = ({
+         <RulerPickerItem
+           isLast={index === arrData.length - 1}
+           index={index}
++          min={min}
++          step={step}
+           shortStepHeight={shortStepHeight}
+           longStepHeight={longStepHeight}
+           gapBetweenSteps={gapBetweenSteps}
+           stepWidth={stepWidth}
++          itemWidth={itemWidth}
+           shortStepColor={shortStepColor}
+           longStepColor={longStepColor}
++          longStepEvery={longStepEvery}
++          stepAlignment={stepAlignment}
++          showLabels={showLabels}
++          labelTextStyle={labelTextStyle}
++          labelFractionDigits={labelFractionDigits}
+         />
+       );
+     },
+     [
+       arrData.length,
++      min,
++      step,
+       gapBetweenSteps,
+       stepWidth,
++      itemWidth,
+       longStepColor,
+       longStepHeight,
+       shortStepColor,
+       shortStepHeight,
++      longStepEvery,
++      stepAlignment,
++      showLabels,
++      labelTextStyle,
++      labelFractionDigits,
+     ]
+   );
+ 
+@@ -234,8 +286,8 @@ export const RulerPicker = ({
+     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+       const newStep = calculateCurrentValue(
+         event.nativeEvent.contentOffset.x || event.nativeEvent.contentOffset.y,
+-        stepWidth,
+-        gapBetweenSteps,
++        itemWidth,
++        0,
+         min,
+         max,
+         step,
+@@ -250,113 +302,78 @@ export const RulerPicker = ({
+     },
+     [
+       fractionDigits,
+-      gapBetweenSteps,
+-      stepWidth,
++      itemWidth,
+       max,
+       min,
+       onValueChangeEnd,
+       step,
+     ]
+   );
+-  function onContentSizeChange() {
+-    const initialIndex = Math.floor((initialValue - min) / step);
+-    listRef.current?.scrollToOffset({
+-      offset: initialIndex * (stepWidth + gapBetweenSteps),
+-      animated: false,
+-    });
++  // `initialScrollIndex` makes the list render its first batch around the
++  // starting value; this one-off correction then lands it exactly (the side
++  // spacing means the target step sits mid-screen, not at the left edge).
++  // Only once, so later re-layouts can't snap the picker back.
++  function onContentSizeChange(contentWidth: number) {
++    if (hasScrolledToInitial.current) return;
++    const offset = initialIndex * itemWidth;
++    // Wait until the content is wide enough, or the scroll gets clamped short.
++    if (contentWidth < offset + width) return;
++    hasScrolledToInitial.current = true;
++    listRef.current?.scrollToOffset({ offset, animated: false });
+   }
+ 
++  const listHeight =
++    longStepHeight + (showLabels ? getLabelHeight(labelTextStyle) : 0);
++
+   return (
+-    <View style={{ width, height }}>
+-      <AnimatedFlashList
+-        ref={listRef}
+-        data={arrData}
+-        keyExtractor={(_, index) => index.toString()}
+-        renderItem={renderItem}
+-        ListHeaderComponent={renderSeparator}
+-        ListFooterComponent={renderSeparator}
+-        onScroll={scrollHandler}
+-        onMomentumScrollEnd={onMomentumScrollEnd}
+-        estimatedItemSize={stepWidth + gapBetweenSteps}
+-        snapToOffsets={arrData.map(
+-          (_, index) => index * (stepWidth + gapBetweenSteps)
+-        )}
+-        onContentSizeChange={onContentSizeChange}
+-        snapToAlignment="start"
+-        decelerationRate={decelerationRate}
+-        estimatedFirstItemOffset={0}
+-        scrollEventThrottle={16}
+-        showsHorizontalScrollIndicator={false}
+-        showsVerticalScrollIndicator={false}
+-        horizontal
+-      />
+-      <View
+-        pointerEvents="none"
+-        style={[
+-          styles.indicator,
+-          {
+-            transform: [
+-              { translateX: -stepWidth * 0.5 },
+-              {
+-                translateY:
+-                  -indicatorHeight * 0.5 -
+-                  (valueTextStyle?.fontSize ?? styles.valueText.fontSize),
+-              },
+-            ],
+-            left: stepWidth * 0.5,
+-          },
+-        ]}
+-      >
+-        <View
+-          style={[
+-            styles.displayTextContainer,
+-            {
+-              height: valueTextStyle?.fontSize ?? styles.valueText.fontSize,
+-              transform: [
+-                {
+-                  translateY:
+-                    -(valueTextStyle?.fontSize ?? styles.valueText.fontSize) *
+-                    0.5,
+-                },
+-              ],
+-            },
+-          ]}
+-        >
+-          <TextInput
+-            ref={stepTextRef}
+-            defaultValue={initialValue.toFixed(fractionDigits)}
+-            style={[
+-              {
+-                lineHeight:
+-                  valueTextStyle?.fontSize ?? styles.valueText.fontSize,
+-              },
+-              styles.valueText,
+-              valueTextStyle,
+-            ]}
+-          />
+-          {unit && (
+-            <Text
+-              style={[
+-                {
+-                  lineHeight:
+-                    unitTextStyle?.fontSize ?? styles.unitText.fontSize,
+-                },
+-                styles.unitText,
+-                unitTextStyle,
+-              ]}
+-            >
+-              {unit}
+-            </Text>
+-          )}
+-        </View>
++    <View style={{ width }}>
++      {/* Value sits above the steps instead of floating over them. */}
++      <View pointerEvents="none" style={styles.displayTextContainer}>
++        <TextInput
++          ref={stepTextRef}
++          editable={false}
++          defaultValue={initialValue.toFixed(fractionDigits)}
++          style={[styles.valueText, valueTextStyle]}
++        />
++        {unit ? (
++          <Text style={[styles.unitText, unitTextStyle]}>{unit}</Text>
++        ) : null}
++      </View>
++
++      <View style={{ height: listHeight }}>
++        <AnimatedFlashList
++          // @ts-expect-error Animated wrapper types the ref as a class component.
++          ref={listRef}
++          data={arrData}
++          keyExtractor={(_, index) => index.toString()}
++          renderItem={renderItem}
++          ListHeaderComponent={renderSeparator}
++          ListFooterComponent={renderSeparator}
++          onScroll={scrollHandler}
++          onMomentumScrollEnd={onMomentumScrollEnd}
++          snapToOffsets={snapOffsets}
++          initialScrollIndex={initialIndex}
++          onContentSizeChange={onContentSizeChange}
++          snapToAlignment="start"
++          decelerationRate={decelerationRate}
++          scrollEventThrottle={16}
++          showsHorizontalScrollIndicator={false}
++          showsVerticalScrollIndicator={false}
++          horizontal
++        />
++        {/* Centred across the long steps. */}
+         <View
+-          style={[
+-            {
+-              width: stepWidth,
+-              height: indicatorHeight,
+-              backgroundColor: indicatorColor,
+-            },
+-          ]}
++          pointerEvents="none"
++          style={{
++            position: 'absolute',
++            // Centre of the step under it, not the raw screen centre.
++            left: sideSpacing + itemWidth / 2 - indicatorWidth / 2,
++            top: (longStepHeight - indicatorHeight) / 2,
++            width: indicatorWidth,
++            height: indicatorHeight,
++            borderRadius: indicatorWidth / 2,
++            backgroundColor: indicatorColor,
++          }}
+         />
+       </View>
+     </View>
+@@ -364,17 +381,12 @@ export const RulerPicker = ({
+ };
+ 
+ const styles = StyleSheet.create({
+-  indicator: {
+-    position: 'absolute',
+-    top: '50%',
+-    width: '100%',
+-    alignItems: 'center',
+-  },
+   displayTextContainer: {
+     width: '100%',
+     flexDirection: 'row',
+     alignItems: 'center',
+     justifyContent: 'center',
++    marginBottom: 12,
+   },
+   valueText: {
+     color: 'black',
+diff --git a/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx b/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx
+index e95a6d7..8f939d3 100644
+--- a/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx
++++ b/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx
+@@ -1,6 +1,11 @@
+ /* eslint-disable react-native/no-inline-styles */
+ import React from 'react';
+-import { View } from 'react-native';
++import { Text, TextStyle, View } from 'react-native';
++
++export type RulerPickerLabelTextProps = Pick<
++  TextStyle,
++  'color' | 'fontSize' | 'fontWeight' | 'fontFamily'
++>;
+ 
+ export type RulerPickerItemProps = {
+   /**
+@@ -39,49 +44,111 @@ export type RulerPickerItemProps = {
+    * @default 'gray'
+    */
+   longStepColor: string;
++  /**
++   * Every how many steps a long step is drawn (counted from `min`)
++   *
++   * @default 10
++   */
++  longStepEvery: number;
++  /**
++   * Which edge the steps grow from: 'top' hangs them from the top,
++   * 'bottom' stands them on a shared baseline.
++   *
++   * @default 'bottom'
++   */
++  stepAlignment: 'top' | 'bottom';
++  /**
++   * Show the value under every long step
++   *
++   * @default false
++   */
++  showLabels: boolean;
++  /**
++   * Text style of the labels under long steps
++   */
++  labelTextStyle?: RulerPickerLabelTextProps;
++  /**
++   * Number of digits after the decimal point in labels
++   *
++   * @default 0
++   */
++  labelFractionDigits: number;
+ };
+ 
++export const LABEL_GAP = 6;
++export const LABEL_WIDTH = 48;
++const DEFAULT_LABEL_FONT_SIZE = 12;
++
++export const getLabelHeight = (labelTextStyle?: RulerPickerLabelTextProps) =>
++  LABEL_GAP + (labelTextStyle?.fontSize ?? DEFAULT_LABEL_FONT_SIZE) * 1.4;
++
+ type Props = {
+   index: number;
+   isLast: boolean;
++  min: number;
++  step: number;
++  // Pixel-snapped slot (step + gap) each step is centred in.
++  itemWidth: number;
+ } & RulerPickerItemProps;
+ 
+ export const RulerPickerItem = React.memo(
+   ({
+-    isLast,
+     index,
+-    gapBetweenSteps,
++    min,
++    step,
++    itemWidth,
+     shortStepHeight,
+     longStepHeight,
+     stepWidth,
+     shortStepColor,
+     longStepColor,
++    longStepEvery,
++    stepAlignment,
++    showLabels,
++    labelTextStyle,
++    labelFractionDigits,
+   }: Props) => {
+-    const isLong = index % 10 === 0;
++    const isLong = index % longStepEvery === 0;
+     const height = isLong ? longStepHeight : shortStepHeight;
+ 
+     return (
+       <View
+-        style={[
+-          {
+-            width: stepWidth,
+-            height: '100%',
+-            justifyContent: 'center',
+-            marginRight: isLast ? 0 : gapBetweenSteps,
+-            marginTop: shortStepHeight,
+-          },
+-        ]}
++        style={{
++          // Fixed size so layout doesn't depend on the list's cell sizing.
++          width: itemWidth,
++          height:
++            longStepHeight + (showLabels ? getLabelHeight(labelTextStyle) : 0),
++          alignItems: 'center',
++        }}
+       >
+         <View
+-          style={[
+-            {
+-              width: '100%',
+-              height: height,
+-              backgroundColor: isLong ? longStepColor : shortStepColor,
+-              marginTop: isLong ? 0 : shortStepHeight,
+-            },
+-          ]}
++          style={{
++            width: stepWidth,
++            height,
++            marginTop: stepAlignment === 'top' ? 0 : longStepHeight - height,
++            backgroundColor: isLong ? longStepColor : shortStepColor,
++            borderRadius: stepWidth / 2,
++          }}
+         />
++        {showLabels && isLong && (
++          <Text
++            numberOfLines={1}
++            style={[
++              {
++                position: 'absolute',
++                top: longStepHeight + LABEL_GAP,
++                left: (itemWidth - LABEL_WIDTH) / 2,
++                width: LABEL_WIDTH,
++                textAlign: 'center',
++                fontSize: DEFAULT_LABEL_FONT_SIZE,
++                color: 'gray',
++              },
++              labelTextStyle,
++            ]}
++          >
++            {(min + index * step).toFixed(labelFractionDigits)}
++          </Text>
++        )}
+       </View>
+     );
+   }

@@ -8,6 +8,7 @@ import { WeightJournalState } from "./weight-journals.types";
 
 const initialState: WeightJournalState = {
   isLoading: false,
+  isSaving: false,
   listWeightJournals: [],
   selectedWeightJournal: null,
 };
@@ -29,14 +30,15 @@ const weightJournalsSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(createWeightJournalAction.pending, (state) => {
-        state.isLoading = true;
+        state.isSaving = true;
       })
       .addCase(createWeightJournalAction.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.listWeightJournals.push(action.payload);
+        state.isSaving = false;
+        // List is newest first.
+        state.listWeightJournals.unshift(action.payload);
       })
       .addCase(createWeightJournalAction.rejected, (state) => {
-        state.isLoading = false;
+        state.isSaving = false;
       })
       .addCase(getWeightJournalAction.pending, (state) => {
         state.isLoading = true;
@@ -49,23 +51,23 @@ const weightJournalsSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(updateWeightJournalAction.pending, (state) => {
-        state.isLoading = true;
+        state.isSaving = true;
       })
       .addCase(updateWeightJournalAction.fulfilled, (state, action) => {
-        state.isLoading = false;
+        state.isSaving = false;
         state.selectedWeightJournal = action.payload;
         state.listWeightJournals = state.listWeightJournals.map((entry) =>
           entry.id === action.payload.id ? action.payload : entry,
         );
       })
       .addCase(updateWeightJournalAction.rejected, (state) => {
-        state.isLoading = false;
+        state.isSaving = false;
       })
       .addCase(deleteWeightJournalAction.pending, (state) => {
-        state.isLoading = true;
+        state.isSaving = true;
       })
       .addCase(deleteWeightJournalAction.fulfilled, (state, action) => {
-        state.isLoading = false;
+        state.isSaving = false;
         state.listWeightJournals = state.listWeightJournals.filter(
           (entry) => entry.id !== action.payload,
         );
@@ -74,7 +76,7 @@ const weightJournalsSlice = createSlice({
         }
       })
       .addCase(deleteWeightJournalAction.rejected, (state) => {
-        state.isLoading = false;
+        state.isSaving = false;
       });
   },
 });
