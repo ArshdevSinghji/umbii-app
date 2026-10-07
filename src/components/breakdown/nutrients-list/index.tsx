@@ -1,8 +1,15 @@
 import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { NutritionValues } from "@/features/food-logs/food-logs.types";
 import { THEME } from "@/lib/theme";
+import {
+  NutrientGoal,
+  calculateHealthScore,
+  scoreNutrient,
+} from "@/utils/calculate-health-score";
 import { Activity, Candy, Salad, Wheat } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
+import HealthScore from "./health-score";
 import NutrientRow from "./nutrient-row";
 
 interface IProps {
@@ -17,14 +24,22 @@ export default function NutrientsList({ consumed, target }: IProps) {
   const netCarbs = Math.max(0, consumed.carbs - consumed.fiber);
   const netCarbsTarget = Math.max(0, target.carbs - target.fiber);
 
-  const nutrients = [
+  const nutrients: {
+    key: string;
+    label: string;
+    value: number;
+    target: number;
+    unit: string;
+    goal: NutrientGoal;
+    icon: React.ReactNode;
+  }[] = [
     {
       key: "fiber",
       label: "Fiber",
       value: consumed.fiber,
       target: target.fiber,
       unit: "g",
-      isGood: consumed.fiber >= target.fiber,
+      goal: "min",
       icon: <Salad size={16} color={theme.foreground} />,
     },
     {
@@ -33,7 +48,7 @@ export default function NutrientsList({ consumed, target }: IProps) {
       value: netCarbs,
       target: netCarbsTarget,
       unit: "g",
-      isGood: netCarbs <= netCarbsTarget || netCarbsTarget === 0,
+      goal: "max",
       icon: <Wheat size={16} color={theme.foreground} />,
     },
     {
@@ -42,7 +57,7 @@ export default function NutrientsList({ consumed, target }: IProps) {
       value: consumed.sugar,
       target: target.sugar,
       unit: "g",
-      isGood: consumed.sugar <= target.sugar || target.sugar === 0,
+      goal: "max",
       icon: <Candy size={16} color={theme.foreground} />,
     },
     {
@@ -51,15 +66,28 @@ export default function NutrientsList({ consumed, target }: IProps) {
       value: consumed.sodium,
       target: target.sodium,
       unit: "mg",
-      isGood: consumed.sodium <= target.sodium || target.sodium === 0,
+      goal: "max",
       icon: <Activity size={16} color={theme.foreground} />,
     },
   ];
 
+  // Nothing logged → no score, rather than a misleading one.
+  const score = consumed.calories > 0 ? calculateHealthScore(nutrients) : null;
+
   return (
     <Card className="gap-2 py-4 px-4">
-      {nutrients.map(({ key, ...nutrient }) => (
-        <NutrientRow key={key} {...nutrient} />
+      <HealthScore score={score} />
+      <Separator className="my-1" />
+      {nutrients.map(({ key, label, value, unit, icon, ...rest }) => (
+        <NutrientRow
+          key={key}
+          label={label}
+          value={value}
+          unit={unit}
+          icon={icon}
+          // On target = full credit for this nutrient.
+          isGood={scoreNutrient({ value, ...rest }) === 1}
+        />
       ))}
     </Card>
   );

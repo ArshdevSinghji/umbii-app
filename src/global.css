@@ -41,39 +41,44 @@
     --chart-5: 27 87% 67%;
   }
 
+  /* Same cool hue (240) as light mode so both feel like one app.
+     Surfaces step up in lightness: page < card < popover/muted, so cards
+     read clearly without borders. Chart hues match light mode (each one
+     means something: protein, carbs, fats, BMI) and are only lifted in
+     lightness where needed for contrast on dark. */
   .dark:root {
-    --background: 0 0% 4%;
+    --background: 240 6% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;
+    --card: 240 5% 14%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 8%;
+    --popover: 240 5% 17%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary-foreground: 240 6% 10%;
 
-    --secondary: 0 0% 14.9%;
+    --secondary: 240 4% 19%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 240 4% 19%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 0 0% 14.9%;
+    --accent: 240 4% 22%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 70.9% 59.4%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 300 0% 45%;
+    --border: 240 4% 22%;
+    --input: 240 4% 22%;
+    --ring: 240 4% 46%;
 
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 45%;
+    --chart-3: 197 40% 55%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 }

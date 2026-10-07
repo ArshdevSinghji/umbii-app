@@ -4,6 +4,7 @@ import { NutritionValues } from "@/features/food-logs/food-logs.types";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { useAppSelector } from "@/store/hooks";
 import {
+  StatsPeriod,
   getDateRangeForPeriod,
   getDaysInRange,
 } from "@/utils/get-date-range-for-period";
@@ -11,10 +12,10 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import AdherenceCalendar from "./adherence-calendar";
 import CalorieSummary from "./calorie-summary";
+import PeriodSelect from "./calorie-summary/period-select";
 import BreakdownHeader from "./header";
 import DailyBreakdownSkeleton from "./loading";
 import NutrientsList from "./nutrients-list";
-import PeriodFilter, { StatsPeriod } from "./period-filter";
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -84,23 +85,25 @@ export default function DailyBreakdown() {
     sodium: nutritionTarget?.sodium ?? 0,
   };
 
+  const periodSelect = (
+    <PeriodSelect value={period} onChange={handlePeriodChange} />
+  );
+
   return (
     <View>
       <BreakdownHeader onCalendarPress={() => setIsCalendarVisible(true)} />
-      <PeriodFilter value={period} onChange={handlePeriodChange} />
-
-      <View className="gap-4 mt-4">
+      <View className="gap-4">
         {isLoading ? (
-          <DailyBreakdownSkeleton />
+          <DailyBreakdownSkeleton calorieAction={periodSelect} />
         ) : (
           <>
             <CalorieSummary
               dailyAverage={average.calories}
-              totalCalories={total.calories}
               caloriesTarget={target.calories}
               protein={average.protein}
               carbs={average.carbs}
               fats={average.fats}
+              action={periodSelect}
             />
             <NutrientsList consumed={average} target={target} />
           </>

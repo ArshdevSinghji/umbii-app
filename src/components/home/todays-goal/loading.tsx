@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { View } from "react-native";
+import GoalProgress from "./goal-progress";
 
 export default function TodaysGoalSkeleton() {
   return (
@@ -25,25 +26,17 @@ export default function TodaysGoalSkeleton() {
 
       <Separator />
 
-      {/* Goal Progress Cards */}
-      <View className="flex-row justify-between px-4">
-        {[1, 2, 3].map((item) => (
-          <View
-            key={item}
-            className="items-center gap-2"
-          >
-            {/* Icon */}
-            <Skeleton className="h-7 w-7 rounded-full" />
-
-            {/* Percentage / Left */}
-            <Skeleton className="h-5 w-10 rounded-md" />
-
-            {/* Label */}
-            <Skeleton className="h-3 w-16 rounded-full" />
-
-            {/* Progress bar */}
-            <Skeleton className="h-2 w-14 rounded-full" />
-          </View>
+      {/* Same tiles as the loaded state, so nothing moves when data lands. */}
+      <View className="flex-row gap-2">
+        {["Protein", "Carbs", "Fat"].map((name) => (
+          <GoalProgress
+            key={name}
+            isLoading
+            name={name}
+            value={0}
+            color="transparent"
+            icon={null}
+          />
         ))}
       </View>
     </Card>

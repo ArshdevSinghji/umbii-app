@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import AdherenceDay from "./adherence-day";
-import AdherenceCalendarSkeleton from "./loading";
+import AdherenceDaySkeleton from "./adherence-day/loading";
 
 interface IProps {
   visible: boolean;
@@ -37,14 +37,10 @@ export default function AdherenceCalendar({
   const theme = THEME[colorScheme ?? "light"];
 
   const { user } = useAppSelector((state) => state.userSlice);
-  const {
-    report,
-    isReportLoading,
-    fetchNutritionTargetReport,
-  } = useNutritionTargetActionsHook();
+  const { report, isReportLoading, fetchNutritionTargetReport } =
+    useNutritionTargetActionsHook();
 
   const [visibleMonth, setVisibleMonth] = useState(() => TODAY.slice(0, 7));
-  const [minDate, setMinDate] = useState<string | undefined>(undefined);
 
   const { startDate, endDate } = getMonthDateRange(visibleMonth);
 
@@ -53,30 +49,12 @@ export default function AdherenceCalendar({
     fetchNutritionTargetReport(user.id, { startDate, endDate });
   }, [user.id, startDate, endDate]);
 
-  // The report only ever contains entries for days the account has existed.
-  // If this month's earliest entry isn't the 1st, that's the account's
-  // first month — lock the calendar from going back any further.
-  useEffect(() => {
-    if (!report) return;
-
-    const earliestInMonth = [
-      ...report.completedDates,
-      ...report.notCompleteDates,
-      ...report.missedDates,
-    ].sort()[0];
-    const firstOfMonth = `${visibleMonth}-01`;
-
-    if (earliestInMonth && earliestInMonth !== firstOfMonth) {
-      setMinDate((prev) =>
-        prev && prev < earliestInMonth ? prev : earliestInMonth,
-      );
-    }
-  }, [report, visibleMonth]);
+  // Before the first request starts, `report` is still null; treat that as
+  // loading too so days never flash as empty before the skeleton shows.
+  const isDaysLoading = isReportLoading || !report;
 
   const completedDates = report?.completedDates ?? [];
-  console.log("report ==> ", report);
   const notCompleteDates = report?.notCompleteDates ?? [];
-  const missedDates = report?.missedDates ?? [];
 
   const handleDayPress = (dateString: string) => {
     onSelectDate(dateString);
@@ -90,99 +68,87 @@ export default function AdherenceCalendar({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View className="flex-1">
-        <Pressable
-          className="flex-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
-          onPress={onClose}
-        />
+      {/* Dim the whole modal, not just the tap area, so the sheet's rounded
+          corners show against the overlay instead of the white page. */}
+      <View
+        className="flex-1"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+      >
+        <Pressable className="flex-1" onPress={onClose} />
 
         <View className="bg-background rounded-t-3xl overflow-hidden p-6">
-          {isReportLoading ? (
-            <AdherenceCalendarSkeleton />
-          ) : (
-            <View className="gap-4">
-              <View className="px-2">
-                <Calendar
-                  current={`${visibleMonth}-01`}
-                  onMonthChange={(month: DateData) =>
-                    setVisibleMonth(month.dateString.slice(0, 7))
+          {/* The calendar, month header, weekday row and legend always render;
+              only the day cells swap to skeletons while the report loads. */}
+          <View className="gap-4">
+            <View className="px-2">
+              <Calendar
+                current={`${visibleMonth}-01`}
+                onMonthChange={(month: DateData) =>
+                  setVisibleMonth(month.dateString.slice(0, 7))
+                }
+                maxDate={TODAY}
+                hideExtraDays={false}
+                showSixWeeks
+                enableSwipeMonths
+                dayComponent={({ date }) => {
+                  const isOutOfMonth =
+                    !date || date.dateString.slice(0, 7) !== visibleMonth;
+
+                  if (!date || isOutOfMonth) {
+                    return <View className="w-9 h-9" />;
                   }
-                  minDate={minDate}
-                  maxDate={TODAY}
-                  hideExtraDays={false}
-                  showSixWeeks
-                  enableSwipeMonths
-                  dayComponent={({ date, state }) => {
-                    const isOutOfMonth =
-                      !date || date.dateString.slice(0, 7) !== visibleMonth;
 
-                    if (!date || isOutOfMonth) {
-                      return <View className="w-9 h-9" />;
-                    }
+                  if (isDaysLoading) {
+                    return <AdherenceDaySkeleton />;
+                  }
 
-                    const isCompleted = completedDates.includes(
-                      date.dateString,
-                    );
-                    const isNotCompleted = notCompleteDates.includes(
-                      date.dateString,
-                    );
-                    // Missed days (and days we simply have no data for) show
-                    // up, but there's nothing to view — only a day with real
-                    // food-log data can be selected.
-                    const isDisabled =
-                      state === "disabled" || !(isCompleted || isNotCompleted);
+                  const isCompleted = completedDates.includes(date.dateString);
+                  const isNotCompleted = notCompleteDates.includes(
+                    date.dateString,
+                  );
+                  // Only days the report knows about have anything to show.
+                  const isDisabled = !(isCompleted || isNotCompleted);
 
-                    return (
-                      <AdherenceDay
-                        day={date.day}
-                        isSelected={date.dateString === selectedDate}
-                        isDisabled={isDisabled}
-                        isCompleted={isCompleted}
-                        isNotCompleted={isNotCompleted}
-                        isMissed={missedDates.includes(date.dateString)}
-                        onPress={() => handleDayPress(date.dateString)}
-                      />
-                    );
-                  }}
-                  theme={{
-                    backgroundColor: "transparent",
-                    calendarBackground: "transparent",
-                    monthTextColor: theme.foreground,
-                    arrowColor: theme.foreground,
-                    textSectionTitleColor: theme.mutedForeground,
-                    textDisabledColor: theme.mutedForeground,
-                  }}
-                  style={{ backgroundColor: "transparent" }}
+                  return (
+                    <AdherenceDay
+                      day={date.day}
+                      isSelected={date.dateString === selectedDate}
+                      isDisabled={isDisabled}
+                      isCompleted={isCompleted}
+                      isNotCompleted={isNotCompleted}
+                      onPress={() => handleDayPress(date.dateString)}
+                    />
+                  );
+                }}
+                theme={{
+                  backgroundColor: "transparent",
+                  calendarBackground: "transparent",
+                  monthTextColor: theme.foreground,
+                  arrowColor: theme.foreground,
+                  textSectionTitleColor: theme.mutedForeground,
+                  textDisabledColor: theme.mutedForeground,
+                }}
+                style={{ backgroundColor: "transparent" }}
+              />
+            </View>
+
+            <View className="flex-row items-center justify-center gap-4">
+              <View className="flex-row items-center gap-1.5">
+                <CircleCheck
+                  size={12}
+                  fill={theme.chart2}
+                  color={theme.primaryForeground}
                 />
+                <Text className="text-muted-foreground text-xs">Completed</Text>
               </View>
-
-              <View className="flex-row items-center justify-center gap-4">
-                <View className="flex-row items-center gap-1.5">
-                  <CircleCheck
-                    size={12}
-                    fill={theme.chart2}
-                    color={theme.primaryForeground}
-                  />
-                  <Text className="text-muted-foreground text-xs">
-                    Completed
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-1.5">
-                  <View className="w-3 h-3 rounded-full border border-dashed border-muted-foreground" />
-                  <Text className="text-muted-foreground text-xs">
-                    Incomplete
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-1.5">
-                  <View className="w-3 h-3 rounded-full bg-muted" />
-                  <Text className="text-muted-foreground text-xs">
-                    Missed
-                  </Text>
-                </View>
+              <View className="flex-row items-center gap-1.5">
+                <View className="w-3 h-3 rounded-full border border-dashed border-muted-foreground" />
+                <Text className="text-muted-foreground text-xs">
+                  Incomplete
+                </Text>
               </View>
             </View>
-          )}
+          </View>
         </View>
       </View>
     </Modal>

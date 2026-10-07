@@ -1,15 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReactNode } from "react";
 import { View } from "react-native";
 
-export default function CalorieSummarySkeleton() {
+interface IProps {
+  // Rendered for real (not as a skeleton) so it stays put and usable.
+  action?: ReactNode;
+}
+
+export default function CalorieSummarySkeleton({ action }: IProps) {
   return (
     <Card className="items-center gap-4 py-6 px-4">
-      <View className="w-full items-start gap-1.5">
-        <Skeleton className="h-8 w-20 rounded-md" />
-        <Skeleton className="h-4 w-24 rounded-full" />
-        <Skeleton className="h-3 w-28 rounded-full mt-1" />
-      </View>
+      <View className="w-full flex-row justify-end">{action}</View>
 
       <Skeleton className="h-[140px] w-[140px] rounded-full" />
 

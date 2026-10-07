@@ -67,7 +67,8 @@ export default function TodaysMeals() {
                   <CardContent className="flex-row justify-between items-center px-4">
                     <View className="flex-row gap-2">
                       <View
-                        style={{ backgroundColor: "#FFF4ED" }}
+                        // Translucent flame orange: a soft tint on light and dark cards alike.
+                        style={{ backgroundColor: "rgba(255, 90, 0, 0.12)" }}
                         className="p-1 rounded-full"
                       >
                         <Flame size={16} color="#FF5A00" fill="#FF5A00" />

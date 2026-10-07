@@ -5,13 +5,13 @@ import { CircleCheck } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 
+// Days without data look like any other day; they just can't be pressed.
 interface IProps {
   day: number;
   isSelected: boolean;
   isDisabled: boolean;
   isCompleted: boolean;
   isNotCompleted: boolean;
-  isMissed: boolean;
   onPress: () => void;
 }
 
@@ -21,7 +21,6 @@ export default function AdherenceDay({
   isDisabled,
   isCompleted,
   isNotCompleted,
-  isMissed,
   onPress,
 }: IProps) {
   const { colorScheme } = useColorScheme();
@@ -37,9 +36,7 @@ export default function AdherenceDay({
         className={cn(
           "w-8 h-8 rounded-full items-center justify-center relative",
           isSelected && "bg-primary",
-          !isSelected && isMissed && "bg-muted",
           !isSelected &&
-            !isDisabled &&
             isNotCompleted &&
             "border border-dashed border-muted-foreground",
         )}
@@ -47,17 +44,13 @@ export default function AdherenceDay({
         <Text
           className={cn(
             "text-xs font-sans-bold",
-            isSelected
-              ? "text-primary-foreground"
-              : isDisabled
-                ? "text-muted-foreground"
-                : undefined,
+            isSelected && "text-primary-foreground",
           )}
         >
           {day}
         </Text>
 
-        {!isDisabled && isCompleted && (
+        {isCompleted && (
           <View className="absolute top-0 -right-0.5">
             <CircleCheck
               size={10}

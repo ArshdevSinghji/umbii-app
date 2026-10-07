@@ -88,15 +88,13 @@ export default function TodaysGoal() {
 
       <Separator />
 
-      <View className="flex-row justify-between px-4">
+      <View className="flex-row gap-2">
         <GoalProgress
           isLoading={isNutritionTargetLoading}
-          left={Math.max(0, goal.protein - nutrition.protein)}
           value={nutrition.protein}
           max={goal.protein}
-          label="Protein left"
+          name="Protein"
           color={theme.chart1}
-          bgColor="bg-muted"
           icon={
             <Drumstick
               size={12}
@@ -108,11 +106,9 @@ export default function TodaysGoal() {
 
         <GoalProgress
           isLoading={isNutritionTargetLoading}
-          left={Math.max(0, goal.carbs - nutrition.carbs)}
           value={nutrition.carbs}
           max={goal.carbs}
-          label="Carbs left"
-          bgColor="bg-muted"
+          name="Carbs"
           color={theme.chart2}
           icon={
             <Milk size={12} color={theme.primary} fill={theme.chart2} />
@@ -121,11 +117,9 @@ export default function TodaysGoal() {
 
         <GoalProgress
           isLoading={isNutritionTargetLoading}
-          left={Math.max(0, goal.fat - nutrition.fats)}
           value={nutrition.fats}
           max={goal.fat}
-          label="Fat left"
-          bgColor="bg-muted"
+          name="Fat"
           color={theme.chart4}
           icon={<Ham size={12} color={theme.primary} fill={theme.chart4} />}
         />

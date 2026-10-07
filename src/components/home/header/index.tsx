@@ -17,7 +17,8 @@ export default function HomeDashboardHeader() {
       </View>
       <View className="mt-auto flex-row items-center gap-4">
         <View className="relative rounded-full bg-muted p-2">
-          <BellRing size={16} />
+          {/* Lucide defaults to black without a colour, invisible in dark mode. */}
+          <BellRing size={16} color={theme.foreground} />
           <View className="absolute -top-2 -right-2">
             <Dot
               strokeWidth={5}

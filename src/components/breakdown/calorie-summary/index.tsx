@@ -3,40 +3,34 @@ import { CircularProgress } from "@/components/ui/circular-progress";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
 import { useColorScheme } from "nativewind";
+import { ReactNode } from "react";
 import { View } from "react-native";
 import MacroChip from "./macro-chip";
 
 interface IProps {
   dailyAverage: number;
-  totalCalories: number;
   caloriesTarget: number;
   protein: number;
   carbs: number;
   fats: number;
+  // Top-right of the card, e.g. the period dropdown.
+  action?: ReactNode;
 }
 
 export default function CalorieSummary({
   dailyAverage,
-  totalCalories,
   caloriesTarget,
   protein,
   carbs,
   fats,
+  action,
 }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
 
   return (
     <Card className="items-center gap-4 py-6 px-4">
-      <View className="w-full items-start gap-0.5">
-        <Text className="text-3xl font-sans-bold">
-          {dailyAverage.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-        </Text>
-        <Text className="text-muted-foreground text-sm">Daily Average</Text>
-        <Text className="text-muted-foreground text-xs mt-1">
-          {totalCalories.toLocaleString(undefined, { maximumFractionDigits: 0 })} kcal total
-        </Text>
-      </View>
+      <View className="w-full flex-row justify-end">{action}</View>
 
       <CircularProgress
         value={dailyAverage}

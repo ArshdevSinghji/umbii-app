@@ -15,7 +15,7 @@ export default function WeightEmptyState({ onGetStarted }: IProps) {
   const theme = THEME[colorScheme ?? "light"];
 
   return (
-    <Card className="items-center gap-4 px-6 py-8 rounded-2xl border-0">
+    <Card className="items-center gap-4 px-6 py-8">
       <View className="p-4 rounded-full bg-muted">
         <Weight size={28} color={theme.chart2} />
       </View>

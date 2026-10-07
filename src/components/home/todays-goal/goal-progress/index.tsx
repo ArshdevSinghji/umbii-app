@@ -1,47 +1,55 @@
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
 import { View } from "react-native";
 
 interface IProps {
-  left: number;
+  // e.g. "Protein" — becomes "Protein left" or "Protein over".
+  name: string;
   value: number;
-  label: string;
   max?: number;
   color: string;
-  bgColor?: string;
   icon: React.ReactNode;
   isLoading?: boolean;
 }
 
+// Shared tile shell so the loaded and loading states are the same size.
+// Nested in a rounded-3xl card with 16px padding, so rounded-2xl keeps the
+// corners concentric. Page colour keeps the tile light against the card.
+const TILE_CLASS = "flex-1 items-center gap-3 rounded-2xl bg-background py-4";
+
 export default function GoalProgress({
-  left,
+  name,
   value,
-  label,
   max = 100,
   color,
-  bgColor = "bg-primary",
   icon,
   isLoading,
 }: IProps) {
   if (isLoading) {
     return (
-      <View className="items-center gap-3">
+      <View className={TILE_CLASS}>
         <View className="items-center gap-1">
-          <Skeleton className="h-5 w-8 rounded-md" />
-          <Text className="text-sm font-sans-bold leading-none">{label}</Text>
+          <Skeleton className="h-5 w-10 rounded-md bg-card" />
+          <Text className="text-sm font-sans-bold leading-none">{name} left</Text>
         </View>
-        <Skeleton className="h-14 w-14 rounded-full" />
+        <Skeleton className="h-14 w-14 rounded-full bg-card" />
       </View>
     );
   }
 
+  const remaining = max - value;
+  const isOver = remaining < 0;
+
   return (
-    <View className="items-center gap-3">
-      <View className="items-center">
-        <Text className="font-sans-bold">{left}g</Text>
-        <Text className="text-sm font-sans-bold leading-none">{label}</Text>
+    <View className={TILE_CLASS}>
+      <View className="items-center gap-1">
+        <Text className="font-sans-bold leading-5">
+          {Math.round(Math.abs(remaining))}g
+        </Text>
+        <Text className="text-sm font-sans-bold leading-none">
+          {name} {isOver ? "over" : "left"}
+        </Text>
       </View>
       <CircularProgress
         value={value}
@@ -50,7 +58,7 @@ export default function GoalProgress({
         strokeWidth={8}
         trackStrokeWidth={4}
       >
-        <View className={cn(bgColor, "p-1", "rounded-full")}>{icon}</View>
+        <View className="p-1 rounded-full bg-card">{icon}</View>
       </CircularProgress>
     </View>
   );

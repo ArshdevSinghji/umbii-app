@@ -23,7 +23,7 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
 
   if (!height) {
     return (
-      <Card className="gap-3 px-4 py-4 rounded-2xl border-0">
+      <Card className="gap-3 px-4 py-4">
         <Text className="font-sans-bold text-lg">Your BMI</Text>
         <Text className="text-sm text-muted-foreground">
           Add your height to see your Body Mass Index.
@@ -40,7 +40,7 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
   const color = getColor(category.label);
 
   return (
-    <Card className="gap-4 px-4 py-4 rounded-2xl border-0">
+    <Card className="gap-4 px-4 py-4">
       <View className="flex-row items-center justify-between">
         <Text className="font-sans-bold text-lg">Your BMI</Text>
         <Pressable

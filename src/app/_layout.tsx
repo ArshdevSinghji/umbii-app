@@ -1,17 +1,9 @@
-import { NAV_THEME } from "@/lib/theme";
+import AppTheme from "@/components/app-theme";
 import { useAuth } from "@/lib/use-auth";
 import StoreProvider from "@/store/store-provider";
 import { PortalHost } from "@rn-primitives/portal";
 import { useFonts } from "expo-font";
-import {
-  SplashScreen,
-  Stack,
-  ThemeProvider,
-  useRouter,
-  useSegments,
-} from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "nativewind";
+import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
@@ -21,7 +13,6 @@ import {
 import "../global.css";
 
 export default function RootLayout() {
-  const { setColorScheme } = useColorScheme();
   const router = useRouter();
   const segments = useSegments();
 
@@ -36,11 +27,10 @@ export default function RootLayout() {
 
   const appReady = (fontsLoaded || !!fontError) && !authLoading;
 
-  // splash + theme
+  // splash (theme is applied by <AppTheme /> from the saved preference)
   useEffect(() => {
     if (!appReady) return;
     SplashScreen.hideAsync();
-    setColorScheme("light");
   }, [appReady]);
 
   // route protection — single effect, single source of truth
@@ -60,11 +50,10 @@ export default function RootLayout() {
       {/* Real insets from the first frame, so screens don't jump once they arrive. */}
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <StoreProvider>
-          <ThemeProvider value={NAV_THEME["light"]}>
-            <StatusBar style="dark" />
+          <AppTheme>
             <Stack />
             <PortalHost />
-          </ThemeProvider>
+          </AppTheme>
         </StoreProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

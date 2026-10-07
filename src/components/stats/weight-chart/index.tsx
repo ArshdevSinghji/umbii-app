@@ -20,7 +20,7 @@ export default function WeightChart({ journals }: IProps) {
   const progress = getOverallProgress(journals);
 
   return (
-    <Card className="gap-4 px-4 py-4 rounded-2xl border-0">
+    <Card className="gap-4 px-4 py-4">
       <View className="gap-0.5">
         <Text className="font-sans-bold text-lg">Weight Progress</Text>
         <Text className="font-sans-bold text-2xl">

@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import Loading from "@/components/ui/loading";
+import { ActionButton } from "@/components/ui/action-button";
 import { Text } from "@/components/ui/text";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "expo-router";
@@ -128,9 +127,7 @@ export default function HealthDetailsForm({ mode }: IProps) {
         {submitError && (
           <Text className="text-center text-sm text-destructive">{submitError}</Text>
         )}
-        <Button className="h-12 rounded-full" onPress={handleSave} disabled={isSaving}>
-          <Loading isLoading={isSaving} text="Save" />
-        </Button>
+        <ActionButton label="Save" onPress={handleSave} isLoading={isSaving} />
       </View>
     </View>
   );

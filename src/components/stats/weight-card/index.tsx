@@ -17,7 +17,7 @@ export default function WeightCard({
   onActionPress,
 }: IProps) {
   return (
-    <Card className="flex-row items-center justify-between gap-4 px-4 py-4 border-0 rounded-2xl">
+    <Card className="flex-row items-center justify-between gap-4 px-4 py-4">
       <View className="gap-0.5">
         <Text className="font-sans-bold text-lg">{weight} kg</Text>
         <Text className="text-muted-foreground text-sm">{label}</Text>

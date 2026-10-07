@@ -6,18 +6,35 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePreferencesActionsHook } from "@/features/preferences/preferences.hooks";
+import { ColorSchemePreference } from "@/features/preferences/preferences.types";
 
 import { Text } from "@/components/ui/text";
 import { useAppSelector } from "@/store/hooks";
 import { getInitials } from "@/utils/get-initials";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const APPEARANCE_OPTIONS: { label: string; value: ColorSchemePreference }[] = [
+  { label: "Light", value: "light" },
+  { label: "Dark", value: "dark" },
+  { label: "System", value: "system" },
+];
+
+const isColorSchemePreference = (
+  value: string,
+): value is ColorSchemePreference =>
+  APPEARANCE_OPTIONS.some((option) => option.value === value);
+
 export function ProfileDropdown() {
   const { user } = useAppSelector((state) => state.userSlice);
   const { signOut } = useSignOut();
+  const { colorSchemePreference, updateColorScheme } =
+    usePreferencesActionsHook();
 
   const insets = useSafeAreaInsets();
   const contentInsets = {
@@ -30,10 +47,15 @@ export function ProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Avatar alt={`${user.username || "User"}'s avatar`} className="border border-border">
+        <Avatar
+          alt={`${user.username || "User"}'s avatar`}
+          className="border border-border"
+        >
           <AvatarImage
             source={{
-              uri: user.imageUrl ?? "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e53521c4600805ff88b3bb5_peep-16.png",
+              uri:
+                user.imageUrl ??
+                "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e53521c4600805ff88b3bb5_peep-16.png",
             }}
           />
           <AvatarFallback>
@@ -48,7 +70,8 @@ export function ProfileDropdown() {
         align="start"
       >
         <DropdownMenuLabel className="font-sans-bold">
-          {user.username}{'\n'}
+          {user.username}
+          {"\n"}
           <Text className="text-xs">{user.email}</Text>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -60,6 +83,22 @@ export function ProfileDropdown() {
             <Text>Billing</Text>
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          Appearance
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={colorSchemePreference}
+          onValueChange={(value) => {
+            if (isColorSchemePreference(value)) updateColorScheme(value);
+          }}
+        >
+          {APPEARANCE_OPTIONS.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value}>
+              <Text>{option.label}</Text>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onPress={signOut}>
           <Text className="text-destructive">Log out</Text>

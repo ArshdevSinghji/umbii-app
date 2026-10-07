@@ -15,11 +15,17 @@ import { foodLogsReducer } from '@/features/food-logs/food-logs.slice';
 import { nutritionTargetReducer } from '@/features/nutrition-target/nutrition-target.slice';
 import { recipesReducer } from '@/features/recipes/recipes.slice';
 import { weightJournalsReducer } from '@/features/weight-journals/weight-journals.slice';
+import { preferencesReducer } from '@/features/preferences/preferences.slice';
 
 const userPersistConfig = {
   key: 'user',
   storage: AsyncStorage,
   whitelist: ['user'], 
+}
+
+const preferencesPersistConfig = {
+  key: 'preferences',
+  storage: AsyncStorage,
 }
 
 const rootReducer = combineReducers({
@@ -28,6 +34,7 @@ const rootReducer = combineReducers({
   nutritionTargetSlice: nutritionTargetReducer,
   recipesSlice: recipesReducer,
   weightJournalsSlice: weightJournalsReducer,
+  preferencesSlice: persistReducer(preferencesPersistConfig, preferencesReducer),
 });
 
 export const store = configureStore({

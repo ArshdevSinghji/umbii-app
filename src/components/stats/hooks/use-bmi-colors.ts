@@ -4,30 +4,18 @@ import { useColorScheme } from "nativewind";
 
 type ChartColor = "chart1" | "chart2" | "chart3" | "chart4" | "chart5";
 
-// The chart palette differs per theme, so pick the key that keeps
-// the "blue -> green -> orange -> red" meaning in each one.
-const BMI_CHART_COLORS: Record<
-  "light" | "dark",
-  Record<BmiCategoryLabel, ChartColor>
-> = {
-  light: {
-    Underweight: "chart3",
-    Healthy: "chart2",
-    Overweight: "chart4",
-    Obese: "chart1",
-  },
-  dark: {
-    Underweight: "chart1",
-    Healthy: "chart2",
-    Overweight: "chart3",
-    Obese: "chart5",
-  },
+// Chart hues are the same in both themes, so one mapping keeps the
+// "blue -> green -> yellow -> red" meaning in light and dark alike.
+const BMI_CHART_COLORS: Record<BmiCategoryLabel, ChartColor> = {
+  Underweight: "chart3",
+  Healthy: "chart2",
+  Overweight: "chart4",
+  Obese: "chart1",
 };
 
 export function useBmiColors() {
   const { colorScheme } = useColorScheme();
-  const scheme = colorScheme ?? "light";
-  const theme = THEME[scheme];
+  const theme = THEME[colorScheme ?? "light"];
 
-  return (label: BmiCategoryLabel) => theme[BMI_CHART_COLORS[scheme][label]];
+  return (label: BmiCategoryLabel) => theme[BMI_CHART_COLORS[label]];
 }

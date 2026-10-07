@@ -1,4 +1,4 @@
-import type { StatsPeriod } from "@/components/breakdown/period-filter";
+export type StatsPeriod = "day" | "week" | "month" | "year";
 
 function toISODate(date: Date) {
   return date.toISOString().split("T")[0];

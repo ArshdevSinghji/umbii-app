@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/action-button";
 import { Input } from "@/components/ui/input";
-import Loading from "@/components/ui/loading";
-import { Text } from "@/components/ui/text";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { FLOATING_INPUT_BAR_BOTTOM_OFFSET } from "@/lib/floating-tab-bar";
 import { THEME } from "@/lib/theme";
@@ -126,22 +124,27 @@ export default function FoodInput() {
       <Modal
         visible={isSheetVisible}
         animationType="slide"
-        onRequestClose={() => setIsSheetVisible(false)}
+        // Can't be dismissed while the meal is being saved.
+        onRequestClose={() => !isLoading && setIsSheetVisible(false)}
         backdropColor={"rgba(0, 0, 0, 0.2)"}
       >
         <View className="flex-1 justify-end">
           <View className="bg-background rounded-t-3xl p-6 h-[500px]">
             <GenerateMealSheet foodLog={generatedFoodLogsDetails} />
-            <View className="flex-row justify-end gap-2 mt-4">
-              <Button
+            <View className="flex-row gap-2 mt-4">
+              <ActionButton
+                className="flex-1"
+                variant="outline"
+                label="Close"
                 onPress={() => setIsSheetVisible(false)}
-                variant={"outline"}
-              >
-                <Text>Close</Text>
-              </Button>
-              <Button onPress={handleSaveMeal}>
-                <Loading isLoading={isLoading} text="Save Meal" />
-              </Button>
+                disabled={isLoading}
+              />
+              <ActionButton
+                className="flex-1"
+                label="Save Meal"
+                onPress={handleSaveMeal}
+                isLoading={isLoading}
+              />
             </View>
           </View>
         </View>

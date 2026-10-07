@@ -36,16 +36,13 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
 
   const completedDates = report?.completedDates ?? [];
   const notCompleteDates = report?.notCompleteDates ?? [];
-  const missedDates = report?.missedDates ?? [];
 
   return (
     <View className="flex-row gap-1 mt-8">
       {week.map((day) => {
         const isSelected = day.fullDate === date;
         const isCompleted = completedDates.includes(day.fullDate);
-        const isNotCompleted =
-          notCompleteDates.includes(day.fullDate) ||
-          missedDates.includes(day.fullDate);
+        const isNotCompleted = notCompleteDates.includes(day.fullDate);
 
         return (
           <Pressable
@@ -53,7 +50,7 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
             key={day.date}
             className="flex-1"
           >
-            <Card className="rounded-3xl items-center gap-2 py-2 bg-muted">
+            <Card className="items-center gap-2 py-2 bg-muted">
               <Text className="text-xs font-sans-bold">{day.week}</Text>
               <View
                 className={cn(

@@ -5,7 +5,6 @@ import { View } from "react-native";
 interface IProps {
   label: string;
   value: number;
-  target: number;
   unit: string;
   isGood: boolean;
   icon: React.ReactNode;
@@ -14,7 +13,6 @@ interface IProps {
 export default function NutrientRow({
   label,
   value,
-  target,
   unit,
   isGood,
   icon,
@@ -28,11 +26,7 @@ export default function NutrientRow({
       <View className="flex-row items-center gap-2">
         <Text className="font-sans-bold">
           {value.toFixed(0)}
-          <Text className="text-muted-foreground font-sans-bold">
-            {" "}
-            / {target.toFixed(0)}
-            {unit}
-          </Text>
+          {unit}
         </Text>
         <View
           className={cn(
