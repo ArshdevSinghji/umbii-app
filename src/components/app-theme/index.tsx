@@ -2,6 +2,7 @@ import { usePreferencesActionsHook } from "@/features/preferences/preferences.ho
 import { NAV_THEME } from "@/lib/theme";
 import { ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { AppToaster } from "@/components/ui/app-toaster";
 import { useColorScheme } from "nativewind";
 import { ReactNode, useEffect } from "react";
 
@@ -26,6 +27,10 @@ export default function AppTheme({ children }: IProps) {
     <ThemeProvider value={NAV_THEME[resolved]}>
       <StatusBar style={resolved === "dark" ? "light" : "dark"} />
       {children}
+      {/* App-wide error toasts — show one with errorToast("…") from
+          ui/app-toaster. Sits inside the gesture-handler and safe-area
+          providers. */}
+      <AppToaster />
     </ThemeProvider>
   );
 }

@@ -29,10 +29,8 @@ export default function GoalProgress({
   if (isLoading) {
     return (
       <View className={TILE_CLASS}>
-        <View className="items-center gap-1">
-          <Skeleton className="h-5 w-10 rounded-md bg-card" />
-          <Text className="text-sm font-sans-bold leading-none">{name} left</Text>
-        </View>
+        <Skeleton className="h-2 w-8 rounded-full bg-card" />
+        <Skeleton className="h-3 w-12 rounded-full bg-card" />
         <Skeleton className="h-14 w-14 rounded-full bg-card" />
       </View>
     );

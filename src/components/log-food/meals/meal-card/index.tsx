@@ -1,15 +1,18 @@
+import { parseLocalDateKey } from "@/utils/date";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { THEME } from "@/lib/theme";
-import { Flame } from "lucide-react-native";
+import { BookmarkCheck } from "lucide-react-native";
+import MealMacros from "../../meal-macros";
 import { useColorScheme } from "nativewind";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 // "Today", "Yesterday", the weekday within a week, else a short date.
 const formatLoggedDay = (createdAt: string) => {
-  const date = new Date(createdAt);
+  // createdAt is a plain "yyyy-MM-dd": read it as a local date, since
+  // new Date("yyyy-MM-dd") is UTC midnight (the previous day west of UTC).
+  const date = parseLocalDateKey(createdAt.slice(0, 10));
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
@@ -25,66 +28,42 @@ const formatLoggedDay = (createdAt: string) => {
 
 interface IProps {
   log: IFoodLog;
+  // Opens the meal sheet (details, and "Save as recipe" if it isn't one).
+  onPress: (log: IFoodLog) => void;
 }
 
 // Not pressable: the food input stays in view, and calories / protein / fat
 // are right on the card to help decide what to log next.
-export default function MealCard({ log }: IProps) {
+export default function MealCard({ log, onPress }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
-  const { calories, protein, fats } = calculateNutrition(log.details);
 
   return (
-    <Card className="gap-2 px-4 py-3">
-      <View className="flex-row items-center justify-between gap-3">
-        <Text className="flex-1 text-sm font-sans-bold" numberOfLines={1}>
-          {log.rawInputText}
-        </Text>
-        <Text className="text-xs text-muted-foreground">
-          {formatLoggedDay(log.createdAt)}
-        </Text>
-      </View>
+    <Pressable onPress={() => onPress(log)} className="active:opacity-70">
+      <Card className="gap-2 px-4 py-3">
+        {/* Name, plus a check when it's saved as a recipe. */}
+        <View className="flex-row items-center justify-between gap-4">
+          <Text className="flex-1 text-sm font-sans-bold" numberOfLines={1}>
+            {log.rawInputText}
+          </Text>
+          {log.recipeId !== null && (
+            <View accessibilityLabel="Saved as recipe">
+              <BookmarkCheck
+                size={16}
+                color={theme.chart2}
+                fill={theme.chart2}
+              />
+            </View>
+          )}
+        </View>
 
-      <View className="flex-row items-center gap-3">
-        <View className="flex-row items-center gap-1.5">
-          <View
-            style={{ backgroundColor: "rgba(255, 90, 0, 0.12)" }}
-            className="rounded-full p-1"
-          >
-            <Flame size={12} color="#FF5A00" fill="#FF5A00" />
-          </View>
-          <Text className="text-xs font-sans-bold">
-            {calories.toFixed(0)} kcal
+        <View className="flex-row items-center justify-between gap-3">
+          <MealMacros details={log.details} />
+          <Text className="text-xs text-muted-foreground">
+            {formatLoggedDay(log.createdAt)}
           </Text>
         </View>
-        <Macro label="protein" grams={protein} color={theme.chart1} />
-        <Macro label="fat" grams={fats} color={theme.chart4} />
-      </View>
-    </Card>
-  );
-}
-
-function Macro({
-  label,
-  grams,
-  color,
-}: {
-  label: string;
-  grams: number;
-  color: string;
-}) {
-  return (
-    <View className="flex-row items-center gap-1">
-      <View
-        className="h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      <Text className="text-xs text-muted-foreground">
-        <Text className="text-xs font-sans-bold text-foreground">
-          {grams.toFixed(0)}g
-        </Text>{" "}
-        {label}
-      </Text>
-    </View>
+      </Card>
+    </Pressable>
   );
 }

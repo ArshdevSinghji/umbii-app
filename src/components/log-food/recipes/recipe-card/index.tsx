@@ -1,27 +1,24 @@
+import { Pressable } from "react-native";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { IRecipe } from "@/features/recipes/recipes.types";
-import { THEME } from "@/lib/theme";
-import { ChevronRight } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
-import { Pressable } from "react-native";
+import MealMacros from "../../meal-macros";
 
 interface IProps {
   recipe: IRecipe;
   onPress: (recipe: IRecipe) => void;
 }
 
+// Name plus the meal's totals, summed across its items (the API sends no
+// recipe totals). Same rows and heights as a meal card.
 export default function RecipeCard({ recipe, onPress }: IProps) {
-  const { colorScheme } = useColorScheme();
-  const theme = THEME[colorScheme ?? "light"];
-
   return (
     <Pressable onPress={() => onPress(recipe)} className="active:opacity-70">
-      <Card className="flex-row items-center justify-between gap-4 px-4 py-4">
-        <Text className="flex-1 font-sans-bold" numberOfLines={1}>
+      <Card className="gap-2 px-4 py-3">
+        <Text className="text-sm font-sans-bold" numberOfLines={1}>
           {recipe.name}
         </Text>
-        <ChevronRight size={18} color={theme.mutedForeground} />
+        <MealMacros details={recipe.details ?? []} />
       </Card>
     </Pressable>
   );

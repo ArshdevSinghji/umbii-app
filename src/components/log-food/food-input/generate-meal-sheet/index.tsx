@@ -49,7 +49,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
                   </Text>
                 </View>
                 <Text className="text-sm">
-                  {parseFloat(log.calories).toFixed(0)} Kcal
+                  {Number(log.calories).toFixed(0)} Kcal
                 </Text>
               </View>
 

@@ -10,13 +10,33 @@ export class UnauthorizedError extends Error {
   }
 }
 
+// Any non-2xx response other than 401. Keeps the status so callers can tell
+// e.g. 409 (conflict) from 404 (not found).
+export class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+  }
+}
+
 // Errors as plain data. Redux actions must be serializable, so thunks reject
 // with this (via toRequestError) instead of the Error instance itself.
-export type RequestError = { name: string; message: string };
+export type RequestError = { name: string; message: string; status?: number };
 
 export function toRequestError(error: unknown): RequestError {
+  if (error instanceof HttpError) {
+    return { name: error.name, message: error.message, status: error.status };
+  }
   if (error instanceof Error) return { name: error.name, message: error.message };
   return { name: 'Error', message: String(error) };
+}
+
+// HTTP status of a failed request (from HttpError or its plain form).
+export function getErrorStatus(error: unknown) {
+  const status = (error as { status?: unknown } | null)?.status;
+  return typeof status === 'number' ? status : undefined;
 }
 
 // Works on both the Error instance and its plain RequestError form (what
@@ -87,7 +107,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message ?? 'Something went wrong');
+    throw new HttpError(response.status, error.message ?? 'Something went wrong');
   }
 
   return response.json();

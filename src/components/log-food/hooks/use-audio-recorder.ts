@@ -25,7 +25,7 @@ export function useAudioRecorderHook() {
       if (samples.length === 0) return;
 
       const rms = Math.sqrt(
-        samples.reduce((sum, s) => sum + s * s, 0) / samples.length
+        samples.reduce((sum, s) => sum + s * s, 0) / samples.length,
       );
       audioLevelRef.current = Math.min(1, rms * 10); // boost sensitivity
     },
@@ -37,7 +37,7 @@ export function useAudioRecorderHook() {
       if (!status.granted) {
         Alert.alert(
           "Microphone Permission",
-          "Please allow microphone access in settings."
+          "Please allow microphone access in settings.",
         );
       }
     });

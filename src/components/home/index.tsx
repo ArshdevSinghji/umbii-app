@@ -6,7 +6,8 @@ import HomeDashboardHeader from "./header";
 import TodaysGoal from "./todays-goal";
 import TodaysMeals from "./todays-meals";
 import WeekDays from "./week-days";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 
 export default function HomeDashboard() {
@@ -17,11 +18,18 @@ export default function HomeDashboard() {
 
   const handleDatePress = (selectedDate: string) => setDate(selectedDate);
 
-  useEffect(() => {
-    fetchFoodLogs(user.id, { date }).catch((error) =>
-      reportRequestError("Error fetching food logs:", error),
-    );
-  }, [user.id, date]);
+  // Tabs stay mounted, so a plain useEffect wouldn't run again when you come
+  // back to Home (e.g. after logging a meal on Log Food). useFocusEffect runs
+  // on every focus, and again when the selected day changes.
+  useFocusEffect(
+    useCallback(() => {
+      if (!user.id) return;
+      fetchFoodLogs(user.id, { date }).catch((error) =>
+        reportRequestError("Error fetching food logs:", error),
+      );
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user.id, date]),
+  );
 
   return (
     <View>

@@ -24,11 +24,11 @@ export default function Waveform({ audioLevelRef, isRecording }: IProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const barHeights = useRef<Animated.Value[]>(
-    Array.from({ length: BAR_COUNT }, () => new Animated.Value(MIN_HEIGHT))
+    Array.from({ length: BAR_COUNT }, () => new Animated.Value(MIN_HEIGHT)),
   ).current;
 
   const barOpacities = useRef<Animated.Value[]>(
-    Array.from({ length: BAR_COUNT }, () => new Animated.Value(0.2))
+    Array.from({ length: BAR_COUNT }, () => new Animated.Value(0.2)),
   ).current;
 
   const updateBars = () => {
@@ -55,7 +55,10 @@ export default function Waveform({ audioLevelRef, isRecording }: IProps) {
     if (!isRecording) {
       // drain to silence
       intervalRef.current = setInterval(() => {
-        levelHistory.current = [0, ...levelHistory.current.slice(0, BAR_COUNT - 1)];
+        levelHistory.current = [
+          0,
+          ...levelHistory.current.slice(0, BAR_COUNT - 1),
+        ];
         updateBars();
         if (levelHistory.current.every((l) => l === 0)) {
           clearInterval(intervalRef.current!);
@@ -76,7 +79,10 @@ export default function Waveform({ audioLevelRef, isRecording }: IProps) {
           ? smoothedLevel.current * (0.85 + Math.random() * 0.3)
           : Math.random() * 0.03;
 
-      levelHistory.current = [variance, ...levelHistory.current.slice(0, BAR_COUNT - 1)];
+      levelHistory.current = [
+        variance,
+        ...levelHistory.current.slice(0, BAR_COUNT - 1),
+      ];
       updateBars();
     }, SCROLL_INTERVAL);
 

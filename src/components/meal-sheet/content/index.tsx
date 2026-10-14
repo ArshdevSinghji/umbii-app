@@ -17,7 +17,9 @@ import React from "react";
 import { ScrollView, View } from "react-native";
 
 interface IProps {
-  log: IFoodLog;
+  // A food log, or anything shaped like one (e.g. a recipe: its name and
+  // the meal's items).
+  log: Pick<IFoodLog, "rawInputText" | "details">;
 }
 
 export default function MealSheetContent({ log }: IProps) {
@@ -30,7 +32,10 @@ export default function MealSheetContent({ log }: IProps) {
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="gap-2">
         <View className="flex-row justify-between items-center gap-2">
-          <Text className="text-muted-foreground text-sm flex-1" numberOfLines={2}>
+          <Text
+            className="text-muted-foreground text-sm flex-1"
+            numberOfLines={2}
+          >
             {log.rawInputText}
           </Text>
           <View className="flex-row gap-1 items-center">
@@ -53,7 +58,9 @@ export default function MealSheetContent({ log }: IProps) {
                     {detail.servingQuantity} {detail.servingUnit}
                   </Text>
                 </View>
-                <Text className="text-sm">{parseFloat(detail.calories).toFixed(0)} Kcal</Text>
+                <Text className="text-sm">
+                  {Number(detail.calories).toFixed(0)} Kcal
+                </Text>
               </View>
 
               <View className="flex-row justify-between items-center mt-2">

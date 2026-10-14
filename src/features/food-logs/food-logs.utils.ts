@@ -4,12 +4,12 @@ const calculateNutrition = (data: IFoodLogDetail[]) =>
   data.reduce(
     (acc, detail) => {
       acc.calories += Number(detail.calories ?? 0);
-      acc.protein += parseFloat(detail.protein ?? "0");
-      acc.carbs += parseFloat(detail.carbs ?? "0");
-      acc.fats += parseFloat(detail.fats ?? "0");
-      acc.fiber += parseFloat(detail.fiber ?? "0");
-      acc.sugar += parseFloat(detail.sugar ?? "0");
-      acc.sodium += parseFloat(detail.sodium ?? "0");
+      acc.protein += Number(detail.protein ?? 0);
+      acc.carbs += Number(detail.carbs ?? 0);
+      acc.fats += Number(detail.fats ?? 0);
+      acc.fiber += Number(detail.fiber ?? 0);
+      acc.sugar += Number(detail.sugar ?? 0);
+      acc.sodium += Number(detail.sodium ?? 0);
 
       return acc;
     },

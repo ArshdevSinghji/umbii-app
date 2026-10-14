@@ -6,13 +6,16 @@ import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
-import { Flame, X } from "lucide-react-native";
+import { BookmarkCheck, Flame } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
-import { Modal, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
+import SaveRecipeForm from "@/components/save-recipe/save-recipe-form";
+import { Button } from "@/components/ui/button";
 import TodaysMealsSkeleton from "./loading";
-import MealSheetContent from "./meal-sheet-content";
-import MealSheetContentSkeleton from "./meal-sheet-content/loading";
+import MealSheet from "@/components/meal-sheet";
+import MealSheetContent from "@/components/meal-sheet/content";
+import MealSheetContentSkeleton from "@/components/meal-sheet/content/loading";
 
 export default function TodaysMeals() {
   const { colorScheme } = useColorScheme();
@@ -28,15 +31,63 @@ export default function TodaysMeals() {
   } = useFoodLogsActionsHook();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
+  const [isSavingRecipe, setIsSavingRecipe] = useState(false);
 
   const handleLogPress = (log: IFoodLog) => {
+    setIsRecipeFormOpen(false);
     setIsModalVisible(true);
     fetchFoodLogById(user.id, log.id).catch((error) =>
       reportRequestError("Error fetching meal:", error),
     );
   };
 
-  const handleClose = () => setIsModalVisible(false);
+  // Can't be dismissed while a recipe is being saved.
+  const handleClose = () => {
+    if (!isSavingRecipe) setIsModalVisible(false);
+  };
+
+  const isLogReady = !isFoodLogLoading && !!selectedFoodLog;
+
+  // Below the meal: "Save as recipe" (inline form, since a second modal on
+  // top of this one is unreliable on iOS) or "Saved as recipe" once saved.
+  const renderRecipeFooter = () => {
+    if (!isLogReady || !selectedFoodLog) return null;
+
+    if (selectedFoodLog.recipeId !== null) {
+      return (
+        <View className="flex-row items-center justify-center gap-2 pt-4">
+          <BookmarkCheck size={16} color={theme.chart2} fill={theme.chart2} />
+          <Text className="text-sm text-muted-foreground">Saved as recipe</Text>
+        </View>
+      );
+    }
+
+    if (isRecipeFormOpen) {
+      return (
+        <View className="pt-4">
+          <SaveRecipeForm
+            log={selectedFoodLog}
+            onDone={() => setIsRecipeFormOpen(false)}
+            onCancel={() => setIsRecipeFormOpen(false)}
+            onSavingChange={setIsSavingRecipe}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <View className="pt-4">
+        <Button
+          variant="outline"
+          className="h-12 rounded-full"
+          onPress={() => setIsRecipeFormOpen(true)}
+        >
+          <Text>Save as recipe</Text>
+        </Button>
+      </View>
+    );
+  };
 
   return (
     <View className="mt-8">
@@ -96,42 +147,18 @@ export default function TodaysMeals() {
         </View>
       )}
 
-      <Modal
+      <MealSheet
         visible={isModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={handleClose}
-        backdropColor={"rgba(0, 0, 0, 0.2)"}
+        title="Meal details"
+        onClose={handleClose}
+        footer={renderRecipeFooter()}
       >
-        <View className="flex-1">
-          <Pressable
-            className="flex-1"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
-            onPress={handleClose}
-          />
-
-          <View className="h-[70%] bg-background rounded-t-3xl p-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="font-sans-bold text-base">Meal details</Text>
-              <Pressable
-                onPress={handleClose}
-                hitSlop={8}
-                className="p-1.5 rounded-full bg-muted"
-              >
-                <X size={16} color={theme.foreground} />
-              </Pressable>
-            </View>
-
-            <View className="flex-1">
-              {isFoodLogLoading || !selectedFoodLog ? (
-                <MealSheetContentSkeleton />
-              ) : (
-                <MealSheetContent log={selectedFoodLog} />
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
+        {isFoodLogLoading || !selectedFoodLog ? (
+          <MealSheetContentSkeleton />
+        ) : (
+          <MealSheetContent log={selectedFoodLog} />
+        )}
+      </MealSheet>
     </View>
   );
 }

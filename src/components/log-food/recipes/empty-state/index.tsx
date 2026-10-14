@@ -1,15 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { Image, View } from "react-native";
+import { Image, LayoutChangeEvent, View } from "react-native";
 
 interface IProps {
-  onCreateRecipe: () => void;
+  // Recipes only come from logged meals, so "adding" one starts by logging a
+  // meal: this focuses the food input below.
+  onAddRecipe: () => void;
+  // Reports this card's height, used as the recipes section's min height.
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export default function RecipesEmptyState({ onCreateRecipe }: IProps) {
+export default function RecipesEmptyState({ onAddRecipe, onLayout }: IProps) {
   return (
-    <Card className="items-center gap-4 px-6 py-8">
+    <Card className="items-center gap-4 px-6 py-8" onLayout={onLayout}>
       {/* Full-colour sticker on transparency — reads fine in both themes. */}
       <Image
         source={require("@/assets/images/fresh-cooked-fried-egg-pan-sticker-vector.png")}
@@ -19,12 +23,11 @@ export default function RecipesEmptyState({ onCreateRecipe }: IProps) {
       <View className="items-center gap-1">
         <Text className="font-sans-bold text-lg">No recipes yet</Text>
         <Text className="text-center text-sm text-muted-foreground">
-          Save the meals you make often as recipes, so you can log them in one
-          tap.
+          Log a meal, then tap the bookmark on it to save it as a recipe.
         </Text>
       </View>
-      <Button className="rounded-full" onPress={onCreateRecipe}>
-        <Text>Create a recipe</Text>
+      <Button className="rounded-full" onPress={onAddRecipe}>
+        <Text>Add a recipe</Text>
       </Button>
     </Card>
   );

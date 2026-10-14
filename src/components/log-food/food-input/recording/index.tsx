@@ -1,8 +1,8 @@
-import { THEME } from '@/lib/theme';
-import { X, Send } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import { Pressable, View } from 'react-native';
-import Waveform from '../waveform';
+import { THEME } from "@/lib/theme";
+import { X, Send } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
+import { Pressable, View } from "react-native";
+import Waveform from "../waveform";
 
 interface IProps {
   audioLevelRef: React.MutableRefObject<number>;
@@ -10,9 +10,13 @@ interface IProps {
   onSend: () => void;
 }
 
-export default function RecordingUI({ audioLevelRef, onCancel, onSend }: IProps) {
+export default function RecordingUI({
+  audioLevelRef,
+  onCancel,
+  onSend,
+}: IProps) {
   const { colorScheme } = useColorScheme();
-  const theme = THEME[colorScheme ?? 'light'];
+  const theme = THEME[colorScheme ?? "light"];
 
   return (
     <View className="bg-card border border-border rounded-3xl flex-row items-center px-3 py-3 gap-3">

@@ -1,4 +1,4 @@
-import { IFoodLogDetail } from "../food-logs.types";
+import { IFoodLog, IFoodLogDetail } from "../food-logs.types";
 
 export interface CreateFoodLogsRequest {
   userId: number;
@@ -6,6 +6,5 @@ export interface CreateFoodLogsRequest {
   details: Omit<IFoodLogDetail, "id" | "createdAt" | "updatedAt">[];
 }
 
-export interface CreateFoodLogsResponse {
-  message: string;
-}
+// The saved log, same shape as GET /food-logs/{id} (recipeId is null).
+export type CreateFoodLogsResponse = IFoodLog;

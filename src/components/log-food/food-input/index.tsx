@@ -1,3 +1,6 @@
+import { SheetHandle } from "@/components/ui/sheet-handle";
+import { eventBus } from "@/lib/event-bus";
+import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import { ActionButton } from "@/components/ui/action-button";
 import { Input } from "@/components/ui/input";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
@@ -7,12 +10,15 @@ import { useAppSelector } from "@/store/hooks";
 import { LinearGradient } from "expo-linear-gradient";
 import { Mic, MoveUp } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, View } from "react-native";
-import Animated, {
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-} from "react-native-reanimated";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  TextInput,
+  View,
+} from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import GenerateMealSheet from "./generate-meal-sheet";
 import { Text } from "@/components/ui/text";
 
@@ -21,12 +27,25 @@ export default function FoodInput() {
   const theme = THEME[colorScheme ?? "light"];
 
   const { user } = useAppSelector((state) => state.userSlice);
-  const { generatedFoodLogsDetails } = useAppSelector((state) => state.foodLogsSlice);
+  const { generatedFoodLogsDetails } = useAppSelector(
+    (state) => state.foodLogsSlice,
+  );
 
   const [log, setLog] = useState("");
+  const inputRef = useRef<TextInput>(null);
+
+  // Other parts of the page (e.g. recipes' "Add a recipe") can ask for focus.
+  useEffect(() => {
+    const focus = () => inputRef.current?.focus();
+    eventBus.on("food-input:focus", focus);
+    return () => {
+      eventBus.off("food-input:focus", focus);
+    };
+  }, []);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
 
-  const { generateFoodLogs, createFoodLogs, isLoading } = useFoodLogsActionsHook();
+  const { generateFoodLogs, createFoodLogs, isLoading } =
+    useFoodLogsActionsHook();
 
   const handleSendText = async () => {
     if (!log.trim()) return;
@@ -55,12 +74,16 @@ export default function FoodInput() {
       ? ["rgba(255,255,255,0.18)", "rgba(255,255,255,0.02)"]
       : ["rgba(0,0,0,0.14)", "rgba(0,0,0,0.02)"];
 
-  const keyboard = useAnimatedKeyboard();
+  // From react-native-keyboard-controller: `height` is the offset to move
+  // content by, so it's negative while the keyboard is open.
+  const keyboard = useReanimatedKeyboardAnimation();
   const animatedPositionStyle = useAnimatedStyle(() => {
-    const keyboardHeight = keyboard.height.value;
+    const keyboardHeight = -keyboard.height.value;
     return {
       bottom:
-        keyboardHeight > 0 ? keyboardHeight + 12 : FLOATING_INPUT_BAR_BOTTOM_OFFSET,
+        keyboardHeight > 0
+          ? keyboardHeight + 12
+          : FLOATING_INPUT_BAR_BOTTOM_OFFSET,
     };
   });
 
@@ -93,6 +116,7 @@ export default function FoodInput() {
           >
             <View className="flex-row items-end px-3 py-2">
               <Input
+                ref={inputRef}
                 multiline
                 value={log}
                 placeholder="What did you eat?"
@@ -131,6 +155,7 @@ export default function FoodInput() {
       >
         <View className="flex-1 justify-end">
           <View className="bg-background rounded-t-3xl p-6 h-[500px]">
+            <SheetHandle />
             <GenerateMealSheet foodLog={generatedFoodLogsDetails} />
             <View className="flex-row gap-2 mt-4">
               <ActionButton

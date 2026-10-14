@@ -1,3 +1,4 @@
+import { useFocusEffect } from "expo-router";
 import { reportRequestError } from "@/lib/http-client";
 import { toLocalDateKey } from "@/utils/date";
 import { Card } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { useAppSelector } from "@/store/hooks";
 import { getCurrentWeek } from "@/utils/get-current-week";
 import { CircleCheck } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
-import { useEffect } from "react";
+import { useCallback } from "react";
 import { Pressable, View } from "react-native";
 
 interface IProps {
@@ -28,14 +29,18 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
   const week = getCurrentWeek();
   const today = toLocalDateKey();
 
-  useEffect(() => {
-    if (!user.id) return;
-
-    fetchNutritionTargetReport(user.id, {
-      startDate: week[0].fullDate,
-      endDate: today,
-    }).catch((error) => reportRequestError("Error fetching report:", error));
-  }, [user.id, today]);
+  // Refetch on every focus too, so the completed / incomplete circles reflect
+  // meals logged on another tab.
+  useFocusEffect(
+    useCallback(() => {
+      if (!user.id) return;
+      fetchNutritionTargetReport(user.id, {
+        startDate: week[0].fullDate,
+        endDate: today,
+      }).catch((error) => reportRequestError("Error fetching report:", error));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user.id, today]),
+  );
 
   const completedDates = report?.completedDates ?? [];
   const notCompleteDates = report?.notCompleteDates ?? [];

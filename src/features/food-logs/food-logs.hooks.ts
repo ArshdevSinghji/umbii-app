@@ -71,9 +71,10 @@ export function useFoodLogsActionsHook() {
   };
 
   const createFoodLogs = async (userId: number, rawInputText: string, details: Omit<IFoodLogDetail, 'id' | 'createdAt' | 'updatedAt'>[]) => {
-    await dispatch(createFoodLogsAction({ userId, rawInputText, details })).unwrap();
-    // The create response has no log in it, so refresh the recent list.
-    fetchRecentFoodLogs(userId).catch(() => {});
+    // Returns the saved log (with its id); the slice adds it to the lists.
+    return await dispatch(
+      createFoodLogsAction({ userId, rawInputText, details }),
+    ).unwrap();
   };
 
   const generateFoodLogs = async (userId: number, rawInputText: string) => {

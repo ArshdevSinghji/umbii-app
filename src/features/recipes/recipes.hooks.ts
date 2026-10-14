@@ -1,3 +1,4 @@
+import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createRecipeAction } from "./create-recipe/create-recipe.action";
 import { deleteRecipeAction } from "./delete-recipe/delete-recipe.action";
@@ -13,8 +14,16 @@ export function useRecipesActionsHook() {
     await dispatch(listRecipesAction({ userId })).unwrap();
   };
 
-  const createRecipe = async (userId: number, name: string) => {
-    await dispatch(createRecipeAction({ userId, name })).unwrap();
+  // Saves a logged meal as a recipe. Returns the new recipe.
+  const createRecipe = async (userId: number, name: string, log: IFoodLog) => {
+    return await dispatch(
+      createRecipeAction({
+        userId,
+        name: name.trim(),
+        foodLogId: log.id,
+        details: log.details,
+      }),
+    ).unwrap();
   };
 
   const fetchRecipeById = async (userId: number, recipeId: number) => {

@@ -1,3 +1,4 @@
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import AppTheme from "@/components/app-theme";
 import { useAuth } from "@/lib/use-auth";
 import StoreProvider from "@/store/store-provider";
@@ -49,12 +50,16 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Real insets from the first frame, so screens don't jump once they arrive. */}
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StoreProvider>
-          <AppTheme>
-            <Stack />
-            <PortalHost />
-          </AppTheme>
-        </StoreProvider>
+        {/* Keyboard insets for edge-to-edge Android (and modals), where the
+            built-in KeyboardAvoidingView / adjustResize no longer work. */}
+        <KeyboardProvider>
+          <StoreProvider>
+            <AppTheme>
+              <Stack />
+              <PortalHost />
+            </AppTheme>
+          </StoreProvider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -1,3 +1,4 @@
+import { SheetHandle } from "@/components/ui/sheet-handle";
 import { reportRequestError } from "@/lib/http-client";
 import { toLocalDateKey } from "@/utils/date";
 import { Text } from "@/components/ui/text";
@@ -82,6 +83,7 @@ export default function AdherenceCalendar({
         <Pressable className="flex-1" onPress={onClose} />
 
         <View className="bg-background rounded-t-3xl overflow-hidden p-6">
+          <SheetHandle />
           {/* The calendar, month header, weekday row and legend always render;
               only the day cells swap to skeletons while the report loads. */}
           <View className="gap-4">
