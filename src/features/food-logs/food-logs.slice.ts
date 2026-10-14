@@ -4,11 +4,15 @@ import { FoodLogState, GenerateFoodLogsDetails } from "./food-logs.types";
 import { getFoodLogAction } from "./get-food-log/get-food-log.action";
 import { listFoodLogsAction } from "./list-food-logs/list-food-logs.action";
 import { generateFoodLogsAction } from "./generate-food-logs/generate-food-logs.action";
+import { listPeriodFoodLogsAction } from "./list-period-food-logs/list-period-food-logs.action";
 import { listRecentFoodLogsAction } from "./list-recent-food-logs/list-recent-food-logs.action";
 
 const initialState: FoodLogState = {
   isLoading: false,
   listFoodLogs: [],
+  isListLoading: false,
+  periodFoodLogs: [],
+  isPeriodFoodLogsLoading: false,
   generatedFoodLogsDetails: {} as GenerateFoodLogsDetails,
   selectedFoodLog: null,
   isFoodLogLoading: false,
@@ -22,14 +26,24 @@ const foodLogsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(listFoodLogsAction.pending, (state) => {
-        state.isLoading = true;
+        state.isListLoading = true;
       })
       .addCase(listFoodLogsAction.fulfilled, (state, action) => {
-        state.isLoading = false;
+        state.isListLoading = false;
         state.listFoodLogs = action.payload;
       })
       .addCase(listFoodLogsAction.rejected, (state) => {
-        state.isLoading = false;
+        state.isListLoading = false;
+      })
+      .addCase(listPeriodFoodLogsAction.pending, (state) => {
+        state.isPeriodFoodLogsLoading = true;
+      })
+      .addCase(listPeriodFoodLogsAction.fulfilled, (state, action) => {
+        state.isPeriodFoodLogsLoading = false;
+        state.periodFoodLogs = action.payload;
+      })
+      .addCase(listPeriodFoodLogsAction.rejected, (state) => {
+        state.isPeriodFoodLogsLoading = false;
       })
       .addCase(createFoodLogsAction.pending, (state) => {
         state.isLoading = true;

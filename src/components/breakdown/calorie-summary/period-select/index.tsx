@@ -39,7 +39,10 @@ export default function PeriodSelect({ value, onChange }: IProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={4} className="w-32">
         {PERIODS.map((period) => (
-          <DropdownMenuItem key={period.value} onPress={() => onChange(period.value)}>
+          <DropdownMenuItem
+            key={period.value}
+            onPress={() => onChange(period.value)}
+          >
             <Text>{period.label}</Text>
           </DropdownMenuItem>
         ))}

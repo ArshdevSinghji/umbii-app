@@ -1,3 +1,4 @@
+import { toRequestError } from "@/lib/http-client";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { UserActionTypes } from "../user.types";
 import { updateUserService } from "./update-user.service";
@@ -10,7 +11,7 @@ export const updateUserAction = createAsyncThunk(
       const response = await updateUserService(request);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

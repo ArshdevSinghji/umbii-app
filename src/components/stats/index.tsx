@@ -2,6 +2,8 @@ import { HealthDetailsMode } from "@/components/health-details/health-details.sc
 import { useWeightJournalsActionsHook } from "@/features/weight-journals/weight-journals.hooks";
 import { getWeightPeriodRange } from "@/features/weight-journals/weight-journals.utils";
 import { useAppSelector } from "@/store/hooks";
+import { ErrorState } from "@/components/ui/error-state";
+import { reportRequestError } from "@/lib/http-client";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -14,22 +16,41 @@ import WeightChart from "./weight-chart";
 
 export default function GoalProgress() {
   const { user } = useAppSelector((state) => state.userSlice);
-  const { listWeightJournals, fetchWeightJournals } = useWeightJournalsActionsHook();
+  const {
+    latestWeightJournal: latest,
+    latestStatus,
+    chartWeightJournals,
+    chartStatus,
+    fetchLatestWeightJournal,
+    fetchWeightChart,
+  } = useWeightJournalsActionsHook();
   const router = useRouter();
+  const [isRetrying, setIsRetrying] = useState(false);
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  // Each loads on its own. The latest entry (current weight, goal) decides
+  // what the page shows; the chart fills in independently and can fail
+  // without taking the page down.
+  const loadLatest = () =>
+    fetchLatestWeightJournal(user.id).catch((error) =>
+      reportRequestError("Error fetching latest weight:", error),
+    );
+  const loadChart = () =>
+    fetchWeightChart(user.id, getWeightPeriodRange("week")).catch((error) =>
+      reportRequestError("Error fetching weight chart:", error),
+    );
 
   useEffect(() => {
     if (!user.id) return;
-
-    const { startDate, endDate } = getWeightPeriodRange("week");
-    fetchWeightJournals(user.id, { startDate, endDate })
-      .catch((error) => console.error("Error fetching weight journals:", error))
-      .finally(() => setIsInitialLoad(false));
+    // In parallel: the chart doesn't wait for the latest entry.
+    loadLatest();
+    loadChart();
   }, [user.id]);
 
-  // API returns newest first, so the latest entry is always at the top.
-  const latest = listWeightJournals[0] ?? null;
+  const handleRetryLatest = async () => {
+    setIsRetrying(true);
+    await loadLatest();
+    setIsRetrying(false);
+  };
 
   const handleMenuPress = () => {
     // TODO: open goal progress options menu.
@@ -39,10 +60,25 @@ export default function GoalProgress() {
     router.push({ pathname: "/health-details", params: { mode } });
 
   const renderContent = () => {
-    if (isInitialLoad) return <GoalProgressSkeleton hasHeight={!!user.height} />;
+    if (latestStatus === "idle" || latestStatus === "loading") {
+      return <GoalProgressSkeleton hasHeight={!!user.height} />;
+    }
+
+    // Not the empty state: "Get started" would create a duplicate first entry.
+    if (latestStatus === "error") {
+      return (
+        <ErrorState
+          title="Couldn't load your weight data"
+          onRetry={handleRetryLatest}
+          isRetrying={isRetrying}
+        />
+      );
+    }
 
     if (!latest) {
-      return <WeightEmptyState onGetStarted={() => openHealthDetails("start")} />;
+      return (
+        <WeightEmptyState onGetStarted={() => openHealthDetails("start")} />
+      );
     }
 
     return (
@@ -59,7 +95,12 @@ export default function GoalProgress() {
           actionLabel="Update weight"
           onActionPress={() => openHealthDetails("weight")}
         />
-        <WeightChart journals={listWeightJournals} />
+        <WeightChart
+          entries={chartWeightJournals}
+          status={chartStatus}
+          onRetry={loadChart}
+          latest={latest}
+        />
         <BmiCard
           weight={parseFloat(latest.currentWeight)}
           height={user.height ?? null}

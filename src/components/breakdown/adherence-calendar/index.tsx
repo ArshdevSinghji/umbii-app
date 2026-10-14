@@ -1,3 +1,5 @@
+import { reportRequestError } from "@/lib/http-client";
+import { toLocalDateKey } from "@/utils/date";
 import { Text } from "@/components/ui/text";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { THEME } from "@/lib/theme";
@@ -17,14 +19,13 @@ interface IProps {
   onSelectDate: (date: string) => void;
 }
 
-const TODAY = new Date().toISOString().split("T")[0];
-
 function getMonthDateRange(monthDateString: string) {
   const [year, month] = monthDateString.split("-").map(Number);
-  const startDate = new Date(year, month - 1, 1).toISOString().split("T")[0];
-  const lastOfMonth = new Date(year, month, 0).toISOString().split("T")[0];
+  const startDate = toLocalDateKey(new Date(year, month - 1, 1));
+  const lastOfMonth = toLocalDateKey(new Date(year, month, 0));
+  const today = toLocalDateKey();
 
-  return { startDate, endDate: TODAY < lastOfMonth ? TODAY : lastOfMonth };
+  return { startDate, endDate: today < lastOfMonth ? today : lastOfMonth };
 }
 
 export default function AdherenceCalendar({
@@ -40,13 +41,17 @@ export default function AdherenceCalendar({
   const { report, isReportLoading, fetchNutritionTargetReport } =
     useNutritionTargetActionsHook();
 
-  const [visibleMonth, setVisibleMonth] = useState(() => TODAY.slice(0, 7));
+  const [visibleMonth, setVisibleMonth] = useState(() =>
+    toLocalDateKey().slice(0, 7),
+  );
 
   const { startDate, endDate } = getMonthDateRange(visibleMonth);
 
   useEffect(() => {
     if (!user.id) return;
-    fetchNutritionTargetReport(user.id, { startDate, endDate });
+    fetchNutritionTargetReport(user.id, { startDate, endDate }).catch((error) =>
+      reportRequestError("Error fetching report:", error),
+    );
   }, [user.id, startDate, endDate]);
 
   // Before the first request starts, `report` is still null; treat that as
@@ -86,7 +91,7 @@ export default function AdherenceCalendar({
                 onMonthChange={(month: DateData) =>
                   setVisibleMonth(month.dateString.slice(0, 7))
                 }
-                maxDate={TODAY}
+                maxDate={toLocalDateKey()}
                 hideExtraDays={false}
                 showSixWeeks
                 enableSwipeMonths

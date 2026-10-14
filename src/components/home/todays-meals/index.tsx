@@ -1,3 +1,4 @@
+import { reportRequestError } from "@/lib/http-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
@@ -19,7 +20,7 @@ export default function TodaysMeals() {
 
   const { user } = useAppSelector((state) => state.userSlice);
   const {
-    isLoading,
+    isListLoading: isLoading,
     listFoodLogs,
     selectedFoodLog,
     isFoodLogLoading,
@@ -30,7 +31,9 @@ export default function TodaysMeals() {
 
   const handleLogPress = (log: IFoodLog) => {
     setIsModalVisible(true);
-    fetchFoodLogById(user.id, log.id);
+    fetchFoodLogById(user.id, log.id).catch((error) =>
+      reportRequestError("Error fetching meal:", error),
+    );
   };
 
   const handleClose = () => setIsModalVisible(false);

@@ -62,7 +62,9 @@ export default function WeightLineChart({ points, unit }: IProps) {
 
   // null for days before the first ever entry; those are skipped.
   const coordinates = points.map((point, index) =>
-    point.weight === null ? null : ([getX(index), getY(point.weight)] as [number, number]),
+    point.weight === null
+      ? null
+      : ([getX(index), getY(point.weight)] as [number, number]),
   );
   const plotted = coordinates.filter(
     (coordinate): coordinate is [number, number] => coordinate !== null,
@@ -78,11 +80,11 @@ export default function WeightLineChart({ points, unit }: IProps) {
   const yTickDecimals = yMax - yMin < Y_TICKS ? 1 : 0;
 
   const xLabelStep = Math.ceil(points.length / MAX_X_LABELS);
-  const columnWidth = points.length > 1 ? plotWidth / (points.length - 1) : plotWidth;
+  const columnWidth =
+    points.length > 1 ? plotWidth / (points.length - 1) : plotWidth;
 
   const selected = points[selectedIndex];
-  const selectedY =
-    selected?.weight != null ? getY(selected.weight) : null;
+  const selectedY = selected?.weight != null ? getY(selected.weight) : null;
   const badgeLeft = selected
     ? Math.min(
         Math.max(getX(selectedIndex) - BADGE_WIDTH / 2, 0),
@@ -115,12 +117,7 @@ export default function WeightLineChart({ points, unit }: IProps) {
             ))}
 
             <Path d={areaPath} fill="url(#weightArea)" />
-            <Path
-              d={linePath}
-              fill="none"
-              stroke={color}
-              strokeWidth={2.5}
-            />
+            <Path d={linePath} fill="none" stroke={color} strokeWidth={2.5} />
 
             {/* Dots and tap targets only on days the user actually logged. */}
             {coordinates.map((coordinate, index) =>
@@ -173,7 +170,11 @@ export default function WeightLineChart({ points, unit }: IProps) {
                   "absolute text-center text-xs text-muted-foreground",
                   index === selectedIndex && "font-sans-bold text-foreground",
                 )}
-                style={{ top: plotBottom + 8, left: getX(index) - 24, width: 48 }}
+                style={{
+                  top: plotBottom + 8,
+                  left: getX(index) - 24,
+                  width: 48,
+                }}
               >
                 {point.label}
               </Text>

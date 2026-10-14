@@ -1,6 +1,6 @@
 import { NutritionValues } from "@/features/food-logs/food-logs.types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { creareNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
+import { createNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
 import { getNutritionTargetReportAction } from "./get-nutrition-target-report/get-nutrition-target-report.action";
 import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-target.action";
 
@@ -11,11 +11,25 @@ export function useNutritionTargetActionsHook() {
   );
 
   const createNutritionTarget = async (userId: number, values: NutritionValues) => {
-    await dispatch(creareNutritionTargetAction({ userId, ...values })).unwrap();
+    await dispatch(createNutritionTargetAction({ userId, ...values })).unwrap();
   };
 
-  const fetchNutritionTarget = async (userId: number, date?: string) => {
-    await dispatch(getNutritionTargetAction({ userId, params: { date } })).unwrap();
+  // No params: the current target. `date`: one day. `startDate`/`endDate`:
+  // a period (Breakdown's week / month / year).
+  const fetchNutritionTarget = async (
+    userId: number,
+    params?: { date?: string; startDate?: string; endDate?: string },
+  ) => {
+    await dispatch(
+      getNutritionTargetAction({
+        userId,
+        params: {
+          date: params?.date,
+          "dateRange.startDate": params?.startDate,
+          "dateRange.endDate": params?.endDate,
+        },
+      }),
+    ).unwrap();
   };
 
   const fetchNutritionTargetReport = async (

@@ -1,14 +1,11 @@
+import { toLocalDateKey } from "@/utils/date";
 export type StatsPeriod = "day" | "week" | "month" | "year";
-
-function toISODate(date: Date) {
-  return date.toISOString().split("T")[0];
-}
 
 export function getDateRangeForPeriod(
   period: StatsPeriod,
   referenceDate = new Date(),
 ): { startDate: string; endDate: string } {
-  const endDate = toISODate(referenceDate);
+  const endDate = toLocalDateKey(referenceDate);
 
   const start = new Date(referenceDate);
 
@@ -26,7 +23,7 @@ export function getDateRangeForPeriod(
       break;
   }
 
-  return { startDate: toISODate(start), endDate };
+  return { startDate: toLocalDateKey(start), endDate };
 }
 
 export function getDaysInRange(startDate: string, endDate: string): number {

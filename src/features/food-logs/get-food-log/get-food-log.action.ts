@@ -1,3 +1,4 @@
+import { toRequestError } from "@/lib/http-client";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { FoodLogActionTypes } from "../food-logs.types";
 import { getFoodLogService } from "./get-food-log.service";
@@ -10,7 +11,7 @@ export const getFoodLogAction = createAsyncThunk(
       const response = await getFoodLogService(request);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

@@ -1,8 +1,9 @@
 import { Text } from "@/components/ui/text";
 import { IRecipe } from "@/features/recipes/recipes.types";
 import { useRecipesActionsHook } from "@/features/recipes/recipes.hooks";
+import { ErrorState } from "@/components/ui/error-state";
+import { useInitialLoad } from "@/lib/use-initial-load";
 import { useAppSelector } from "@/store/hooks";
-import { useEffect, useState } from "react";
 import { View } from "react-native";
 import RecipesEmptyState from "./empty-state";
 import RecipesSkeleton from "./loading";
@@ -13,14 +14,10 @@ export default function Recipes() {
   const { listRecipes, fetchRecipes } = useRecipesActionsHook();
 
   // Skeleton only for the first load, same as the stats screen.
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  useEffect(() => {
-    if (!user.id) return;
-    fetchRecipes(user.id)
-      .catch((error) => console.error("Error fetching recipes:", error))
-      .finally(() => setIsInitialLoad(false));
-  }, [user.id]);
+  const { isInitialLoad, hasError, isRetrying, retry } = useInitialLoad(
+    () => fetchRecipes(user.id),
+    !!user.id,
+  );
 
   const handleCreateRecipe = () => {
     // TODO: open the create-recipe flow.
@@ -32,6 +29,15 @@ export default function Recipes() {
 
   const renderContent = () => {
     if (isInitialLoad) return <RecipesSkeleton />;
+    if (hasError) {
+      return (
+        <ErrorState
+          title="Couldn't load your recipes"
+          onRetry={retry}
+          isRetrying={isRetrying}
+        />
+      );
+    }
 
     if (listRecipes.length === 0) {
       return <RecipesEmptyState onCreateRecipe={handleCreateRecipe} />;

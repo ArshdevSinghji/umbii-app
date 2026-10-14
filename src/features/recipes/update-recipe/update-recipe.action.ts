@@ -1,3 +1,4 @@
+import { toRequestError } from "@/lib/http-client";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RecipeActionTypes } from "../recipes.types";
 import { updateRecipeService } from "./update-recipe.service";
@@ -10,7 +11,7 @@ export const updateRecipeAction = createAsyncThunk(
       const response = await updateRecipeService(request);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

@@ -1,6 +1,42 @@
 import { eventBus } from './event-bus';
 import { deleteToken, getToken } from './token';
 
+// Thrown on 401. By then the token is cleared and the app is already heading
+// to sign-in, so callers should treat it as expected, not as a failure.
+export class UnauthorizedError extends Error {
+  constructor() {
+    super('UNAUTHORIZED');
+    this.name = 'UnauthorizedError';
+  }
+}
+
+// Errors as plain data. Redux actions must be serializable, so thunks reject
+// with this (via toRequestError) instead of the Error instance itself.
+export type RequestError = { name: string; message: string };
+
+export function toRequestError(error: unknown): RequestError {
+  if (error instanceof Error) return { name: error.name, message: error.message };
+  return { name: 'Error', message: String(error) };
+}
+
+// Works on both the Error instance and its plain RequestError form (what
+// `.unwrap()` hands back), since `instanceof` doesn't survive the latter.
+export function isUnauthorizedError(error: unknown) {
+  return (error as { name?: string } | null)?.name === 'UnauthorizedError';
+}
+
+export function getErrorMessage(error: unknown, fallback = 'Something went wrong.') {
+  const message = (error as { message?: unknown } | null)?.message;
+  return typeof message === 'string' && message ? message : fallback;
+}
+
+// For fire-and-forget requests (e.g. fetches in useEffect): log real
+// failures, stay quiet about 401s.
+export function reportRequestError(context: string, error: unknown) {
+  if (isUnauthorizedError(error)) return;
+  console.error(context, error);
+}
+
 export type ApiResponse<T> = {
   message: string;
   data: T;
@@ -46,7 +82,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   if (response.status === 401) {
     await deleteToken();
     eventBus.emit('auth:unauthorized');
-    throw new Error('UNAUTHORIZED');
+    throw new UnauthorizedError();
   }
 
   if (!response.ok) {

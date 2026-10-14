@@ -2,36 +2,60 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createWeightJournalAction } from "./create-weight-journal/create-weight-journal.action";
 import { deleteWeightJournalAction } from "./delete-weight-journal/delete-weight-journal.action";
 import { getWeightJournalAction } from "./get-weight-journal/get-weight-journal.action";
+import { getLatestWeightJournalAction } from "./get-latest-weight-journal/get-latest-weight-journal.action";
 import { listWeightJournalsAction } from "./list-weight-journals/list-weight-journals.action";
 import { updateWeightJournalAction } from "./update-weight-journal/update-weight-journal.action";
 
 export function useWeightJournalsActionsHook() {
   const dispatch = useAppDispatch();
-  const { listWeightJournals, selectedWeightJournal, isLoading, isSaving } = useAppSelector(
-    (state) => state.weightJournalsSlice,
-  );
+  const {
+    latestWeightJournal,
+    latestStatus,
+    chartWeightJournals,
+    chartStatus,
+    selectedWeightJournal,
+    isSelectedLoading,
+    isSaving,
+  } = useAppSelector((state) => state.weightJournalsSlice);
 
-  const fetchWeightJournals = async (
+  // The user's all-time latest entry (current weight, goal).
+  const fetchLatestWeightJournal = async (userId: number) => {
+    await dispatch(getLatestWeightJournalAction({ userId })).unwrap();
+  };
+
+  // Entries for the chart's date range.
+  const fetchWeightChart = async (
     userId: number,
-    params?: { startDate?: string; endDate?: string },
+    params: { startDate: string; endDate: string },
   ) => {
     await dispatch(
       listWeightJournalsAction({
         userId,
         params: {
-          "dateRange.startDate": params?.startDate,
-          "dateRange.endDate": params?.endDate,
+          "dateRange.startDate": params.startDate,
+          "dateRange.endDate": params.endDate,
         },
       }),
     ).unwrap();
   };
 
-  const createWeightJournal = async (userId: number, currentWeight: string, targetWeight: string) => {
-    await dispatch(createWeightJournalAction({ userId, currentWeight, targetWeight })).unwrap();
+  const createWeightJournal = async (
+    userId: number,
+    currentWeight: string,
+    targetWeight: string,
+  ) => {
+    await dispatch(
+      createWeightJournalAction({ userId, currentWeight, targetWeight }),
+    ).unwrap();
   };
 
-  const fetchWeightJournalById = async (userId: number, weightJournalId: number) => {
-    await dispatch(getWeightJournalAction({ userId, weightJournalId })).unwrap();
+  const fetchWeightJournalById = async (
+    userId: number,
+    weightJournalId: number,
+  ) => {
+    await dispatch(
+      getWeightJournalAction({ userId, weightJournalId }),
+    ).unwrap();
   };
 
   const updateWeightJournal = async (
@@ -40,19 +64,40 @@ export function useWeightJournalsActionsHook() {
     currentWeight: string,
     targetWeight: string,
   ) => {
-    await dispatch(updateWeightJournalAction({ userId, weightJournalId, currentWeight, targetWeight })).unwrap();
+    await dispatch(
+      updateWeightJournalAction({
+        userId,
+        weightJournalId,
+        currentWeight,
+        targetWeight,
+      }),
+    ).unwrap();
   };
 
-  const deleteWeightJournal = async (userId: number, weightJournalId: number) => {
-    await dispatch(deleteWeightJournalAction({ userId, weightJournalId })).unwrap();
+  const deleteWeightJournal = async (
+    userId: number,
+    weightJournalId: number,
+  ) => {
+    await dispatch(
+      deleteWeightJournalAction({ userId, weightJournalId }),
+    ).unwrap();
+    // If it was the latest, the next one may be outside the chart's range;
+    // only the server knows, so ask again.
+    if (latestWeightJournal?.id === weightJournalId) {
+      await fetchLatestWeightJournal(userId);
+    }
   };
 
   return {
-    isLoading,
     isSaving,
-    listWeightJournals,
+    latestWeightJournal,
+    latestStatus,
+    chartWeightJournals,
+    chartStatus,
     selectedWeightJournal,
-    fetchWeightJournals,
+    isSelectedLoading,
+    fetchLatestWeightJournal,
+    fetchWeightChart,
     createWeightJournal,
     fetchWeightJournalById,
     updateWeightJournal,

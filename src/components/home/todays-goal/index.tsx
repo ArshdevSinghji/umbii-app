@@ -1,3 +1,4 @@
+import { reportRequestError } from "@/lib/http-client";
 import { Card } from "@/components/ui/card";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Separator } from "@/components/ui/separator";
@@ -20,7 +21,7 @@ export default function TodaysGoal() {
   const theme = THEME[colorScheme ?? "light"];
 
   const { user } = useAppSelector((state) => state.userSlice);
-  const { isLoading, listFoodLogs } = useFoodLogsActionsHook();
+  const { isListLoading: isLoading, listFoodLogs } = useFoodLogsActionsHook();
   const {
     isLoading: isNutritionTargetLoading,
     nutritionTarget,
@@ -29,7 +30,9 @@ export default function TodaysGoal() {
 
   useEffect(() => {
     if (!user.id) return;
-    fetchNutritionTarget(user.id);
+    fetchNutritionTarget(user.id).catch((error) =>
+      reportRequestError("Error fetching target:", error),
+    );
   }, [user.id]);
 
   const nutrition = useMemo(() => {
@@ -54,7 +57,9 @@ export default function TodaysGoal() {
         <View>
           <Text className="text-sm">Today's Goal</Text>
           <View className="flex-row items-end gap-2">
-            <Text className="text-3xl font-sans-bold">{nutrition.calories}</Text>
+            <Text className="text-3xl font-sans-bold">
+              {nutrition.calories}
+            </Text>
             {isNutritionTargetLoading ? (
               <Skeleton className="h-6 w-10 rounded-md mb-1" />
             ) : (
@@ -96,11 +101,7 @@ export default function TodaysGoal() {
           name="Protein"
           color={theme.chart1}
           icon={
-            <Drumstick
-              size={12}
-              color={theme.primary}
-              fill={theme.chart1}
-            />
+            <Drumstick size={12} color={theme.primary} fill={theme.chart1} />
           }
         />
 
@@ -110,9 +111,7 @@ export default function TodaysGoal() {
           max={goal.carbs}
           name="Carbs"
           color={theme.chart2}
-          icon={
-            <Milk size={12} color={theme.primary} fill={theme.chart2} />
-          }
+          icon={<Milk size={12} color={theme.primary} fill={theme.chart2} />}
         />
 
         <GoalProgress

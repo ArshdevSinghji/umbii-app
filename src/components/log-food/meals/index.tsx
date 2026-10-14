@@ -1,7 +1,8 @@
 import { Text } from "@/components/ui/text";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
+import { ErrorState } from "@/components/ui/error-state";
+import { useInitialLoad } from "@/lib/use-initial-load";
 import { useAppSelector } from "@/store/hooks";
-import { useEffect, useState } from "react";
 import { View } from "react-native";
 import MealsEmptyState from "./empty-state";
 import MealsSkeleton from "./loading";
@@ -12,17 +13,22 @@ export default function Meals() {
   const { recentFoodLogs, fetchRecentFoodLogs } = useFoodLogsActionsHook();
 
   // Skeleton only for the first load; saving a meal refreshes in place.
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  useEffect(() => {
-    if (!user.id) return;
-    fetchRecentFoodLogs(user.id)
-      .catch((error) => console.error("Error fetching recent meals:", error))
-      .finally(() => setIsInitialLoad(false));
-  }, [user.id]);
+  const { isInitialLoad, hasError, isRetrying, retry } = useInitialLoad(
+    () => fetchRecentFoodLogs(user.id),
+    !!user.id,
+  );
 
   const renderContent = () => {
     if (isInitialLoad) return <MealsSkeleton />;
+    if (hasError) {
+      return (
+        <ErrorState
+          title="Couldn't load your meals"
+          onRetry={retry}
+          isRetrying={isRetrying}
+        />
+      );
+    }
     if (recentFoodLogs.length === 0) return <MealsEmptyState />;
 
     return (

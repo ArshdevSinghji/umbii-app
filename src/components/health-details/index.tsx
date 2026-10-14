@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@/lib/http-client";
 import { ActionButton } from "@/components/ui/action-button";
 import { Text } from "@/components/ui/text";
 import { useAppSelector } from "@/store/hooks";
@@ -97,7 +98,7 @@ export default function HealthDetailsForm({ mode }: IProps) {
       await save(values);
       setIsDone(true);
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Something went wrong.");
+      setSubmitError(getErrorMessage(error));
     }
   };
 

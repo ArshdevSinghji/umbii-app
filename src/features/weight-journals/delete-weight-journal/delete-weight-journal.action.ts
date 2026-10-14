@@ -1,3 +1,4 @@
+import { toRequestError } from "@/lib/http-client";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { WeightJournalActionTypes } from "../weight-journals.types";
 import { deleteWeightJournalService } from "./delete-weight-journal.service";
@@ -10,7 +11,7 @@ export const deleteWeightJournalAction = createAsyncThunk(
       await deleteWeightJournalService(request);
       return request.weightJournalId;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

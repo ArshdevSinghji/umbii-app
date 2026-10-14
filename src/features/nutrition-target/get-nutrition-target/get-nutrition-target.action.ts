@@ -1,3 +1,4 @@
+import { toRequestError } from "@/lib/http-client";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { NutritionTargetActionTypes } from "../nutrition-target.types";
 import { getNutritionTargetService } from "./get-nutrition-target.service";
@@ -10,7 +11,7 @@ export const getNutritionTargetAction = createAsyncThunk(
       const response = await getNutritionTargetService(request);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

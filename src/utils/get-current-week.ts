@@ -1,3 +1,4 @@
+import { toLocalDateKey } from "@/utils/date";
 export function getCurrentWeek() {
   const today = new Date();
 
@@ -12,7 +13,7 @@ export function getCurrentWeek() {
     return {
       week: days[date.getDay()],
       date: date.getDate(),
-      fullDate: date.toISOString().split("T")[0],
+      fullDate: toLocalDateKey(date),
       isToday: offset === 0,
     };
   });

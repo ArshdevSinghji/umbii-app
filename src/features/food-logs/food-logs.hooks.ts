@@ -1,9 +1,11 @@
+import { toLocalDateKey } from "@/utils/date";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { listFoodLogsAction } from "./list-food-logs/list-food-logs.action";
 import { createFoodLogsAction } from "./create-food-logs/create-food-logs.action";
 import { generateFoodLogsAction } from "./generate-food-logs/generate-food-logs.action";
 import { getFoodLogAction } from "./get-food-log/get-food-log.action";
 import { IFoodLogDetail } from "./food-logs.types";
+import { listPeriodFoodLogsAction } from "./list-period-food-logs/list-period-food-logs.action";
 import { listRecentFoodLogsAction } from "./list-recent-food-logs/list-recent-food-logs.action";
 
 export function useFoodLogsActionsHook() {
@@ -14,6 +16,9 @@ export function useFoodLogsActionsHook() {
     selectedFoodLog,
     isFoodLogLoading,
     recentFoodLogs,
+    isListLoading,
+    periodFoodLogs,
+    isPeriodFoodLogsLoading,
   } = useAppSelector((state) => state.foodLogsSlice);
 
   const fetchFoodLogs = async (
@@ -32,6 +37,22 @@ export function useFoodLogsActionsHook() {
     ).unwrap();
   };
 
+  // Breakdown's period; separate from Home's day so neither overwrites the other.
+  const fetchPeriodFoodLogs = async (
+    userId: number,
+    params: { startDate: string; endDate: string },
+  ) => {
+    await dispatch(
+      listPeriodFoodLogsAction({
+        userId,
+        params: {
+          "dateRange.startDate": params.startDate,
+          "dateRange.endDate": params.endDate,
+        },
+      }),
+    ).unwrap();
+  };
+
   // Last 7 days (today and the six before), newest first from the API.
   const fetchRecentFoodLogs = async (userId: number) => {
     const end = new Date();
@@ -42,8 +63,8 @@ export function useFoodLogsActionsHook() {
       listRecentFoodLogsAction({
         userId,
         params: {
-          "dateRange.startDate": start.toISOString().split("T")[0],
-          "dateRange.endDate": end.toISOString().split("T")[0],
+          "dateRange.startDate": toLocalDateKey(start),
+          "dateRange.endDate": toLocalDateKey(end),
         },
       }),
     ).unwrap();
@@ -67,6 +88,10 @@ export function useFoodLogsActionsHook() {
     isLoading,
     listFoodLogs,
     fetchFoodLogs,
+    isListLoading,
+    periodFoodLogs,
+    isPeriodFoodLogsLoading,
+    fetchPeriodFoodLogs,
     recentFoodLogs,
     fetchRecentFoodLogs,
     createFoodLogs,

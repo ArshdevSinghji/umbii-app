@@ -8,12 +8,17 @@ const toApiWeight = (weight: number) => weight.toFixed(1);
 
 export function useSaveHealthDetails(mode: HealthDetailsMode) {
   const { user } = useAppSelector((state) => state.userSlice);
-  const { isSaving: isSavingWeight, listWeightJournals, createWeightJournal, updateWeightJournal } =
-    useWeightJournalsActionsHook();
+  const {
+    isSaving: isSavingWeight,
+    latestWeightJournal,
+    createWeightJournal,
+    updateWeightJournal,
+  } = useWeightJournalsActionsHook();
   const { isUpdating: isSavingHeight, updateHeight } = useUserActionsHook();
 
-  // API returns newest first.
-  const latest = listWeightJournals[0] ?? null;
+  // All-time latest entry, so "update today's entry vs create" and the form's
+  // starting values are right even after a week without entries.
+  const latest = latestWeightJournal;
 
   const save = async ({ currentWeight, targetWeight, height }: HealthDetailsValues) => {
     if (mode === "height") {

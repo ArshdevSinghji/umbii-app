@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { creareNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
+import { createNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
 import { getNutritionTargetReportAction } from "./get-nutrition-target-report/get-nutrition-target-report.action";
 import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-target.action";
 import { NutritionTargetState } from "./nutrition-target.types";
@@ -17,14 +17,14 @@ const nutritionTargetSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(creareNutritionTargetAction.pending, (state) => {
+      .addCase(createNutritionTargetAction.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(creareNutritionTargetAction.fulfilled, (state, action) => {
+      .addCase(createNutritionTargetAction.fulfilled, (state, action) => {
         state.isLoading = false;
         state.nutritionTarget = action.payload;
       })
-      .addCase(creareNutritionTargetAction.rejected, (state) => {
+      .addCase(createNutritionTargetAction.rejected, (state) => {
         state.isLoading = false;
       })
       .addCase(getNutritionTargetAction.pending, (state) => {

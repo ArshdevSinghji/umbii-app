@@ -1,6 +1,7 @@
 export enum FoodLogActionTypes {
   LIST_FOOD_LOGS = "food-logs/list-food-logs",
   LIST_RECENT_FOOD_LOGS = "food-logs/list-recent-food-logs",
+  LIST_PERIOD_FOOD_LOGS = "food-logs/list-period-food-logs",
   CREATE_FOOD_LOGS = "food-logs/create-food-logs",
   GENERATE_FOOD_LOGS = "food-logs/generate-food-logs",
   GET_FOOD_LOG = "food-logs/get-food-log",
@@ -46,8 +47,14 @@ export interface GenerateFoodLogsDetails {
 }
 
 export interface FoodLogState {
+  // Generating / saving a meal (Log Food).
   isLoading: boolean;
+  // Home's selected day.
   listFoodLogs: IFoodLog[];
+  isListLoading: boolean;
+  // Breakdown's selected period (day / week / month / year).
+  periodFoodLogs: IFoodLog[];
+  isPeriodFoodLogsLoading: boolean;
   generatedFoodLogsDetails: GenerateFoodLogsDetails;
   selectedFoodLog: IFoodLog | null;
   isFoodLogLoading: boolean;

@@ -1,3 +1,4 @@
+import { toLocalDateKey } from "@/utils/date";
 import { IWeightJournal } from "@/features/weight-journals/weight-journals.types";
 
 export type WeightPeriod = "week" | "month";
@@ -17,18 +18,21 @@ const PERIOD_DAYS: Record<WeightPeriod, number> = { week: 7, month: 30 };
 const toDateKey = (value: string) => value.slice(0, 10);
 
 // Rolling window ending today, e.g. the last 7 or 30 days.
-const getWeightPeriodRange = (period: WeightPeriod, referenceDate = new Date()) => {
+const getWeightPeriodRange = (
+  period: WeightPeriod,
+  referenceDate = new Date(),
+) => {
   const start = new Date(referenceDate);
   start.setDate(start.getDate() - (PERIOD_DAYS[period] - 1));
 
   return {
-    startDate: toDateKey(start.toISOString()),
-    endDate: toDateKey(referenceDate.toISOString()),
+    startDate: toLocalDateKey(start),
+    endDate: toLocalDateKey(referenceDate),
   };
 };
 
 const isLoggedToday = (journal: IWeightJournal) =>
-  toDateKey(journal.createdAt) === toDateKey(new Date().toISOString());
+  toDateKey(journal.createdAt) === toLocalDateKey();
 
 const sortByDate = (journals: IWeightJournal[]) =>
   [...journals].sort(
@@ -83,18 +87,31 @@ const buildWeightChartPoints = (
   period: WeightPeriod,
   startDate: string,
   endDate: string,
+  latest?: IWeightJournal | null,
 ): WeightChartPoint[] => {
   const sorted = sortByDate(journals);
-  const startWeight = sorted.length ? parseFloat(sorted[0].currentWeight) : 0;
+
+  // If the all-time latest entry is before the range, it's the weight in
+  // effect on the range's first day — carry it in, so a period with no
+  // weigh-ins still shows the current weight as a flat line.
+  const carriedIn =
+    latest && toDateKey(latest.createdAt) < startDate ? latest : null;
+
+  // Progress within the period: from the weight going into it.
+  const startEntry = carriedIn ?? sorted[0];
+  const startWeight = startEntry ? parseFloat(startEntry.currentWeight) : 0;
 
   let cursor = 0;
-  let lastEntry: IWeightJournal | null = null;
+  let lastEntry: IWeightJournal | null = carriedIn;
 
   return getDatesInRange(startDate, endDate).map((date) => {
     let isLogged = false;
 
     // Advance to the latest entry on or before this day.
-    while (cursor < sorted.length && toDateKey(sorted[cursor].createdAt) <= date) {
+    while (
+      cursor < sorted.length &&
+      toDateKey(sorted[cursor].createdAt) <= date
+    ) {
       lastEntry = sorted[cursor];
       isLogged = toDateKey(lastEntry.createdAt) === date;
       cursor += 1;
@@ -119,16 +136,22 @@ const buildWeightChartPoints = (
   });
 };
 
-// Overall progress based on the very first and the latest entries.
-const getOverallProgress = (journals: IWeightJournal[]) => {
-  const sorted = sortByDate(journals);
-  if (sorted.length === 0) return 0;
+// Progress toward the goal made within the period: from the earliest weight
+// in range (or the latest entry before it, if nothing was logged in range)
+// to the user's latest weight.
+const getPeriodProgress = (
+  journals: IWeightJournal[],
+  latest: IWeightJournal | null,
+  startDate: string,
+) => {
+  if (!latest) return 0;
 
-  const first = sorted[0];
-  const latest = sorted[sorted.length - 1];
+  const sorted = sortByDate(journals);
+  const start =
+    toDateKey(latest.createdAt) < startDate ? latest : (sorted[0] ?? latest);
 
   return calculateGoalProgress(
-    parseFloat(first.currentWeight),
+    parseFloat(start.currentWeight),
     parseFloat(latest.currentWeight),
     parseFloat(latest.targetWeight),
   );
@@ -137,7 +160,7 @@ const getOverallProgress = (journals: IWeightJournal[]) => {
 export {
   buildWeightChartPoints,
   calculateGoalProgress,
-  getOverallProgress,
+  getPeriodProgress,
   getProgressStatus,
   getWeightPeriodRange,
   isLoggedToday,

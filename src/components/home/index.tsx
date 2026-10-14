@@ -1,3 +1,5 @@
+import { reportRequestError } from "@/lib/http-client";
+import { toLocalDateKey } from "@/utils/date";
 import { useAppSelector } from "@/store/hooks";
 import { View } from "react-native";
 import HomeDashboardHeader from "./header";
@@ -11,16 +13,20 @@ export default function HomeDashboard() {
   const { user } = useAppSelector((state) => state.userSlice);
   const { fetchFoodLogs } = useFoodLogsActionsHook();
 
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(() => toLocalDateKey());
 
   const handleDatePress = (selectedDate: string) => setDate(selectedDate);
 
-  useEffect(() => { fetchFoodLogs(user.id, { date }) }, [user.id, date]);
+  useEffect(() => {
+    fetchFoodLogs(user.id, { date }).catch((error) =>
+      reportRequestError("Error fetching food logs:", error),
+    );
+  }, [user.id, date]);
 
   return (
     <View>
       <HomeDashboardHeader />
-      <WeekDays date={date} handleDatePress={handleDatePress}/>
+      <WeekDays date={date} handleDatePress={handleDatePress} />
       <TodaysGoal />
       <TodaysMeals />
     </View>

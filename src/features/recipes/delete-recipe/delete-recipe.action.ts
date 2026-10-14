@@ -1,3 +1,4 @@
+import { toRequestError } from "@/lib/http-client";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RecipeActionTypes } from "../recipes.types";
 import { deleteRecipeService } from "./delete-recipe.service";
@@ -10,7 +11,7 @@ export const deleteRecipeAction = createAsyncThunk(
       await deleteRecipeService(request);
       return request.recipeId;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

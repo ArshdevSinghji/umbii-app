@@ -1,3 +1,5 @@
+import { reportRequestError } from "@/lib/http-client";
+import { toLocalDateKey } from "@/utils/date";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
@@ -20,10 +22,11 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
   const theme = THEME[colorScheme ?? "light"];
 
   const { user } = useAppSelector((state) => state.userSlice);
-  const { report, fetchNutritionTargetReport } = useNutritionTargetActionsHook();
+  const { report, fetchNutritionTargetReport } =
+    useNutritionTargetActionsHook();
 
   const week = getCurrentWeek();
-  const today = new Date().toISOString().split("T")[0];
+  const today = toLocalDateKey();
 
   useEffect(() => {
     if (!user.id) return;
@@ -31,7 +34,7 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
     fetchNutritionTargetReport(user.id, {
       startDate: week[0].fullDate,
       endDate: today,
-    });
+    }).catch((error) => reportRequestError("Error fetching report:", error));
   }, [user.id, today]);
 
   const completedDates = report?.completedDates ?? [];
@@ -73,7 +76,11 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
 
                 {isCompleted && (
                   <View className="absolute top-0 -right-0.5">
-                    <CircleCheck size={12} fill={theme.chart2} color={theme.primaryForeground} />
+                    <CircleCheck
+                      size={12}
+                      fill={theme.chart2}
+                      color={theme.primaryForeground}
+                    />
                   </View>
                 )}
               </View>
