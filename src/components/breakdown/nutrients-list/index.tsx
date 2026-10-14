@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { NutritionValues } from "@/features/food-logs/food-logs.types";
 import { THEME } from "@/lib/theme";
@@ -9,6 +8,7 @@ import {
 } from "@/utils/calculate-health-score";
 import { Activity, Candy, Salad, Wheat } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
+import { View } from "react-native";
 import HealthScore from "./health-score";
 import NutrientRow from "./nutrient-row";
 
@@ -75,9 +75,9 @@ export default function NutrientsList({ consumed, target }: IProps) {
   const score = consumed.calories > 0 ? calculateHealthScore(nutrients) : null;
 
   return (
-    <Card className="gap-2 py-4 px-4">
+    <View className="gap-1">
       <HealthScore score={score} />
-      <Separator className="my-1" />
+      <Separator className="my-1.5" />
       {nutrients.map(({ key, label, value, unit, icon, ...rest }) => (
         <NutrientRow
           key={key}
@@ -89,6 +89,6 @@ export default function NutrientsList({ consumed, target }: IProps) {
           isGood={scoreNutrient({ value, ...rest }) === 1}
         />
       ))}
-    </Card>
+    </View>
   );
 }

@@ -41,7 +41,7 @@ const userSlice = createSlice({
       })
       .addCase(updateUserAction.rejected, (state) => {
         state.isUpdating = false;
-      })
+      });
   },
 });
 

@@ -18,7 +18,7 @@ export default function NutrientRow({
   icon,
 }: IProps) {
   return (
-    <View className="flex-row justify-between items-center py-2">
+    <View className="flex-row justify-between items-center py-1.5">
       <View className="flex-row gap-2 items-center">
         {icon}
         <Text>{label}</Text>

@@ -1,18 +1,23 @@
 import { reportRequestError } from "@/lib/http-client";
-import { parseLocalDateKey, toLocalDateKey } from "@/utils/date";
+import { toLocalDateKey } from "@/utils/date";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { NutritionValues } from "@/features/food-logs/food-logs.types";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { useAppSelector } from "@/store/hooks";
-import {
-  StatsPeriod,
-  getDateRangeForPeriod,
-  getDaysInRange,
-} from "@/utils/get-date-range-for-period";
+import { FLOATING_TAB_BAR_CLEARANCE } from "@/lib/floating-tab-bar";
+import { StatsPeriod, getDaysInRange } from "@/utils/get-date-range-for-period";
+import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
-import AdherenceCalendar from "./adherence-calendar";
+import { Separator } from "@/components/ui/separator";
+import { ScrollView, View } from "react-native";
+import { CalendarProvider } from "react-native-calendars";
+import BreakdownCalendar, { KEEP_SELECTION_ON } from "./breakdown-calendar";
+import {
+  formatBreakdownRange,
+  getAccountStartDate,
+  getBreakdownRange,
+} from "./breakdown-calendar/calendar.utils";
 import CalorieSummary, { getCalorieLabels } from "./calorie-summary";
 import PeriodSelect from "./calorie-summary/period-select";
 import BreakdownHeader from "./header";
@@ -27,7 +32,9 @@ const toLogDateKey = (createdAt: string) =>
 export default function DailyBreakdown() {
   const [period, setPeriod] = useState<StatsPeriod>("day");
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateKey());
-  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  // The day the calendar is showing; moves with its arrows and swipes.
+  const [visibleDate, setVisibleDate] = useState(selectedDate);
+  const { colorScheme } = useColorScheme();
 
   const { user } = useAppSelector((state) => state.userSlice);
   const {
@@ -41,9 +48,13 @@ export default function DailyBreakdown() {
     fetchNutritionTarget,
   } = useNutritionTargetActionsHook();
 
-  const referenceDate =
-    period === "day" ? parseLocalDateKey(selectedDate) : new Date();
-  const { startDate, endDate } = getDateRangeForPeriod(period, referenceDate);
+  // The picked day, or its week / month / year (up to today).
+  // Never before the account existed.
+  const { startDate, endDate } = getBreakdownRange(
+    period,
+    selectedDate,
+    getAccountStartDate(user.createdAt),
+  );
   const days = getDaysInRange(startDate, endDate);
 
   useEffect(() => {
@@ -62,18 +73,6 @@ export default function DailyBreakdown() {
   }, [user.id, startDate, endDate]);
 
   const isLoading = isFoodLogsLoading || isTargetLoading;
-
-  const handlePeriodChange = (newPeriod: StatsPeriod) => {
-    setPeriod(newPeriod);
-    if (newPeriod === "day") {
-      setSelectedDate(toLocalDateKey());
-    }
-  };
-
-  const handleSelectDate = (date: string) => {
-    setSelectedDate(date);
-    setPeriod("day");
-  };
 
   // Compare intake and target over the same covered days: the target range
   // starts at the user's first target (`startDate`), so earlier logs don't
@@ -109,55 +108,73 @@ export default function DailyBreakdown() {
     sodium: (nutritionTarget?.sodium ?? 0) / coveredDays,
   };
 
-  // "Today's Calories" / "Calories · 12 Oct" for a day; "Avg. Daily
-  // Calories" for week/month/year, where the number is a per-day average.
+  // "Today's Calories" / "Calories · 12 Oct" for a day; "Avg. Daily ·
+  // 6 – 12 Oct" for week/month/year, where the number is a per-day average.
   const isToday = selectedDate === toLocalDateKey();
+  const rangeLabel = formatBreakdownRange(period, startDate, endDate);
   const calorieLabels = getCalorieLabels(
     period === "day",
-    isToday
-      ? undefined
-      : `Calories · ${parseLocalDateKey(selectedDate).toLocaleDateString(
-          undefined,
-          { day: "numeric", month: "short" },
-        )}`,
+    period === "day"
+      ? isToday
+        ? "Today's Calories"
+        : `Calories · ${rangeLabel}`
+      : `Avg. Daily · ${rangeLabel}`,
   );
 
-  const periodSelect = (
-    <PeriodSelect value={period} onChange={handlePeriodChange} />
-  );
+  // Picking a day keeps the period: the week / month / year moves with it.
+  const periodSelect = <PeriodSelect value={period} onChange={setPeriod} />;
 
   return (
-    <View>
-      <BreakdownHeader onCalendarPress={() => setIsCalendarVisible(true)} />
-      <View className="gap-4">
-        {isLoading ? (
-          <DailyBreakdownSkeleton
-            calorieAction={periodSelect}
-            calorieTitle={calorieLabels.title}
-          />
-        ) : (
-          <>
-            <CalorieSummary
-              title={calorieLabels.title}
-              targetLabel={calorieLabels.targetLabel}
-              dailyAverage={average.calories}
-              caloriesTarget={target.calories}
-              protein={average.protein}
-              carbs={average.carbs}
-              fats={average.fats}
-              action={periodSelect}
-            />
-            <NutrientsList consumed={average} target={target} />
-          </>
-        )}
-      </View>
+    <View className="flex-1">
+      {/* Remount on theme change: the calendar reads its colours once. */}
+      <CalendarProvider
+        key={colorScheme}
+        date={selectedDate}
+        disableAutoDaySelection={KEEP_SELECTION_ON}
+        onDateChanged={(date) => setVisibleDate(date)}
+      >
+        <View className="px-4 pt-8">
+          <BreakdownHeader action={periodSelect} />
+        </View>
+        {/* Its drag handle strip is drawn as the rounded top of the card
+            below, so the content looks like a sheet over the calendar. */}
+        <BreakdownCalendar
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          range={period === "day" ? null : { startDate, endDate }}
+          visibleDate={visibleDate}
+        />
 
-      <AdherenceCalendar
-        visible={isCalendarVisible}
-        selectedDate={selectedDate}
-        onClose={() => setIsCalendarVisible(false)}
-        onSelectDate={handleSelectDate}
-      />
+        <ScrollView
+          className="flex-1 bg-card"
+          // One section on the page, not separate cards: calories, then the
+          // health score and nutrients.
+          contentContainerStyle={{
+            gap: 12,
+            paddingTop: 8,
+            paddingHorizontal: 16,
+            paddingBottom: FLOATING_TAB_BAR_CLEARANCE,
+          }}
+        >
+          {isLoading ? (
+            <DailyBreakdownSkeleton calorieTitle={calorieLabels.title} />
+          ) : (
+            <>
+              <CalorieSummary
+                title={calorieLabels.title}
+                targetLabel={calorieLabels.targetLabel}
+                dailyAverage={average.calories}
+                caloriesTarget={target.calories}
+                protein={average.protein}
+                carbs={average.carbs}
+                fats={average.fats}
+              />
+              <Separator />
+              <NutrientsList consumed={average} target={target} />
+            </>
+          )}
+        </ScrollView>
+      </CalendarProvider>
     </View>
   );
 }

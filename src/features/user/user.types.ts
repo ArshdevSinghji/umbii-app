@@ -14,6 +14,9 @@ export interface IUser {
   phoneNumber: string | null;
   // Always in cm. Missing on users persisted before height existed.
   height?: number | null;
+  // When the account was created (from sign-in). Missing on users persisted
+  // before it was stored; treat that as "no lower limit".
+  createdAt?: string;
 }
 
 export interface UserState {

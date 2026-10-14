@@ -1,9 +1,7 @@
-import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { Flame } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { ReactNode } from "react";
 import { View } from "react-native";
@@ -25,10 +23,10 @@ const formatKcal = (value: number) =>
   value.toLocaleString(undefined, { maximumFractionDigits: 0 });
 
 // What the number means: a single day's total or a per-day average.
-export const getCalorieLabels = (isSingleDay: boolean, dayLabel?: string) =>
-  isSingleDay
-    ? { title: dayLabel ?? "Today's Calories", targetLabel: "Target" }
-    : { title: "Avg. Daily Calories", targetLabel: "Avg. daily target" };
+export const getCalorieLabels = (isSingleDay: boolean, title: string) => ({
+  title,
+  targetLabel: isSingleDay ? "Target" : "Avg. daily target",
+});
 
 interface IProps {
   title: string;
@@ -58,17 +56,9 @@ export default function CalorieSummary({
   const scaleMax = getCalorieScaleMax(dailyAverage, caloriesTarget);
 
   return (
-    <Card className="gap-4 px-4 py-4">
+    <View className="gap-3">
       <View className="flex-row items-center justify-between gap-4">
-        <View className="flex-row items-center gap-2">
-          <View
-            className="rounded-xl p-2"
-            style={{ backgroundColor: "rgba(255, 90, 0, 0.12)" }}
-          >
-            <Flame size={16} color={CALORIE_COLOR} fill={CALORIE_COLOR} />
-          </View>
-          <Text className="font-sans-bold">{title}</Text>
-        </View>
+        <Text className="font-sans-bold">{title}</Text>
         {action}
       </View>
 
@@ -104,6 +94,6 @@ export default function CalorieSummary({
         <MacroChip label="Carbs" value={carbs} color={theme.chart2} />
         <MacroChip label="Fats" value={fats} color={theme.chart4} />
       </View>
-    </Card>
+    </View>
   );
 }

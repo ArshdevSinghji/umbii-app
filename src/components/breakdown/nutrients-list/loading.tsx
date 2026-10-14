@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { View } from "react-native";
@@ -6,7 +5,7 @@ import { HEALTH_SCORE_RING_SIZE } from "./health-score";
 
 export default function NutrientsListSkeleton() {
   return (
-    <Card className="gap-2 py-4 px-4">
+    <View className="gap-1">
       {/* Mirrors HealthScore: label + rating on the left, ring on the right. */}
       <View className="flex-row items-center justify-between">
         <View className="gap-1.5">
@@ -21,9 +20,12 @@ export default function NutrientsListSkeleton() {
           }}
         />
       </View>
-      <Separator className="my-1" />
+      <Separator className="my-1.5" />
       {[1, 2, 3, 4].map((item) => (
-        <View key={item} className="flex-row justify-between items-center py-2">
+        <View
+          key={item}
+          className="flex-row justify-between items-center py-1.5"
+        >
           <View className="flex-row gap-2 items-center">
             <Skeleton className="h-4 w-4 rounded-full" />
             <Skeleton className="h-3 w-16 rounded-full" />
@@ -34,6 +36,6 @@ export default function NutrientsListSkeleton() {
           </View>
         </View>
       ))}
-    </Card>
+    </View>
   );
 }

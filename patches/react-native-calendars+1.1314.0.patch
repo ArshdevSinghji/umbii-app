@@ -1,0 +1,19 @@
+diff --git a/node_modules/react-native-calendars/src/calendar-list/index.js b/node_modules/react-native-calendars/src/calendar-list/index.js
+index 6cf1b71..a0e97ce 100644
+--- a/node_modules/react-native-calendars/src/calendar-list/index.js
++++ b/node_modules/react-native-calendars/src/calendar-list/index.js
+@@ -170,9 +170,11 @@ const CalendarList = (props, ref) => {
+     }, [horizontal, calendarStyle, calendarWidth, testID, getMarkedDatesForItem, isDateInRange, calendarProps]);
+     const renderStaticHeader = () => {
+         if (shouldUseStaticHeader) {
+-            const onHeaderLayoutToPass = shouldMeasureHeader.current ? onHeaderLayout : undefined;
+-            shouldMeasureHeader.current = false;
+-            return (<CalendarHeader {...headerProps} testID={`${testID}.staticHeader`} style={staticHeaderStyle} month={currentMonth} addMonth={addMonth} onHeaderLayout={onHeaderLayoutToPass} accessibilityElementsHidden={accessibilityElementsHidden} // iOS
++            // Patched: always measure the static header. It is a single view, and
++            // dropping the callback after the first render (as the list items do)
++            // loses the measurement whenever the parent re-renders before layout,
++            // leaving ExpandableCalendar hidden (headerHeight 0 -> opacity 0).
++            return (<CalendarHeader {...headerProps} testID={`${testID}.staticHeader`} style={staticHeaderStyle} month={currentMonth} addMonth={addMonth} onHeaderLayout={onHeaderLayout} accessibilityElementsHidden={accessibilityElementsHidden} // iOS
+              importantForAccessibility={importantForAccessibility} // Android
+             />);
+         }

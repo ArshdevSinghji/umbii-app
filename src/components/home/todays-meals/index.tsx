@@ -11,7 +11,8 @@ import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import SaveRecipeForm from "@/components/save-recipe/save-recipe-form";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/action-button";
+import ChildSheet from "@/components/meal-sheet/child-sheet";
 import TodaysMealsSkeleton from "./loading";
 import MealSheet from "@/components/meal-sheet";
 import MealSheetContent from "@/components/meal-sheet/content";
@@ -31,26 +32,36 @@ export default function TodaysMeals() {
   } = useFoodLogsActionsHook();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
+  const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [isSavingRecipe, setIsSavingRecipe] = useState(false);
+  // Bumped per opening so the save form remounts fresh (name, errors).
+  const [saveCount, setSaveCount] = useState(0);
 
   const handleLogPress = (log: IFoodLog) => {
-    setIsRecipeFormOpen(false);
+    setIsSaveOpen(false);
     setIsModalVisible(true);
     fetchFoodLogById(user.id, log.id).catch((error) =>
       reportRequestError("Error fetching meal:", error),
     );
   };
 
-  // Can't be dismissed while a recipe is being saved.
+  const openSave = () => {
+    setSaveCount((count) => count + 1);
+    setIsSaveOpen(true);
+  };
+
+  // Back / backdrop: close the save child sheet first, then the meal sheet.
+  // Nothing closes while a recipe is being saved. (Same as Log Food.)
   const handleClose = () => {
-    if (!isSavingRecipe) setIsModalVisible(false);
+    if (isSavingRecipe) return;
+    if (isSaveOpen) setIsSaveOpen(false);
+    else setIsModalVisible(false);
   };
 
   const isLogReady = !isFoodLogLoading && !!selectedFoodLog;
 
-  // Below the meal: "Save as recipe" (inline form, since a second modal on
-  // top of this one is unreliable on iOS) or "Saved as recipe" once saved.
+  // Below the meal: "Save as recipe" (opens a child sheet in the same Modal)
+  // or "Saved as recipe" once saved.
   const renderRecipeFooter = () => {
     if (!isLogReady || !selectedFoodLog) return null;
 
@@ -63,35 +74,16 @@ export default function TodaysMeals() {
       );
     }
 
-    if (isRecipeFormOpen) {
-      return (
-        <View className="pt-4">
-          <SaveRecipeForm
-            log={selectedFoodLog}
-            onDone={() => setIsRecipeFormOpen(false)}
-            onCancel={() => setIsRecipeFormOpen(false)}
-            onSavingChange={setIsSavingRecipe}
-          />
-        </View>
-      );
-    }
-
     return (
       <View className="pt-4">
-        <Button
-          variant="outline"
-          className="h-12 rounded-full"
-          onPress={() => setIsRecipeFormOpen(true)}
-        >
-          <Text>Save as recipe</Text>
-        </Button>
+        <ActionButton label="Save as recipe" onPress={openSave} />
       </View>
     );
   };
 
   return (
     <View className="mt-8">
-      <Text className="font-sans-bold text-lg mb-8">Today's meals</Text>
+      <Text className="font-sans-bold text-lg mb-8">{`Today's meals`}</Text>
 
       {isLoading ? (
         <TodaysMealsSkeleton />
@@ -152,6 +144,24 @@ export default function TodaysMeals() {
         title="Meal details"
         onClose={handleClose}
         footer={renderRecipeFooter()}
+        overlay={
+          selectedFoodLog && (
+            <ChildSheet
+              visible={isSaveOpen}
+              title="Save as recipe"
+              description="Name it so you can find and log this meal again."
+              onClose={handleClose}
+            >
+              <SaveRecipeForm
+                key={`${selectedFoodLog.id}-${saveCount}`}
+                log={selectedFoodLog}
+                onDone={() => setIsSaveOpen(false)}
+                onCancel={() => setIsSaveOpen(false)}
+                onSavingChange={setIsSavingRecipe}
+              />
+            </ChildSheet>
+          )
+        }
       >
         {isFoodLogLoading || !selectedFoodLog ? (
           <MealSheetContentSkeleton />
