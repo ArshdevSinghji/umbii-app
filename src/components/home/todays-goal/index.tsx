@@ -1,5 +1,5 @@
 import { reportRequestError } from "@/lib/http-client";
-import { Card } from "@/components/ui/card";
+import { GradientCard } from "@/components/ui/gradient-card";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,10 +52,10 @@ export default function TodaysGoal() {
   }
 
   return (
-    <Card className="mt-8 shadow-none px-4 gap-3">
+    <GradientCard className="mt-8 shadow-none px-4 gap-3">
       <View className="flex-row justify-between items-center">
         <View>
-          <Text className="text-sm">Today's Goal</Text>
+          <Text className="text-sm">{`Today's Goal`}</Text>
           <View className="flex-row items-end gap-2">
             <Text className="text-3xl font-sans-bold">
               {nutrition.calories}
@@ -123,6 +123,6 @@ export default function TodaysGoal() {
           icon={<Ham size={12} color={theme.primary} fill={theme.chart4} />}
         />
       </View>
-    </Card>
+    </GradientCard>
   );
 }

@@ -8,18 +8,23 @@ export enum RecipeActionTypes {
   DELETE_RECIPE = "recipes/delete-recipe",
 }
 
-// A name attached to a logged meal. Names aren't unique — key by id. There
-// are no totals: sum each macro across `details` (calculateNutrition).
-// GET /recipes has no fixed order; sort by createdAt then id, newest first.
+// One of a recipe's own items: copied from the meal it was saved from, so
+// editing either later doesn't change the other. Same fields as a food-log
+// detail, but `id` is a recipe-item id — never use it as a food-log id.
+export type IRecipeItem = IFoodLogDetail;
+
+// A named set of items that can be logged as a meal any number of times.
+// Names aren't unique — key by id. There are no totals: sum each macro across
+// `details` (calculateNutrition). GET /recipes has no fixed order; sort by
+// createdAt then id, newest first.
 export interface IRecipe {
   id: number;
   name: string;
-  foodLogId: number;
   createdAt: string;
-  updatedAt: string;
-  // The food log's items. Present on GET /recipes and GET /recipes/{id};
-  // not on create / update responses.
-  details?: IFoodLogDetail[];
+  updatedAt: string;  
+  // The recipe's own items. On list, get and create responses; an update
+  // (rename) keeps the ones already loaded.
+  details: IRecipeItem[];
 }
 
 export interface RecipeState {

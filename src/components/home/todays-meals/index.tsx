@@ -61,7 +61,7 @@ export default function TodaysMeals() {
   const isLogReady = !isFoodLogLoading && !!selectedFoodLog;
 
   // Below the meal: "Save as recipe" (opens a child sheet in the same Modal)
-  // or "Saved as recipe" once saved.
+  // or "In your recipes" once it's linked to one (saved as, or eaten from).
   const renderRecipeFooter = () => {
     if (!isLogReady || !selectedFoodLog) return null;
 
@@ -69,7 +69,7 @@ export default function TodaysMeals() {
       return (
         <View className="flex-row items-center justify-center gap-2 pt-4">
           <BookmarkCheck size={16} color={theme.chart2} fill={theme.chart2} />
-          <Text className="text-sm text-muted-foreground">Saved as recipe</Text>
+          <Text className="text-sm text-muted-foreground">In your recipes</Text>
         </View>
       );
     }

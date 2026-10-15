@@ -1,12 +1,12 @@
 import { IFoodLogDetail } from "../food-logs.types";
 
 export interface GenerateFoodLogsRequest {
-    userId: number;
-    rawInputText: string;
+  userId: number;
+  rawInputText: string;
 }
 
 export interface GenerateFoodLogsResponse {
-    remark: string;
-    rawInputText: string;
-    details: Omit<IFoodLogDetail, 'id' | 'createdAt' | 'updatedAt'>[];
+  remark: string;
+  rawInputText: string;
+  details: Omit<IFoodLogDetail, "id" | "createdAt" | "updatedAt">[];
 }

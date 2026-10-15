@@ -8,7 +8,9 @@ import { updateRecipeAction } from "./update-recipe/update-recipe.action";
 
 export function useRecipesActionsHook() {
   const dispatch = useAppDispatch();
-  const { listRecipes, selectedRecipe, isLoading } = useAppSelector((state) => state.recipesSlice);
+  const { listRecipes, selectedRecipe, isLoading } = useAppSelector(
+    (state) => state.recipesSlice,
+  );
 
   const fetchRecipes = async (userId: number) => {
     await dispatch(listRecipesAction({ userId })).unwrap();
@@ -21,7 +23,6 @@ export function useRecipesActionsHook() {
         userId,
         name: name.trim(),
         foodLogId: log.id,
-        details: log.details,
       }),
     ).unwrap();
   };
@@ -30,7 +31,11 @@ export function useRecipesActionsHook() {
     await dispatch(getRecipeAction({ userId, recipeId })).unwrap();
   };
 
-  const updateRecipe = async (userId: number, recipeId: number, name: string) => {
+  const updateRecipe = async (
+    userId: number,
+    recipeId: number,
+    name: string,
+  ) => {
     await dispatch(updateRecipeAction({ userId, recipeId, name })).unwrap();
   };
 

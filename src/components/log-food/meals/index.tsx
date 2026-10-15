@@ -73,7 +73,7 @@ export default function Meals() {
       return (
         <View className="flex-row items-center justify-center gap-2 pt-4">
           <BookmarkCheck size={16} color={theme.chart2} fill={theme.chart2} />
-          <Text className="text-sm text-muted-foreground">Saved as recipe</Text>
+          <Text className="text-sm text-muted-foreground">In your recipes</Text>
         </View>
       );
     }

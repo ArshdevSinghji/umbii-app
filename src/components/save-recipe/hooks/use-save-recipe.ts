@@ -49,7 +49,8 @@ export function useSaveRecipe() {
       // Already sent to sign-in by the http client.
       if (isUnauthorizedError(err)) return true;
 
-      // Saved earlier (another device / double tap): refresh so it shows saved.
+      // Already linked to a recipe (saved earlier, on another device or by a
+      // double tap, or eaten from one): refresh so the button hides.
       if (status === 409) {
         fetchFoodLogById(user.id, log.id).catch((e) =>
           reportRequestError("Error refreshing meal:", e),

@@ -47,7 +47,7 @@ export default function MealCard({ log, onPress }: IProps) {
             {log.rawInputText}
           </Text>
           {log.recipeId !== null && (
-            <View accessibilityLabel="Saved as recipe">
+            <View accessibilityLabel="In your recipes">
               <BookmarkCheck
                 size={16}
                 color={theme.chart2}

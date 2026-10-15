@@ -130,9 +130,13 @@ const foodLogsSlice = createSlice({
       })
       // Saving / deleting a recipe changes its log's recipeId; mirror it
       // everywhere that log is shown so "Save as recipe" stays accurate.
+      // The response no longer names the source log: take it from the request.
       .addCase(createRecipeAction.fulfilled, (state, action) => {
-        const { id, foodLogId } = action.payload;
-        replaceLog(state, foodLogId, (log) => ({ ...log, recipeId: id }));
+        const recipeId = action.payload.id;
+        replaceLog(state, action.meta.arg.foodLogId, (log) => ({
+          ...log,
+          recipeId,
+        }));
       })
       .addCase(getFoodLogAction.rejected, (state) => {
         state.isFoodLogLoading = false;

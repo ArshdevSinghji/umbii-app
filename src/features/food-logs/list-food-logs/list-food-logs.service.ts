@@ -4,5 +4,7 @@ import { IFoodLog } from "../food-logs.types";
 
 export const listFoodLogsService = async (request: ListFoodLogsRequest) => {
   const { userId, params } = request;
-  return await http.get<ApiResponse<IFoodLog[]>>(`/users/${userId}/food-logs`, { params });
+  return await http.get<ApiResponse<IFoodLog[]>>(`/users/${userId}/food-logs`, {
+    params,
+  });
 };

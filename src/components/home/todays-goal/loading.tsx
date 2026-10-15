@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card";
+import { GradientCard } from "@/components/ui/gradient-card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { View } from "react-native";
@@ -6,7 +6,7 @@ import GoalProgress from "./goal-progress";
 
 export default function TodaysGoalSkeleton() {
   return (
-    <Card className="mt-8 shadow-none px-4 gap-3">
+    <GradientCard className="mt-8 shadow-none px-4 gap-3">
       <View className="flex-row justify-between items-center">
         <View className="gap-2">
           <Skeleton className="h-4 w-24 rounded-full" />
@@ -39,6 +39,6 @@ export default function TodaysGoalSkeleton() {
           />
         ))}
       </View>
-    </Card>
+    </GradientCard>
   );
 }

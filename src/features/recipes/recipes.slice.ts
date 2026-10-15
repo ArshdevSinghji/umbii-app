@@ -48,11 +48,8 @@ const recipesSlice = createSlice({
       })
       .addCase(createRecipeAction.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Newest first; the response has no details, so reuse the meal's.
-        state.listRecipes.unshift({
-          ...action.payload,
-          details: action.meta.arg.details,
-        });
+        // Newest first. The response includes the recipe's copied items.
+        state.listRecipes.unshift(action.payload);
       })
       .addCase(createRecipeAction.rejected, (state) => {
         state.isLoading = false;

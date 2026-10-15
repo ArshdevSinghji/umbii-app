@@ -1,10 +1,11 @@
+import { CARD_GRADIENT } from "@/components/ui/gradient-card";
 import { Text } from "@/components/ui/text";
 import {
   FLOATING_TAB_BAR_BOTTOM_MARGIN,
   FLOATING_TAB_BAR_HEIGHT,
 } from "@/lib/floating-tab-bar";
 import { THEME } from "@/lib/theme";
-import { cn } from "@/lib/utils";
+import { LinearGradient } from "expo-linear-gradient";
 import { Stack } from "expo-router";
 import { Tabs, type BottomTabBarProps } from "expo-router/js-tabs";
 import {
@@ -36,6 +37,13 @@ function FloatingTabBar({
 }: BottomTabBarProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
+  const gradient = CARD_GRADIENT[colorScheme ?? "light"];
+  // Soft tint for the active tab, so it sits on the gradient rather than
+  // covering it with a flat block.
+  const activeTint =
+    colorScheme === "dark"
+      ? "rgba(255, 255, 255, 0.08)"
+      : "rgba(0, 0, 0, 0.05)";
 
   const shadow = {
     shadowColor: "#000",
@@ -59,14 +67,30 @@ function FloatingTabBar({
           flexDirection: "row",
           height: FLOATING_TAB_BAR_HEIGHT,
           borderRadius: FLOATING_TAB_BAR_HEIGHT / 2,
-          borderWidth: 0,
-          borderColor: theme.border,
-          backgroundColor: theme.card,
+          // Same gradient and hairline outline as the headline cards.
+          borderWidth: 1,
+          borderColor: gradient.border,
+          backgroundColor: gradient.colors[1],
           paddingHorizontal: 6,
           paddingVertical: 6,
           ...shadow,
         }}
       >
+        {/* Rounded itself rather than clipping the bar: overflow "hidden"
+            would also clip the shadow on iOS. */}
+        <LinearGradient
+          colors={gradient.colors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            borderRadius: FLOATING_TAB_BAR_HEIGHT / 2 - 1,
+          }}
+        />
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const focused = state.index === index;
@@ -96,10 +120,8 @@ function FloatingTabBar({
               key={route.key}
               onPress={onPress}
               onLongPress={onLongPress}
-              className={cn(
-                "flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-2.5",
-                focused && "bg-secondary",
-              )}
+              className="flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-2.5"
+              style={focused ? { backgroundColor: activeTint } : undefined}
             >
               {options.tabBarIcon?.({ focused, color, size: 18 })}
               <Text style={{ color }} className="text-[10px] font-medium">

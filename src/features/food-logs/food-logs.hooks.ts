@@ -70,16 +70,22 @@ export function useFoodLogsActionsHook() {
     ).unwrap();
   };
 
-  const createFoodLogs = async (userId: number, rawInputText: string, details: Omit<IFoodLogDetail, 'id' | 'createdAt' | 'updatedAt'>[]) => {
+  // `recipeId` links the meal to the recipe it was logged from.
+  const createFoodLogs = async (
+    userId: number,
+    rawInputText: string,
+    details: Omit<IFoodLogDetail, "id" | "createdAt" | "updatedAt">[],
+    recipeId?: number,
+  ) => {
     // Returns the saved log (with its id); the slice adds it to the lists.
     return await dispatch(
-      createFoodLogsAction({ userId, rawInputText, details }),
+      createFoodLogsAction({ userId, rawInputText, details, recipeId }),
     ).unwrap();
   };
 
   const generateFoodLogs = async (userId: number, rawInputText: string) => {
     await dispatch(generateFoodLogsAction({ userId, rawInputText })).unwrap();
-  }
+  };
 
   const fetchFoodLogById = async (userId: number, foodLogId: number) => {
     await dispatch(getFoodLogAction({ userId, foodLogId })).unwrap();

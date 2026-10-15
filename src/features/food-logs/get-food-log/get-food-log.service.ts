@@ -3,5 +3,7 @@ import { GetFoodLogRequest, GetFoodLogResponse } from "./get-food-log.types";
 
 export const getFoodLogService = async (request: GetFoodLogRequest) => {
   const { userId, foodLogId } = request;
-  return await http.get<ApiResponse<GetFoodLogResponse>>(`/users/${userId}/food-logs/${foodLogId}`);
+  return await http.get<ApiResponse<GetFoodLogResponse>>(
+    `/users/${userId}/food-logs/${foodLogId}`,
+  );
 };
