@@ -6,7 +6,10 @@ import {
   calculateHealthScore,
   scoreNutrient,
 } from "@/utils/calculate-health-score";
-import { Activity, Candy, Salad, Wheat } from "lucide-react-native";
+import { Cookie } from "phosphor-react-native/src/icons/Cookie";
+import { Grains } from "phosphor-react-native/src/icons/Grains";
+import { Leaf } from "phosphor-react-native/src/icons/Leaf";
+import { Pulse } from "phosphor-react-native/src/icons/Pulse";
 import { useColorScheme } from "nativewind";
 import { View } from "react-native";
 import HealthScore from "./health-score";
@@ -40,7 +43,7 @@ export default function NutrientsList({ consumed, target }: IProps) {
       target: target.fiber,
       unit: "g",
       goal: "min",
-      icon: <Salad size={16} color={theme.foreground} />,
+      icon: <Leaf size={16} color={theme.foreground} />,
     },
     {
       key: "net-carbs",
@@ -49,7 +52,7 @@ export default function NutrientsList({ consumed, target }: IProps) {
       target: netCarbsTarget,
       unit: "g",
       goal: "max",
-      icon: <Wheat size={16} color={theme.foreground} />,
+      icon: <Grains size={16} color={theme.foreground} />,
     },
     {
       key: "sugar",
@@ -58,7 +61,7 @@ export default function NutrientsList({ consumed, target }: IProps) {
       target: target.sugar,
       unit: "g",
       goal: "max",
-      icon: <Candy size={16} color={theme.foreground} />,
+      icon: <Cookie size={16} color={theme.foreground} />,
     },
     {
       key: "sodium",
@@ -67,7 +70,7 @@ export default function NutrientsList({ consumed, target }: IProps) {
       target: target.sodium,
       unit: "mg",
       goal: "max",
-      icon: <Activity size={16} color={theme.foreground} />,
+      icon: <Pulse size={16} color={theme.foreground} />,
     },
   ];
 

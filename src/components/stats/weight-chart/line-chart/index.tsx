@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import { parseLocalDateKey } from "@/utils/date";
 import { area, curveMonotoneX, line } from "d3-shape";
 import { useColorScheme } from "nativewind";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { CaretDown } from "phosphor-react-native/src/icons/CaretDown";
+import { CaretUp } from "phosphor-react-native/src/icons/CaretUp";
 import { useRef, useState } from "react";
 import { GestureResponderEvent, LayoutChangeEvent, View } from "react-native";
 import Svg, {
@@ -186,7 +187,7 @@ export default function WeightLineChart({
     return details;
   };
   const details = isExpanded ? getDetails() : [];
-  const Chevron = isExpanded ? ChevronUp : ChevronDown;
+  const Chevron = isExpanded ? CaretUp : CaretDown;
 
   return (
     <View style={{ height: CHART_HEIGHT }} onLayout={handleLayout}>

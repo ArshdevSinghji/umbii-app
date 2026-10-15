@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { THEME } from "@/lib/theme";
-import { Search, X } from "lucide-react-native";
+import { MagnifyingGlass } from "phosphor-react-native/src/icons/MagnifyingGlass";
+import { X } from "phosphor-react-native/src/icons/X";
 import { useColorScheme } from "nativewind";
 import { useRef } from "react";
 import { Pressable, TextInput, View } from "react-native";
@@ -25,19 +26,19 @@ export default function RecipeSearch({ value, onChange }: IProps) {
       accessible={false}
     >
       <View className="h-9 w-9 items-center justify-center rounded-full bg-muted">
-        <Search size={16} color={theme.foreground} />
+        <MagnifyingGlass size={16} color={theme.foreground} />
       </View>
       <Input
         ref={inputRef}
         value={value}
         onChangeText={onChange}
-        placeholder="Search recipes..."
+        placeholder="MagnifyingGlass recipes..."
         returnKeyType="search"
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="never"
         className="h-full flex-1 border-0 bg-transparent px-0 dark:bg-transparent"
-        accessibilityLabel="Search recipes"
+        accessibilityLabel="MagnifyingGlass recipes"
       />
       {value.length > 0 && (
         <Pressable

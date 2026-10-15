@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import Loading from "@/components/ui/loading";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { CloudOff } from "lucide-react-native";
+import { CloudSlash } from "phosphor-react-native/src/icons/CloudSlash";
 import { useColorScheme } from "nativewind";
 import { View } from "react-native";
 
@@ -28,7 +28,7 @@ export function ErrorState({
   return (
     <Card className="items-center gap-4 px-6 py-8">
       <View className="rounded-full bg-muted p-4">
-        <CloudOff size={28} color={theme.mutedForeground} />
+        <CloudSlash size={28} color={theme.mutedForeground} />
       </View>
       <View className="items-center gap-1">
         <Text className="font-sans-bold text-lg text-center">{title}</Text>

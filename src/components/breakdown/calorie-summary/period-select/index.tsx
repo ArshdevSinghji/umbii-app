@@ -7,7 +7,7 @@ import {
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
 import { StatsPeriod } from "@/utils/get-date-range-for-period";
-import { ChevronDown } from "lucide-react-native";
+import { CaretDown } from "phosphor-react-native/src/icons/CaretDown";
 import { useColorScheme } from "nativewind";
 import { View } from "react-native";
 
@@ -34,7 +34,7 @@ export default function PeriodSelect({ value, onChange }: IProps) {
       <DropdownMenuTrigger>
         <View className="flex-row items-center gap-1 rounded-full bg-muted px-3 py-1.5">
           <Text className="text-sm font-sans-bold">{selected?.label}</Text>
-          <ChevronDown size={14} color={theme.foreground} />
+          <CaretDown size={14} color={theme.foreground} />
         </View>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={4} className="w-32">

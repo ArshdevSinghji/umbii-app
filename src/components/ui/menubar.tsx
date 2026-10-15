@@ -4,7 +4,10 @@ import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import * as MenubarPrimitive from '@rn-primitives/menubar';
 import { Portal } from '@rn-primitives/portal';
-import { Check, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react-native';
+import { CaretDown } from 'phosphor-react-native/src/icons/CaretDown';
+import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
+import { CaretUp } from 'phosphor-react-native/src/icons/CaretUp';
+import { Check } from 'phosphor-react-native/src/icons/Check';
 import * as React from 'react';
 import {
   Platform,
@@ -107,7 +110,7 @@ function MenubarSubTrigger({
     inset?: boolean;
   }) {
   const { open } = MenubarPrimitive.useSubContext();
-  const icon = Platform.OS === 'web' ? ChevronRight : open ? ChevronUp : ChevronDown;
+  const icon = Platform.OS === 'web' ? CaretRight : open ? CaretUp : CaretDown;
   return (
     <TextClassContext.Provider
       value={cn(

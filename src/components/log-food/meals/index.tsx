@@ -11,7 +11,7 @@ import { THEME } from "@/lib/theme";
 import { useInitialLoad } from "@/lib/use-initial-load";
 import { useRefresh } from "@/lib/pull-to-refresh";
 import { useAppSelector } from "@/store/hooks";
-import { BookmarkCheck } from "lucide-react-native";
+import { BookmarkSimple } from "phosphor-react-native/src/icons/BookmarkSimple";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { View } from "react-native";
@@ -75,7 +75,7 @@ export default function Meals() {
     if (sheetLog.recipeId !== null) {
       return (
         <View className="flex-row items-center justify-center gap-2 pt-4">
-          <BookmarkCheck size={16} color={theme.chart2} fill={theme.chart2} />
+          <BookmarkSimple size={16} color={theme.chart2} weight="fill" />
           <Text className="text-sm text-muted-foreground">In your recipes</Text>
         </View>
       );

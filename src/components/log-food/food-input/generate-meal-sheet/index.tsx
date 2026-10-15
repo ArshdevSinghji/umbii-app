@@ -2,14 +2,12 @@ import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { GenerateFoodLogsDetails } from "@/features/food-logs/food-logs.types";
 import { THEME } from "@/lib/theme";
-import {
-  Activity,
-  Beef,
-  Candy,
-  Droplets,
-  Salad,
-  Wheat,
-} from "lucide-react-native";
+import { Cookie } from "phosphor-react-native/src/icons/Cookie";
+import { Avocado } from "phosphor-react-native/src/icons/Avocado";
+import { Egg } from "phosphor-react-native/src/icons/Egg";
+import { Grains } from "phosphor-react-native/src/icons/Grains";
+import { Leaf } from "phosphor-react-native/src/icons/Leaf";
+import { Pulse } from "phosphor-react-native/src/icons/Pulse";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { ScrollView, View } from "react-native";
@@ -55,7 +53,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
 
               <View className="flex-row justify-between items-center mt-2">
                 <View className="flex-row gap-1 items-center">
-                  <Beef size={14} color={theme.foreground} />
+                  <Egg size={14} color={theme.foreground} />
                   <Text>Protein</Text>
                 </View>
                 <Text className="font-sans-bold">{log.protein} g</Text>
@@ -63,7 +61,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
 
               <View className="flex-row justify-between items-center mt-2">
                 <View className="flex-row gap-1 items-center">
-                  <Salad size={14} color={theme.foreground} />
+                  <Leaf size={14} color={theme.foreground} />
                   <Text>Fiber</Text>
                 </View>
                 <Text className="font-sans-bold">{log.fiber} g</Text>
@@ -71,7 +69,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
 
               <View className="flex-row justify-between items-center mt-2">
                 <View className="flex-row gap-1 items-center">
-                  <Wheat size={14} color={theme.foreground} />
+                  <Grains size={14} color={theme.foreground} />
                   <Text>Carbs</Text>
                 </View>
                 <Text className="font-sans-bold">{log.carbs} g</Text>
@@ -79,7 +77,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
 
               <View className="flex-row justify-between items-center mt-2">
                 <View className="flex-row gap-1 items-center">
-                  <Droplets size={14} color={theme.foreground} />
+                  <Avocado size={14} color={theme.foreground} />
                   <Text>Fats</Text>
                 </View>
                 <Text className="font-sans-bold">{log.fats} g</Text>
@@ -87,7 +85,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
 
               <View className="flex-row justify-between items-center mt-2">
                 <View className="flex-row gap-1 items-center">
-                  <Activity size={14} color={theme.foreground} />
+                  <Pulse size={14} color={theme.foreground} />
                   <Text>Sodium</Text>
                 </View>
                 <Text className="font-sans-bold">{log.sodium} g</Text>
@@ -95,7 +93,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
 
               <View className="flex-row justify-between items-center mt-2">
                 <View className="flex-row gap-1 items-center">
-                  <Candy size={14} color={theme.foreground} />
+                  <Cookie size={14} color={theme.foreground} />
                   <Text>Sugar</Text>
                 </View>
                 <Text className="font-sans-bold">{log.sugar} g</Text>

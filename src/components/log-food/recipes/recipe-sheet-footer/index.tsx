@@ -1,6 +1,6 @@
 import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react-native";
+import { Trash } from "phosphor-react-native/src/icons/Trash";
 import { View } from "react-native";
 
 interface IProps {
@@ -31,7 +31,7 @@ export default function RecipeSheetFooter({
         disabled={isLogging}
         accessibilityLabel="Delete recipe"
       >
-        <Trash2 size={18} color="#FFFFFF" />
+        <Trash size={18} color="#FFFFFF" />
       </Button>
       <ActionButton
         className="flex-1 px-2"

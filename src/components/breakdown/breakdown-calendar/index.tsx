@@ -4,7 +4,9 @@ import { reportRequestError } from "@/lib/http-client";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
 import { parseLocalDateKey, toLocalDateKey } from "@/utils/date";
-import { ChevronLeft, ChevronRight, Circle } from "lucide-react-native";
+import { CaretLeft } from "phosphor-react-native/src/icons/CaretLeft";
+import { CaretRight } from "phosphor-react-native/src/icons/CaretRight";
+import { CircleIcon } from "phosphor-react-native/src/icons/Circle";
 import { useColorScheme } from "nativewind";
 import {
   createContext,
@@ -89,7 +91,7 @@ function DayCell({ date, state, marking, onPress }: IDayCellProps) {
 function LegendDot({ color, label }: { color: string; label: string }) {
   return (
     <View className="flex-row items-center gap-1.5">
-      <Circle size={8} strokeWidth={4} color={color} fill={color} />
+      <CircleIcon size={10} color={color} weight="fill" />
       <Text className="text-xs text-muted-foreground">{label}</Text>
     </View>
   );
@@ -226,7 +228,7 @@ export default function BreakdownCalendar({
 
   const renderArrow = useCallback(
     (direction: "left" | "right") => {
-      const Icon = direction === "left" ? ChevronLeft : ChevronRight;
+      const Icon = direction === "left" ? CaretLeft : CaretRight;
       const isDisabled = direction === "right" ? isLatest : isEarliest;
       return (
         <View

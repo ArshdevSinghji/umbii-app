@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { THEME } from "@/lib/theme";
-import { BookmarkCheck } from "lucide-react-native";
+import { BookmarkSimple } from "phosphor-react-native/src/icons/BookmarkSimple";
 import MealMacros from "../../meal-macros";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
@@ -48,11 +48,7 @@ export default function MealCard({ log, onPress }: IProps) {
           </Text>
           {log.recipeId !== null && (
             <View accessibilityLabel="In your recipes">
-              <BookmarkCheck
-                size={16}
-                color={theme.chart2}
-                fill={theme.chart2}
-              />
+              <BookmarkSimple size={16} color={theme.chart2} weight="fill" />
             </View>
           )}
         </View>

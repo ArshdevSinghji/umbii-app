@@ -8,7 +8,8 @@ import { FLOATING_INPUT_BAR_BOTTOM_OFFSET } from "@/lib/floating-tab-bar";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
 import { LinearGradient } from "expo-linear-gradient";
-import { Mic, MoveUp } from "lucide-react-native";
+import { ArrowUp } from "phosphor-react-native/src/icons/ArrowUp";
+import { Microphone } from "phosphor-react-native/src/icons/Microphone";
 import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -138,7 +139,7 @@ export default function FoodInput() {
 
               {log.length === 0 ? (
                 <View className="h-9 w-9 items-center justify-center">
-                  <Mic size={20} color={theme.mutedForeground} />
+                  <Microphone size={20} color={theme.mutedForeground} />
                 </View>
               ) : (
                 <Pressable
@@ -149,7 +150,7 @@ export default function FoodInput() {
                   {isLoading ? (
                     <ActivityIndicator color={theme.primaryForeground} />
                   ) : (
-                    <MoveUp size={18} color={theme.primaryForeground} />
+                    <ArrowUp size={18} color={theme.primaryForeground} />
                   )}
                 </Pressable>
               )}

@@ -3,7 +3,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { X } from "lucide-react-native";
+import { X } from "phosphor-react-native/src/icons/X";
 import { useColorScheme } from "nativewind";
 import { ReactNode } from "react";
 import { Modal, Pressable, View } from "react-native";

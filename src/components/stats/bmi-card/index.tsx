@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
 import { calculateBmi, getBmiCategory } from "@/utils/calculate-bmi";
-import { Pencil } from "lucide-react-native";
+import { PencilSimple } from "phosphor-react-native/src/icons/PencilSimple";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { useBmiColors } from "../hooks/use-bmi-colors";
@@ -54,7 +54,7 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
           <Text className="text-xs font-sans-bold">
             {Number(height.toFixed(1))} cm
           </Text>
-          <Pencil size={12} color={theme.foreground} />
+          <PencilSimple size={12} color={theme.foreground} />
         </Pressable>
       </View>
 

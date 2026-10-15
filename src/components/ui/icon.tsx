@@ -1,21 +1,32 @@
 import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
-import type { LucideIcon, LucideProps } from 'lucide-react-native';
+import type {
+  IconProps as PhosphorIconProps,
+  Icon as PhosphorIcon,
+} from 'phosphor-react-native';
 import { cssInterop } from 'nativewind';
 import * as React from 'react';
 
-type IconProps = LucideProps & {
-  as: LucideIcon;
-} & React.RefAttributes<LucideIcon>;
+type IconProps = PhosphorIconProps & {
+  as: PhosphorIcon;
+  className?: string;
+  'aria-hidden'?: boolean;
+};
 
-function IconImpl({ as: IconComponent, ...props }: IconProps) {
+function IconImpl({
+  as: IconComponent,
+  'aria-hidden': _ariaHidden,
+  ...props
+}: IconProps) {
   return <IconComponent {...props} />;
 }
 
+// `text-*` classes become the icon's `color`, `size-*` its `size`.
 cssInterop(IconImpl, {
   className: {
     target: 'style',
     nativeStyleToProp: {
+      color: 'color',
       height: 'size',
       width: 'size',
     },
@@ -23,26 +34,30 @@ cssInterop(IconImpl, {
 });
 
 /**
- * A wrapper component for Lucide icons with Nativewind `className` support via `cssInterop`.
+ * A wrapper for Phosphor icons with Nativewind `className` support via `cssInterop`.
  *
- * This component allows you to render any Lucide icon while applying utility classes
- * using `nativewind`. It avoids the need to wrap or configure each icon individually.
+ * Renders any Phosphor icon while applying utility classes (`text-*` for the
+ * colour, `size-*` for the size), without wrapping each icon individually.
  *
- * @component
  * @example
  * ```tsx
- * import { ArrowRight } from 'lucide-react-native';
- * import { Icon } from '@/registry/components/ui/icon';
+ * import { ArrowRight } from 'phosphor-react-native/src/icons/ArrowRight';
+ * import { Icon } from '@/components/ui/icon';
  *
- * <Icon as={ArrowRight} className="text-red-500" size={16} />
+ * <Icon as={ArrowRight} className='text-red-500' size={16} />
  * ```
  *
- * @param {LucideIcon} as - The Lucide icon component to render.
+ * @param {PhosphorIcon} as - The Phosphor icon component to render.
  * @param {string} className - Utility classes to style the icon using Nativewind.
  * @param {number} size - Icon size (defaults to 14).
- * @param {...LucideProps} ...props - Additional Lucide icon props passed to the "as" icon.
+ * @param {...PhosphorIconProps} ...props - Other Phosphor props (e.g. `weight`).
  */
-function Icon({ as: IconComponent, className, size = 14, ...props }: IconProps) {
+function Icon({
+  as: IconComponent,
+  className,
+  size = 14,
+  ...props
+}: IconProps) {
   const textClass = React.useContext(TextClassContext);
   return (
     <IconImpl

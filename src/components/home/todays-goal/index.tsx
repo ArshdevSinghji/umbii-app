@@ -10,7 +10,10 @@ import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
-import { Drumstick, Flame, Ham, Milk } from "lucide-react-native";
+import { Avocado } from "phosphor-react-native/src/icons/Avocado";
+import { Egg } from "phosphor-react-native/src/icons/Egg";
+import { Fire } from "phosphor-react-native/src/icons/Fire";
+import { Grains } from "phosphor-react-native/src/icons/Grains";
 import { useColorScheme } from "nativewind";
 import { useEffect, useMemo } from "react";
 import { View } from "react-native";
@@ -84,11 +87,7 @@ export default function TodaysGoal() {
             trackStrokeWidth={5}
           >
             <View className="p-1 bg-primary rounded-full">
-              <Flame
-                size={20}
-                color={theme.background}
-                fill={theme.background}
-              />
+              <Fire size={20} color={theme.background} weight="fill" />
             </View>
           </CircularProgress>
         )}
@@ -103,9 +102,7 @@ export default function TodaysGoal() {
           max={goal.protein}
           name="Protein"
           color={theme.chart1}
-          icon={
-            <Drumstick size={12} color={theme.primary} fill={theme.chart1} />
-          }
+          icon={<Egg size={12} color={theme.chart1} weight="fill" />}
         />
 
         <GoalProgress
@@ -114,7 +111,7 @@ export default function TodaysGoal() {
           max={goal.carbs}
           name="Carbs"
           color={theme.chart2}
-          icon={<Milk size={12} color={theme.primary} fill={theme.chart2} />}
+          icon={<Grains size={12} color={theme.chart2} weight="fill" />}
         />
 
         <GoalProgress
@@ -123,7 +120,7 @@ export default function TodaysGoal() {
           max={goal.fat}
           name="Fat"
           color={theme.chart4}
-          icon={<Ham size={12} color={theme.primary} fill={theme.chart4} />}
+          icon={<Avocado size={12} color={theme.chart4} weight="fill" />}
         />
       </View>
     </GradientCard>

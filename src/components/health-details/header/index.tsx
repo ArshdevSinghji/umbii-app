@@ -1,6 +1,6 @@
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeft } from "phosphor-react-native/src/icons/ArrowLeft";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 

@@ -8,25 +8,29 @@ import { THEME } from "@/lib/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack } from "expo-router";
 import { Tabs, type BottomTabBarProps } from "expo-router/js-tabs";
-import {
-  ChartPie,
-  Home,
-  Rows3,
-  Utensils,
-  type LucideIcon,
-} from "lucide-react-native";
+// Phosphor, imported one icon at a time (the package root bundles all of
+// them): each has an outline and a filled weight, so the active tab is
+// filled and the rest are outlines.
+import type { Icon as PhosphorIcon } from "phosphor-react-native";
+import { ChartBar } from "phosphor-react-native/src/icons/ChartBar";
+import { ForkKnife } from "phosphor-react-native/src/icons/ForkKnife";
+import { House } from "phosphor-react-native/src/icons/House";
+import { Target } from "phosphor-react-native/src/icons/Target";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 
 const TABS: {
   name: string;
   title: string;
-  icon: LucideIcon;
+  icon: PhosphorIcon;
 }[] = [
-  { name: "home", title: "Home", icon: Home },
-  { name: "breakdown", title: "Breakdown", icon: Rows3 },
-  { name: "log-food", title: "Log Food", icon: Utensils },
-  { name: "stats", title: "Stats", icon: ChartPie },
+  // Labels describe what each tab shows; route names stay as they are.
+  { name: "home", title: "Home", icon: House },
+  // Calories and nutrients by day / week / month / year.
+  { name: "breakdown", title: "Stats", icon: ChartBar },
+  { name: "log-food", title: "Log Food", icon: ForkKnife },
+  // Weight and goal progress.
+  { name: "stats", title: "Goals", icon: Target },
 ];
 
 function FloatingTabBar({
@@ -149,8 +153,13 @@ export default function TabsLayout() {
             name={name}
             options={{
               title,
-              tabBarIcon: ({ color, size }) => (
-                <Icon color={color} size={size} />
+              tabBarIcon: ({ focused, color }) => (
+                <Icon
+                  // Our tab bar always passes a theme colour string.
+                  color={color as string}
+                  size={22}
+                  weight={focused ? "fill" : "regular"}
+                />
               ),
             }}
           />

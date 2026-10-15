@@ -1,12 +1,11 @@
-import { reportRequestError } from "@/lib/http-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { THEME } from "@/lib/theme";
-import { useAppSelector } from "@/store/hooks";
-import { BookmarkCheck, Flame } from "lucide-react-native";
+import { BookmarkSimple } from "phosphor-react-native/src/icons/BookmarkSimple";
+import { Fire } from "phosphor-react-native/src/icons/Fire";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -16,20 +15,20 @@ import ChildSheet from "@/components/meal-sheet/child-sheet";
 import TodaysMealsSkeleton from "./loading";
 import MealSheet from "@/components/meal-sheet";
 import MealSheetContent from "@/components/meal-sheet/content";
-import MealSheetContentSkeleton from "@/components/meal-sheet/content/loading";
 
 export default function TodaysMeals() {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
 
-  const { user } = useAppSelector((state) => state.userSlice);
-  const {
-    isListLoading: isLoading,
-    listFoodLogs,
-    selectedFoodLog,
-    isFoodLogLoading,
-    fetchFoodLogById,
-  } = useFoodLogsActionsHook();
+  const { isListLoading: isLoading, listFoodLogs } = useFoodLogsActionsHook();
+
+  // The day's list already has each meal's items, so the sheet opens straight
+  // from it — no extra request. Kept after closing so the sheet can slide out
+  // with its content.
+  const [openedLog, setOpenedLog] = useState<IFoodLog | null>(null);
+  // Live copy from the list, so recipeId updates as soon as it's saved.
+  const selectedFoodLog =
+    listFoodLogs.find((log) => log.id === openedLog?.id) ?? openedLog;
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSaveOpen, setIsSaveOpen] = useState(false);
@@ -39,10 +38,8 @@ export default function TodaysMeals() {
 
   const handleLogPress = (log: IFoodLog) => {
     setIsSaveOpen(false);
+    setOpenedLog(log);
     setIsModalVisible(true);
-    fetchFoodLogById(user.id, log.id).catch((error) =>
-      reportRequestError("Error fetching meal:", error),
-    );
   };
 
   const openSave = () => {
@@ -58,17 +55,15 @@ export default function TodaysMeals() {
     else setIsModalVisible(false);
   };
 
-  const isLogReady = !isFoodLogLoading && !!selectedFoodLog;
-
   // Below the meal: "Save as recipe" (opens a child sheet in the same Modal)
   // or "In your recipes" once it's linked to one (saved as, or eaten from).
   const renderRecipeFooter = () => {
-    if (!isLogReady || !selectedFoodLog) return null;
+    if (!selectedFoodLog) return null;
 
     if (selectedFoodLog.recipeId !== null) {
       return (
         <View className="flex-row items-center justify-center gap-2 pt-4">
-          <BookmarkCheck size={16} color={theme.chart2} fill={theme.chart2} />
+          <BookmarkSimple size={16} color={theme.chart2} weight="fill" />
           <Text className="text-sm text-muted-foreground">In your recipes</Text>
         </View>
       );
@@ -121,7 +116,7 @@ export default function TodaysMeals() {
                         style={{ backgroundColor: "rgba(255, 90, 0, 0.12)" }}
                         className="p-1 rounded-full"
                       >
-                        <Flame size={16} color="#FF5A00" fill="#FF5A00" />
+                        <Fire size={16} color="#FF5A00" weight="fill" />
                       </View>
                       <Text className="font-sans-bold">
                         {`${totalCalories.toFixed(0)} Kcal`}
@@ -163,11 +158,7 @@ export default function TodaysMeals() {
           )
         }
       >
-        {isFoodLogLoading || !selectedFoodLog ? (
-          <MealSheetContentSkeleton />
-        ) : (
-          <MealSheetContent log={selectedFoodLog} />
-        )}
+        {selectedFoodLog && <MealSheetContent log={selectedFoodLog} />}
       </MealSheet>
     </View>
   );

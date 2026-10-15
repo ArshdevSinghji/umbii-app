@@ -10,7 +10,7 @@ interface IProps {
 export default function BreakdownHeader({ action }: IProps) {
   return (
     <View className="mb-2 flex-row items-center justify-between gap-4">
-      <Text className="font-sans-bold text-lg">Statistic</Text>
+      <Text className="font-sans-bold text-lg">Stats</Text>
       {action}
     </View>
   );

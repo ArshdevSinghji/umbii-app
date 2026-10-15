@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { DayStatus } from "../calendar.utils";
-import { Circle } from "lucide-react-native";
+import { CircleIcon } from "phosphor-react-native/src/icons/Circle";
 
 // The expandable calendar sizes each week row at 46px: this cell (42) plus
 // 2px above and below (`weekVerticalMargin`). The content (30px circle with
@@ -126,7 +126,7 @@ export default function CalendarDay({
       {/* Fixed 6px slot so the row height never changes. */}
       <View className="h-1.5 w-1.5 items-center justify-center pt-1">
         {showStatus && status !== "none" && (
-          <Circle size={7} strokeWidth={4} color={dotColor} fill={dotColor} />
+          <CircleIcon size={9} color={dotColor} weight="fill" />
         )}
       </View>
     </Pressable>

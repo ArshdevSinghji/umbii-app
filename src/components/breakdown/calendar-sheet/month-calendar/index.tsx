@@ -2,7 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
 import { toLocalDateKey } from "@/utils/date";
-import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { CaretLeft } from "phosphor-react-native/src/icons/CaretLeft";
+import { CaretRight } from "phosphor-react-native/src/icons/CaretRight";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
@@ -62,7 +63,7 @@ export default function MonthCalendar({
           accessibilityLabel="Previous month"
           className="active:opacity-60"
         >
-          <ChevronLeft size={20} color={theme.foreground} />
+          <CaretLeft size={20} color={theme.foreground} />
         </Pressable>
         <Text className="min-w-36 text-center font-sans-bold text-base">
           {formatMonthTitle(month)}
@@ -76,7 +77,7 @@ export default function MonthCalendar({
           className="active:opacity-60"
           style={{ opacity: isCurrentMonth ? 0.25 : 1 }}
         >
-          <ChevronRight size={20} color={theme.foreground} />
+          <CaretRight size={20} color={theme.foreground} />
         </Pressable>
       </View>
 

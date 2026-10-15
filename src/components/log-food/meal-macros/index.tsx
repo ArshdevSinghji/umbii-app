@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/text";
 import { IFoodLogDetail } from "@/features/food-logs/food-logs.types";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { THEME } from "@/lib/theme";
-import { Flame } from "lucide-react-native";
+import { Fire } from "phosphor-react-native/src/icons/Fire";
 import { useColorScheme } from "nativewind";
 import { View } from "react-native";
 
@@ -24,7 +24,7 @@ export default function MealMacros({ details }: IProps) {
           style={{ backgroundColor: "rgba(255, 90, 0, 0.12)" }}
           className="rounded-full p-1"
         >
-          <Flame size={12} color="#FF5A00" fill="#FF5A00" />
+          <Fire size={12} color="#FF5A00" weight="fill" />
         </View>
         <Text className="text-xs font-sans-bold">
           {calories.toFixed(0)} kcal

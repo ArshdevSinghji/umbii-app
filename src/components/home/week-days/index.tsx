@@ -9,7 +9,7 @@ import { THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/hooks";
 import { getCurrentWeek } from "@/utils/get-current-week";
-import { CircleCheck } from "lucide-react-native";
+import { CheckCircle } from "phosphor-react-native/src/icons/CheckCircle";
 import { useColorScheme } from "nativewind";
 import { useCallback } from "react";
 import { Pressable, View } from "react-native";
@@ -89,11 +89,8 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
 
                 {isCompleted && (
                   <View className="absolute top-0 -right-0.5">
-                    <CircleCheck
-                      size={12}
-                      fill={theme.chart2}
-                      color={theme.primaryForeground}
-                    />
+                    {/* Green disc with the check cut out. */}
+                    <CheckCircle size={12} weight="fill" color={theme.chart2} />
                   </View>
                 )}
               </View>

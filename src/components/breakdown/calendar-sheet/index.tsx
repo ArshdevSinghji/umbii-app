@@ -4,7 +4,7 @@ import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutri
 import { reportRequestError } from "@/lib/http-client";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
-import { X } from "lucide-react-native";
+import { X } from "phosphor-react-native/src/icons/X";
 import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, View } from "react-native";

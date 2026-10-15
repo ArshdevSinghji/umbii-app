@@ -1,5 +1,6 @@
 import { THEME } from "@/lib/theme";
-import { X, Send } from "lucide-react-native";
+import { PaperPlaneRight } from "phosphor-react-native/src/icons/PaperPlaneRight";
+import { X } from "phosphor-react-native/src/icons/X";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import Waveform from "../waveform";
@@ -33,7 +34,7 @@ export default function RecordingUI({
         onPress={onSend}
         className="h-9 w-9 items-center justify-center rounded-full bg-primary"
       >
-        <Send size={16} color={theme.primaryForeground} />
+        <PaperPlaneRight size={16} color={theme.primaryForeground} />
       </Pressable>
     </View>
   );
