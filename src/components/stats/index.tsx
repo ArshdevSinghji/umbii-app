@@ -4,6 +4,7 @@ import { getWeightPeriodRange } from "@/features/weight-journals/weight-journals
 import { useAppSelector } from "@/store/hooks";
 import { ErrorState } from "@/components/ui/error-state";
 import { reportRequestError } from "@/lib/http-client";
+import { useRefresh } from "@/lib/pull-to-refresh";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -45,6 +46,14 @@ export default function GoalProgress() {
     loadLatest();
     loadChart();
   }, [user.id]);
+
+  // Pull-to-refresh: both, rejecting on failure so the toast can show.
+  useRefresh(() =>
+    Promise.all([
+      fetchLatestWeightJournal(user.id),
+      fetchWeightChart(user.id, getWeightPeriodRange("week")),
+    ]),
+  );
 
   const handleRetryLatest = async () => {
     setIsRetrying(true);

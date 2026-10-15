@@ -81,7 +81,14 @@ export default function WeightChart({
       endDate,
       latest,
     );
-    return <WeightLineChart key={entries.length} points={points} unit="kg" />;
+    return (
+      <WeightLineChart
+        key={entries.length}
+        points={points}
+        unit="kg"
+        targetWeight={parseFloat(latest.targetWeight)}
+      />
+    );
   };
 
   return (

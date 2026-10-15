@@ -2,32 +2,43 @@ import { Text } from "@/components/ui/text";
 import { WeightChartPoint } from "@/features/weight-journals/weight-journals.utils";
 import { THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { parseLocalDateKey } from "@/utils/date";
 import { area, curveMonotoneX, line } from "d3-shape";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
-import { LayoutChangeEvent, View } from "react-native";
+import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { useRef, useState } from "react";
+import { GestureResponderEvent, LayoutChangeEvent, View } from "react-native";
 import Svg, {
   Circle,
   Defs,
   Line,
   LinearGradient,
   Path,
-  Rect,
   Stop,
 } from "react-native-svg";
 
 const CHART_HEIGHT = 180;
-const PADDING = { top: 36, right: 16, bottom: 28, left: 44 };
+// Top room fits the info label (TOOLTIP_HEIGHT) above the plot.
+const PADDING = { top: 48, right: 16, bottom: 28, left: 44 };
 const Y_TICKS = 5;
 const MAX_X_LABELS = 7;
-const BADGE_WIDTH = 48;
+const TOOLTIP_WIDTH = 104;
+const TOOLTIP_EXPANDED_WIDTH = 148;
+// py-1 (8) + text-sm line (20) + text-[10px] line (~14).
+const TOOLTIP_HEIGHT = 42;
 
 interface IProps {
   points: WeightChartPoint[];
   unit: string;
+  // Goal weight, for the "to goal" detail. Omit to leave it out.
+  targetWeight?: number | null;
 }
 
-export default function WeightLineChart({ points, unit }: IProps) {
+export default function WeightLineChart({
+  points,
+  unit,
+  targetWeight,
+}: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
   const color = theme.chart2;
@@ -36,6 +47,14 @@ export default function WeightLineChart({ points, unit }: IProps) {
   const [selectedIndex, setSelectedIndex] = useState(() =>
     points.findLastIndex((point) => point.isLogged),
   );
+
+  // The label shows weight and date; tapping the selected dot again opens
+  // the extra details (and closes them). It stays open while scrubbing.
+  const [isExpanded, setIsExpanded] = useState(false);
+  // Per touch: did it start on the selected dot, and did it move the
+  // selection? A plain tap on the selected dot toggles the details.
+  const touchStartedOnSelected = useRef(false);
+  const touchChangedSelection = useRef(false);
 
   const handleLayout = (event: LayoutChangeEvent) =>
     setWidth(event.nativeEvent.layout.width);
@@ -80,17 +99,94 @@ export default function WeightLineChart({ points, unit }: IProps) {
   const yTickDecimals = yMax - yMin < Y_TICKS ? 1 : 0;
 
   const xLabelStep = Math.ceil(points.length / MAX_X_LABELS);
-  const columnWidth =
-    points.length > 1 ? plotWidth / (points.length - 1) : plotWidth;
+
+  // Nearest day the user actually logged to a touch at `x`; carried-forward
+  // days have no reading of their own, so they're skipped.
+  const getNearestLoggedIndex = (x: number) => {
+    let nearest = -1;
+    let nearestDistance = Infinity;
+    points.forEach((point, index) => {
+      if (!point.isLogged || point.weight === null) return;
+      const distance = Math.abs(getX(index) - x);
+      if (distance < nearestDistance) {
+        nearest = index;
+        nearestDistance = distance;
+      }
+    });
+    return nearest;
+  };
+
+  // Tap a dot or drag across the chart: the selection follows the finger.
+  const handleTouch = (event: GestureResponderEvent) => {
+    const index = getNearestLoggedIndex(event.nativeEvent.locationX);
+    if (index !== -1 && index !== selectedIndex) {
+      setSelectedIndex(index);
+      touchChangedSelection.current = true;
+    }
+  };
+
+  const handleTouchStart = (event: GestureResponderEvent) => {
+    const index = getNearestLoggedIndex(event.nativeEvent.locationX);
+    touchStartedOnSelected.current = index !== -1 && index === selectedIndex;
+    touchChangedSelection.current = false;
+    handleTouch(event);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartedOnSelected.current && !touchChangedSelection.current) {
+      setIsExpanded((expanded) => !expanded);
+    }
+  };
 
   const selected = points[selectedIndex];
+  const selectedX = selected ? getX(selectedIndex) : null;
   const selectedY = selected?.weight != null ? getY(selected.weight) : null;
-  const badgeLeft = selected
-    ? Math.min(
-        Math.max(getX(selectedIndex) - BADGE_WIDTH / 2, 0),
-        width - BADGE_WIDTH,
-      )
-    : 0;
+  const tooltipWidth = isExpanded ? TOOLTIP_EXPANDED_WIDTH : TOOLTIP_WIDTH;
+  const tooltipLeft =
+    selectedX !== null
+      ? Math.min(
+          Math.max(selectedX - tooltipWidth / 2, 0),
+          width - tooltipWidth,
+        )
+      : 0;
+
+  // Extra details for the selected day, shown when the label is opened.
+  const getDetails = () => {
+    if (!selected || selected.weight === null) return [];
+    const details: string[] = [];
+
+    // Change since the previous weigh-in (carried-forward days skipped).
+    for (let index = selectedIndex - 1; index >= 0; index--) {
+      const previous = points[index];
+      if (!previous.isLogged || previous.weight === null) continue;
+      const change = selected.weight - previous.weight;
+      const day = parseLocalDateKey(previous.date).toLocaleDateString(
+        undefined,
+        { weekday: "short" },
+      );
+      details.push(
+        `${change >= 0 ? "+" : "−"}${Math.abs(change).toFixed(1)} ${unit} since ${day}`,
+      );
+      break;
+    }
+
+    if (targetWeight != null) {
+      const remaining = Math.abs(selected.weight - targetWeight);
+      details.push(
+        remaining < 0.05
+          ? "Goal reached"
+          : `${remaining.toFixed(1)} ${unit} to goal`,
+      );
+    }
+
+    if (selected.progress !== null) {
+      details.push(`${selected.progress.toFixed(0)}% toward goal this week`);
+    }
+
+    return details;
+  };
+  const details = isExpanded ? getDetails() : [];
+  const Chevron = isExpanded ? ChevronUp : ChevronDown;
 
   return (
     <View style={{ height: CHART_HEIGHT }} onLayout={handleLayout}>
@@ -119,7 +215,20 @@ export default function WeightLineChart({ points, unit }: IProps) {
             <Path d={areaPath} fill="url(#weightArea)" />
             <Path d={linePath} fill="none" stroke={color} strokeWidth={2.5} />
 
-            {/* Dots and tap targets only on days the user actually logged. */}
+            {/* From the info label down to the selected dot. */}
+            {selectedX !== null && selectedY !== null && (
+              <Line
+                x1={selectedX}
+                x2={selectedX}
+                y1={TOOLTIP_HEIGHT}
+                y2={plotBottom}
+                stroke={theme.mutedForeground}
+                strokeOpacity={0.5}
+                strokeWidth={1}
+              />
+            )}
+
+            {/* Dots only on days the user actually logged. */}
             {coordinates.map((coordinate, index) =>
               coordinate && points[index].isLogged ? (
                 <Circle
@@ -130,20 +239,6 @@ export default function WeightLineChart({ points, unit }: IProps) {
                   fill={index === selectedIndex ? color : theme.card}
                   stroke={color}
                   strokeWidth={2}
-                />
-              ) : null,
-            )}
-
-            {coordinates.map((coordinate, index) =>
-              coordinate && points[index].isLogged ? (
-                <Rect
-                  key={`hit-${points[index].date}`}
-                  x={coordinate[0] - columnWidth / 2}
-                  y={0}
-                  width={columnWidth}
-                  height={CHART_HEIGHT}
-                  fill="transparent"
-                  onPress={() => setSelectedIndex(index)}
                 />
               ) : null,
             )}
@@ -181,22 +276,54 @@ export default function WeightLineChart({ points, unit }: IProps) {
             );
           })}
 
-          {selected && selectedY !== null && selected.progress !== null && (
+          {/* Info for the selected day: weight and date; tap the selected
+              dot again for more (the chevron hints at it). */}
+          {selected && selected.weight !== null && (
             <View
               pointerEvents="none"
-              className="absolute items-center rounded-full py-1"
-              style={{
-                top: selectedY - 34,
-                left: badgeLeft,
-                width: BADGE_WIDTH,
-                backgroundColor: color,
-              }}
+              className="absolute top-0 items-center rounded-lg bg-muted px-2 py-1"
+              style={{ left: tooltipLeft, width: tooltipWidth }}
             >
-              <Text className="text-xs font-sans-bold text-white">
-                {selected.progress.toFixed(0)}%
+              <Text className="text-sm font-sans-bold">
+                {selected.weight.toFixed(1)}
+                <Text className="text-xs text-muted-foreground">
+                  {` ${unit}`}
+                </Text>
               </Text>
+              <View className="flex-row items-center gap-0.5">
+                <Text className="text-[10px] text-muted-foreground">
+                  {parseLocalDateKey(selected.date).toLocaleDateString(
+                    undefined,
+                    { weekday: "short", day: "numeric", month: "short" },
+                  )}
+                </Text>
+                <Chevron size={10} color={theme.mutedForeground} />
+              </View>
+              {details.length > 0 && (
+                <View className="mt-1 w-full gap-0.5 border-t border-border pt-1">
+                  {details.map((detail) => (
+                    <Text
+                      key={detail}
+                      className="text-center text-[10px] text-foreground"
+                    >
+                      {detail}
+                    </Text>
+                  ))}
+                </View>
+              )}
             </View>
           )}
+
+          {/* Touch layer over the whole chart for tapping and scrubbing. A
+              vertical page scroll can still take the touch over. */}
+          <View
+            className="absolute inset-0"
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderGrant={handleTouchStart}
+            onResponderMove={handleTouch}
+            onResponderRelease={handleTouchEnd}
+          />
         </>
       )}
     </View>

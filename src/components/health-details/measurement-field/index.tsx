@@ -39,7 +39,9 @@ export default function MeasurementField({
       <View className="flex-row items-center justify-between gap-4">
         <View className="gap-0.5">
           <Text className="text-sm text-muted-foreground">{label}</Text>
-          {hint && <Text className="text-xs text-muted-foreground">{hint}</Text>}
+          {hint && (
+            <Text className="text-xs text-muted-foreground">{hint}</Text>
+          )}
         </View>
         {action}
       </View>
@@ -69,9 +71,21 @@ export default function MeasurementField({
           indicatorWidth={4}
           indicatorHeight={LONG_STEP + 12}
           indicatorColor={theme.chart2}
-          valueTextStyle={{ color: theme.foreground, fontSize: 32, fontFamily: "Caudex-Bold" }}
-          unitTextStyle={{ color: theme.mutedForeground, fontSize: 16, fontFamily: "Caudex-Regular" }}
-          labelTextStyle={{ color: theme.mutedForeground, fontSize: 12, fontFamily: "Caudex-Regular" }}
+          valueTextStyle={{
+            color: theme.foreground,
+            fontSize: 32,
+            fontFamily: "Caudex-Bold",
+          }}
+          unitTextStyle={{
+            color: theme.mutedForeground,
+            fontSize: 16,
+            fontFamily: "Caudex-Regular",
+          }}
+          labelTextStyle={{
+            color: theme.mutedForeground,
+            fontSize: 12,
+            fontFamily: "Caudex-Regular",
+          }}
         />
       </View>
 

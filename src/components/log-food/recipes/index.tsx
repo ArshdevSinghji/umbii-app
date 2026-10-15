@@ -13,6 +13,7 @@ import { Text } from "@/components/ui/text";
 import { useRecipesActionsHook } from "@/features/recipes/recipes.hooks";
 import { ErrorState } from "@/components/ui/error-state";
 import { useInitialLoad } from "@/lib/use-initial-load";
+import { useRefresh } from "@/lib/pull-to-refresh";
 import { useAppSelector } from "@/store/hooks";
 import { Pressable, View } from "react-native";
 import RecipesEmptyState from "./empty-state";
@@ -28,6 +29,8 @@ export default function Recipes() {
     () => fetchRecipes(user.id),
     !!user.id,
   );
+
+  useRefresh(() => fetchRecipes(user.id));
 
   // Kept after closing so the sheet can slide out with its content.
   const [openedRecipe, setOpenedRecipe] = useState<IRecipe | null>(null);

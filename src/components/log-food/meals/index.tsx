@@ -9,6 +9,7 @@ import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { THEME } from "@/lib/theme";
 import { useInitialLoad } from "@/lib/use-initial-load";
+import { useRefresh } from "@/lib/pull-to-refresh";
 import { useAppSelector } from "@/store/hooks";
 import { BookmarkCheck } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
@@ -31,6 +32,8 @@ export default function Meals() {
     () => fetchRecentFoodLogs(user.id),
     !!user.id,
   );
+
+  useRefresh(() => fetchRecentFoodLogs(user.id));
 
   // Kept after closing so the sheet can slide out with its content.
   const [openedLog, setOpenedLog] = useState<IFoodLog | null>(null);

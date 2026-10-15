@@ -1,4 +1,5 @@
 import { reportRequestError } from "@/lib/http-client";
+import { RefreshableScrollView, useRefresh } from "@/lib/pull-to-refresh";
 import { toLocalDateKey } from "@/utils/date";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
@@ -72,6 +73,17 @@ export default function DailyBreakdown() {
     );
   }, [user.id, startDate, endDate]);
 
+  // Pull-to-refresh: the same two requests, for the current period.
+  useRefresh(() =>
+    Promise.all([
+      fetchNutritionTarget(
+        user.id,
+        period === "day" ? { date: selectedDate } : { startDate, endDate },
+      ),
+      fetchPeriodFoodLogs(user.id, { startDate, endDate }),
+    ]),
+  );
+
   const isLoading = isFoodLogsLoading || isTargetLoading;
 
   // Compare intake and target over the same covered days: the target range
@@ -125,7 +137,11 @@ export default function DailyBreakdown() {
   const periodSelect = <PeriodSelect value={period} onChange={setPeriod} />;
 
   return (
-    <View className="flex-1">
+    // The pull-to-refresh spans the whole page from the top, like the other
+    // tabs, rather than starting on the sheet right below the calendar's drag
+    // handle. Its content is exactly screen-high, so it never scrolls itself;
+    // it only allows the pull. The sheet inside scrolls on its own.
+    <RefreshableScrollView contentContainerStyle={{ flexGrow: 1 }}>
       {/* Remount on theme change: the calendar reads its colours once. */}
       <CalendarProvider
         key={colorScheme}
@@ -147,6 +163,8 @@ export default function DailyBreakdown() {
 
         <ScrollView
           className="flex-1 bg-card"
+          // Android: scroll inside the page's (non-scrolling) refresh view.
+          nestedScrollEnabled
           // One section on the page, not separate cards: calories, then the
           // health score and nutrients.
           contentContainerStyle={{
@@ -175,6 +193,6 @@ export default function DailyBreakdown() {
           )}
         </ScrollView>
       </CalendarProvider>
-    </View>
+    </RefreshableScrollView>
   );
 }

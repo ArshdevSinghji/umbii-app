@@ -1,3 +1,4 @@
+import { useRefresh } from "@/lib/pull-to-refresh";
 import { useFocusEffect } from "expo-router";
 import { reportRequestError } from "@/lib/http-client";
 import { toLocalDateKey } from "@/utils/date";
@@ -40,6 +41,13 @@ export default function WeekDays({ date, handleDatePress }: IProps) {
       }).catch((error) => reportRequestError("Error fetching report:", error));
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user.id, today]),
+  );
+
+  useRefresh(() =>
+    fetchNutritionTargetReport(user.id, {
+      startDate: week[0].fullDate,
+      endDate: today,
+    }),
   );
 
   const completedDates = report?.completedDates ?? [];

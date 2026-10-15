@@ -103,7 +103,7 @@ index eed0f9e..a7bcdf7 100644
  //# sourceMappingURL=RulerPickerItem.d.ts.map
 \ No newline at end of file
 diff --git a/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx b/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
-index 8d1f0d1..116da43 100644
+index 8d1f0d1..de4f7e4 100644
 --- a/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
 +++ b/node_modules/react-native-ruler-picker/src/components/RulerPicker.tsx
 @@ -1,6 +1,7 @@
@@ -171,7 +171,7 @@ index 8d1f0d1..116da43 100644
    min,
    max,
    step = 1,
-@@ -134,18 +144,44 @@ export const RulerPicker = ({
+@@ -134,18 +144,56 @@ export const RulerPicker = ({
    shortStepHeight = 20,
    longStepHeight = 40,
    stepWidth = 2,
@@ -197,7 +197,18 @@ index 8d1f0d1..116da43 100644
 +  // (e.g. 1 + 6 = 7dp on a 2.625x screen) get rounded per item by the list,
 +  // and that error accumulates across hundreds of steps.
 +  const itemWidth = PixelRatio.roundToNearestPixel(stepWidth + gapBetweenSteps);
-+  const sideSpacing = PixelRatio.roundToNearestPixel(width / 2 - itemWidth / 2);
++  // Left padding is a whole number of steps, so FlashList's own initial
++  // scroll (item at the left edge, after this padding) lands exactly on the
++  // starting value from the first frame. The indicator sits over the step
++  // after the padding: within half a step of the screen centre.
++  const sideSlots = Math.max(
++    0,
++    Math.round((width / 2 - itemWidth / 2) / itemWidth)
++  );
++  const sideSpacing = sideSlots * itemWidth;
++  // Right padding fills the rest, so the last step can still reach the
++  // indicator.
++  const endSpacing = Math.max(0, width - sideSpacing - itemWidth);
 +
 +  // Round, not floor: (74 - 30) / 0.1 is 439.999... in floating point.
 +  const itemAmount = Math.round((max - min) / step);
@@ -214,12 +225,13 @@ index 8d1f0d1..116da43 100644
 +    itemAmount,
 +    Math.max(0, Math.round((initialValue - min) / step))
 +  );
-+  const hasScrolledToInitial = useRef(false);
++  // Set on the first drag: from then on the user owns the position.
++  const hasUserScrolled = useRef(false);
 +  const listRef = useRef<FlashListRef<number>>(null);
  
    const stepTextRef = useRef<TextInput>(null);
    const prevValue = useRef<string>(initialValue.toFixed(fractionDigits));
-@@ -158,8 +194,8 @@ export const RulerPicker = ({
+@@ -158,8 +206,8 @@ export const RulerPicker = ({
      ({ value }) => {
        const newStep = calculateCurrentValue(
          value,
@@ -230,7 +242,7 @@ index 8d1f0d1..116da43 100644
          min,
          max,
          step,
-@@ -173,7 +209,7 @@ export const RulerPicker = ({
+@@ -173,7 +221,7 @@ export const RulerPicker = ({
  
        prevValue.current = newStep;
      },
@@ -239,18 +251,31 @@ index 8d1f0d1..116da43 100644
    );
  
    useEffect(() => {
-@@ -200,8 +236,8 @@ export const RulerPicker = ({
+@@ -199,10 +247,20 @@ export const RulerPicker = ({
+     }
    );
  
-   const renderSeparator = useCallback(
+-  const renderSeparator = useCallback(
 -    () => <View style={{ width: width * 0.5 - stepWidth * 0.5 }} />,
 -    [stepWidth, width]
++  const renderHeader = useCallback(
 +    () => <View style={{ width: sideSpacing }} />,
 +    [sideSpacing]
    );
++  const renderFooter = useCallback(
++    () => <View style={{ width: endSpacing }} />,
++    [endSpacing]
++  );
++  // Scrolling item `initialIndex - sideSlots` to the left edge puts
++  // `initialIndex` under the indicator. Values within the first screen
++  // (fewer steps from `min` than the padding) start at 0 and are moved the
++  // short rest of the way by scrollToInitial.
++  const initialScrollIndex =
++    initialIndex >= sideSlots ? initialIndex - sideSlots : undefined;
  
    const renderItem: ListRenderItem<unknown> = useCallback(
-@@ -210,23 +246,39 @@ export const RulerPicker = ({
+     ({ index }) => {
+@@ -210,23 +268,39 @@ export const RulerPicker = ({
          <RulerPickerItem
            isLast={index === arrData.length - 1}
            index={index}
@@ -290,7 +315,7 @@ index 8d1f0d1..116da43 100644
      ]
    );
  
-@@ -234,8 +286,8 @@ export const RulerPicker = ({
+@@ -234,8 +308,8 @@ export const RulerPicker = ({
      (event: NativeSyntheticEvent<NativeScrollEvent>) => {
        const newStep = calculateCurrentValue(
          event.nativeEvent.contentOffset.x || event.nativeEvent.contentOffset.y,
@@ -301,7 +326,7 @@ index 8d1f0d1..116da43 100644
          min,
          max,
          step,
-@@ -250,113 +302,78 @@ export const RulerPicker = ({
+@@ -250,113 +324,83 @@ export const RulerPicker = ({
      },
      [
        fractionDigits,
@@ -316,21 +341,19 @@ index 8d1f0d1..116da43 100644
    );
 -  function onContentSizeChange() {
 -    const initialIndex = Math.floor((initialValue - min) / step);
--    listRef.current?.scrollToOffset({
++  // Backup for the initial position (same offset FlashList's own initial
++  // scroll lands on): lands the starting value exactly under the indicator.
++  // Re-applied on every layout and content-size change until the user first
++  // drags: a single early attempt can be clamped short (content not yet wide
++  // enough) or undone by a later re-layout. After the first drag it never
++  // runs again, so it can't snap the picker back.
++  function scrollToInitial() {
++    if (hasUserScrolled.current) return;
+     listRef.current?.scrollToOffset({
 -      offset: initialIndex * (stepWidth + gapBetweenSteps),
--      animated: false,
--    });
-+  // `initialScrollIndex` makes the list render its first batch around the
-+  // starting value; this one-off correction then lands it exactly (the side
-+  // spacing means the target step sits mid-screen, not at the left edge).
-+  // Only once, so later re-layouts can't snap the picker back.
-+  function onContentSizeChange(contentWidth: number) {
-+    if (hasScrolledToInitial.current) return;
-+    const offset = initialIndex * itemWidth;
-+    // Wait until the content is wide enough, or the scroll gets clamped short.
-+    if (contentWidth < offset + width) return;
-+    hasScrolledToInitial.current = true;
-+    listRef.current?.scrollToOffset({ offset, animated: false });
++      offset: initialIndex * itemWidth,
+       animated: false,
+     });
    }
  
 +  const listHeight =
@@ -440,13 +463,17 @@ index 8d1f0d1..116da43 100644
 +          data={arrData}
 +          keyExtractor={(_, index) => index.toString()}
 +          renderItem={renderItem}
-+          ListHeaderComponent={renderSeparator}
-+          ListFooterComponent={renderSeparator}
++          ListHeaderComponent={renderHeader}
++          ListFooterComponent={renderFooter}
++          initialScrollIndex={initialScrollIndex}
 +          onScroll={scrollHandler}
 +          onMomentumScrollEnd={onMomentumScrollEnd}
 +          snapToOffsets={snapOffsets}
-+          initialScrollIndex={initialIndex}
-+          onContentSizeChange={onContentSizeChange}
++          onContentSizeChange={scrollToInitial}
++          onLayout={() => requestAnimationFrame(scrollToInitial)}
++          onScrollBeginDrag={() => {
++            hasUserScrolled.current = true;
++          }}
 +          snapToAlignment="start"
 +          decelerationRate={decelerationRate}
 +          scrollEventThrottle={16}
@@ -477,7 +504,7 @@ index 8d1f0d1..116da43 100644
          />
        </View>
      </View>
-@@ -364,17 +381,12 @@ export const RulerPicker = ({
+@@ -364,17 +408,12 @@ export const RulerPicker = ({
  };
  
  const styles = StyleSheet.create({

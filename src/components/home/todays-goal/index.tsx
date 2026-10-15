@@ -1,4 +1,5 @@
 import { reportRequestError } from "@/lib/http-client";
+import { useRefresh } from "@/lib/pull-to-refresh";
 import { GradientCard } from "@/components/ui/gradient-card";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Separator } from "@/components/ui/separator";
@@ -34,6 +35,8 @@ export default function TodaysGoal() {
       reportRequestError("Error fetching target:", error),
     );
   }, [user.id]);
+
+  useRefresh(() => fetchNutritionTarget(user.id));
 
   const nutrition = useMemo(() => {
     const allDetails = listFoodLogs.flatMap((log) => log.details);

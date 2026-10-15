@@ -1,8 +1,10 @@
 import { useUserActionsHook } from "@/features/user/user.hook";
 import { useWeightJournalsActionsHook } from "@/features/weight-journals/weight-journals.hooks";
-import { isLoggedToday } from "@/features/weight-journals/weight-journals.utils";
 import { useAppSelector } from "@/store/hooks";
-import { HealthDetailsMode, HealthDetailsValues } from "../health-details.schema";
+import {
+  HealthDetailsMode,
+  HealthDetailsValues,
+} from "../health-details.schema";
 
 const toApiWeight = (weight: number) => weight.toFixed(1);
 
@@ -16,22 +18,25 @@ export function useSaveHealthDetails(mode: HealthDetailsMode) {
   } = useWeightJournalsActionsHook();
   const { isUpdating: isSavingHeight, updateHeight } = useUserActionsHook();
 
-  // All-time latest entry, so "update today's entry vs create" and the form's
-  // starting values are right even after a week without entries.
+  // All-time latest entry: the form's starting values and the goal kept when
+  // only the weight changes, right even after a week without entries.
   const latest = latestWeightJournal;
 
-  const save = async ({ currentWeight, targetWeight, height }: HealthDetailsValues) => {
+  const save = async ({
+    currentWeight,
+    targetWeight,
+    height,
+  }: HealthDetailsValues) => {
     if (mode === "height") {
       await updateHeight(height);
       return;
     }
 
-    // Writes today's weight entry: updates it if one exists, otherwise creates
-    // one. Safe to repeat, so a retry after a partial failure can't duplicate it.
+    // Writes today's weight entry. POST is an upsert (one entry per day): the
+    // first save of the day creates it, later ones replace it. Safe to repeat,
+    // so a retry after a partial failure can't duplicate it.
     const saveTodaysWeight = (weight: string, target: string) =>
-      latest && isLoggedToday(latest)
-        ? updateWeightJournal(user.id, latest.id, weight, target)
-        : createWeightJournal(user.id, weight, target);
+      createWeightJournal(user.id, weight, target);
 
     // First entry: weight and height go out together. Height is a PUT, so
     // resending it on retry is harmless too.
@@ -44,7 +49,12 @@ export function useSaveHealthDetails(mode: HealthDetailsMode) {
     }
 
     if (mode === "goal") {
-      await updateWeightJournal(user.id, latest.id, latest.currentWeight, toApiWeight(targetWeight));
+      await updateWeightJournal(
+        user.id,
+        latest.id,
+        latest.currentWeight,
+        toApiWeight(targetWeight),
+      );
       return;
     }
 

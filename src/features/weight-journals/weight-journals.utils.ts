@@ -31,9 +31,6 @@ const getWeightPeriodRange = (
   };
 };
 
-const isLoggedToday = (journal: IWeightJournal) =>
-  toDateKey(journal.createdAt) === toLocalDateKey();
-
 const sortByDate = (journals: IWeightJournal[]) =>
   [...journals].sort(
     (a, b) => a.createdAt.localeCompare(b.createdAt) || a.id - b.id,
@@ -163,5 +160,4 @@ export {
   getPeriodProgress,
   getProgressStatus,
   getWeightPeriodRange,
-  isLoggedToday,
 };

@@ -1,6 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { reportRequestError } from "@/lib/http-client";
+import { useRefresh } from "@/lib/pull-to-refresh";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
 import { parseLocalDateKey, toLocalDateKey } from "@/utils/date";
@@ -175,6 +176,9 @@ export default function BreakdownCalendar({
       reportRequestError("Error fetching report:", error),
     );
   }, [user.id, startDate, endDate]);
+
+  // Pull-to-refresh: the visible month's dots.
+  useRefresh(() => fetchNutritionTargetReport(user.id, { startDate, endDate }));
 
   // Before the first request starts `report` is still null; no dots until
   // it has loaded, so they never flash in late.

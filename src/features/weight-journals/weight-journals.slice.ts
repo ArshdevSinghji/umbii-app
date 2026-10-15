@@ -63,11 +63,19 @@ const weightJournalsSlice = createSlice({
       })
       .addCase(createWeightJournalAction.fulfilled, (state, action) => {
         state.isSaving = false;
-        // A new entry is the newest of all time.
-        state.latestWeightJournal = action.payload;
-        // Chart list is newest first; only add it if it's in the chart's range.
-        if (isInChartRange(state, action.payload)) {
-          state.chartWeightJournals.unshift(action.payload);
+        const entry = action.payload;
+        // Today's entry is the newest of all time.
+        state.latestWeightJournal = entry;
+        // POST is an upsert: a later save today returns today's existing
+        // entry (same id), so replace it rather than adding a second point.
+        const index = state.chartWeightJournals.findIndex(
+          (journal) => journal.id === entry.id,
+        );
+        if (index !== -1) {
+          state.chartWeightJournals[index] = entry;
+        } else if (isInChartRange(state, entry)) {
+          // Chart list is newest first; only add it if it's in range.
+          state.chartWeightJournals.unshift(entry);
         }
       })
       .addCase(createWeightJournalAction.rejected, (state) => {

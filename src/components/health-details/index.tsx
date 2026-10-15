@@ -22,24 +22,26 @@ import MeasurementField from "./measurement-field";
 const DEFAULT_WEIGHT = 70;
 const DEFAULT_HEIGHT = 170;
 
-const COPY: Record<HealthDetailsMode, { title: string; description: string }> = {
-  start: {
-    title: "Start tracking your weight",
-    description: "Tell us your current weight, the weight you're aiming for, and your height.",
-  },
-  weight: {
-    title: "Update your weight",
-    description: "Slide to what you weigh today.",
-  },
-  goal: {
-    title: "Set your goal weight",
-    description: "Slide to the weight you're aiming for.",
-  },
-  height: {
-    title: "Update your height",
-    description: "We use it to work out your BMI.",
-  },
-};
+const COPY: Record<HealthDetailsMode, { title: string; description: string }> =
+  {
+    start: {
+      title: "Start tracking your weight",
+      description:
+        "Tell us your current weight, the weight you're aiming for, and your height.",
+    },
+    weight: {
+      title: "Update your weight",
+      description: "Slide to what you weigh today.",
+    },
+    goal: {
+      title: "Set your goal weight",
+      description: "Slide to the weight you're aiming for.",
+    },
+    height: {
+      title: "Update your height",
+      description: "We use it to work out your BMI.",
+    },
+  };
 
 // Height has its own field (cm / ft toggle).
 const FIELDS: Record<
@@ -65,7 +67,9 @@ export default function HealthDetailsForm({ mode }: IProps) {
     targetWeight: latest ? parseFloat(latest.targetWeight) : DEFAULT_WEIGHT,
     height: user.height ?? DEFAULT_HEIGHT,
   }));
-  const [errors, setErrors] = useState<Partial<Record<HealthDetailsField, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<HealthDetailsField, string>>
+  >({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isDone, setIsDone] = useState(false);
 
@@ -126,7 +130,9 @@ export default function HealthDetailsForm({ mode }: IProps) {
 
       <View className="gap-2">
         {submitError && (
-          <Text className="text-center text-sm text-destructive">{submitError}</Text>
+          <Text className="text-center text-sm text-destructive">
+            {submitError}
+          </Text>
         )}
         <ActionButton label="Save" onPress={handleSave} isLoading={isSaving} />
       </View>

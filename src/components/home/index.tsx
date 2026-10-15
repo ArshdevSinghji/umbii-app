@@ -9,6 +9,7 @@ import WeekDays from "./week-days";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
+import { useRefresh } from "@/lib/pull-to-refresh";
 
 export default function HomeDashboard() {
   const { user } = useAppSelector((state) => state.userSlice);
@@ -30,6 +31,9 @@ export default function HomeDashboard() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user.id, date]),
   );
+
+  // Pull-to-refresh: the meals of the day being shown.
+  useRefresh(() => fetchFoodLogs(user.id, { date }));
 
   return (
     <View>
