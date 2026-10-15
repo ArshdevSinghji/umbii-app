@@ -18,9 +18,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import GenerateMealSheet from "./generate-meal-sheet";
-import { Text } from "@/components/ui/text";
 
 export default function FoodInput() {
   const { colorScheme } = useColorScheme();
@@ -77,11 +79,15 @@ export default function FoodInput() {
   // From react-native-keyboard-controller: `height` is the offset to move
   // content by, so it's negative while the keyboard is open.
   const keyboard = useReanimatedKeyboardAnimation();
+  // Only ride the keyboard when this input has it. When another field opens
+  // the keyboard (e.g. recipe search), stay put; the keyboard covers it.
+  const isFocused = useSharedValue(false);
   const animatedPositionStyle = useAnimatedStyle(() => {
     const keyboardHeight = -keyboard.height.value;
+    const isKeyboardOpen = keyboardHeight > 0;
     return {
       bottom:
-        keyboardHeight > 0
+        isKeyboardOpen && isFocused.value
           ? keyboardHeight + 12
           : FLOATING_INPUT_BAR_BOTTOM_OFFSET,
     };
@@ -121,6 +127,12 @@ export default function FoodInput() {
                 value={log}
                 placeholder="What did you eat?"
                 onChangeText={setLog}
+                onFocus={() => {
+                  isFocused.value = true;
+                }}
+                onBlur={() => {
+                  isFocused.value = false;
+                }}
                 className="min-h-10 flex-1 border-0 bg-transparent dark:bg-transparent px-2 py-0 font-sans"
               />
 

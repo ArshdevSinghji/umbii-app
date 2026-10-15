@@ -2,45 +2,53 @@ import { Input } from "@/components/ui/input";
 import { THEME } from "@/lib/theme";
 import { Search, X } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
-import { Pressable, View } from "react-native";
+import { useRef } from "react";
+import { Pressable, TextInput, View } from "react-native";
 
 interface IProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-// Search field with a magnifier on the left and a clear button on the right.
+// A pill with the magnifier in its own round chip on the left, a borderless
+// input beside it and a clear button on the right. Tapping anywhere on the
+// pill (e.g. the chip) focuses the input.
 export default function RecipeSearch({ value, onChange }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
+  const inputRef = useRef<TextInput>(null);
 
   return (
-    <View className="justify-center">
-      <View className="absolute left-3 z-10" pointerEvents="none">
-        <Search size={16} color={theme.mutedForeground} />
+    <Pressable
+      onPress={() => inputRef.current?.focus()}
+      className="h-12 flex-row items-center gap-2 rounded-full border border-input bg-background pl-1.5 pr-4 dark:bg-input/30"
+      accessible={false}
+    >
+      <View className="h-9 w-9 items-center justify-center rounded-full bg-muted">
+        <Search size={16} color={theme.foreground} />
       </View>
       <Input
+        ref={inputRef}
         value={value}
         onChangeText={onChange}
-        placeholder="Search recipes or foods"
+        placeholder="Search recipes..."
         returnKeyType="search"
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="never"
-        className="h-11 rounded-full pl-9 pr-9"
+        className="h-full flex-1 border-0 bg-transparent px-0 dark:bg-transparent"
         accessibilityLabel="Search recipes"
       />
       {value.length > 0 && (
         <Pressable
           onPress={() => onChange("")}
           hitSlop={10}
-          className="absolute right-3"
           accessibilityRole="button"
           accessibilityLabel="Clear search"
         >
           <X size={16} color={theme.mutedForeground} />
         </Pressable>
       )}
-    </View>
+    </Pressable>
   );
 }
