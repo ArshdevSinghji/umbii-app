@@ -61,10 +61,6 @@ export default function GoalProgress() {
     setIsRetrying(false);
   };
 
-  const handleMenuPress = () => {
-    // TODO: open goal progress options menu.
-  };
-
   const openHealthDetails = (mode: HealthDetailsMode) =>
     router.push({ pathname: "/health-details", params: { mode } });
 
@@ -121,7 +117,7 @@ export default function GoalProgress() {
 
   return (
     <View>
-      <StatsHeader onMenuPress={handleMenuPress} />
+      <StatsHeader />
       {renderContent()}
     </View>
   );

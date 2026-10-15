@@ -1,5 +1,5 @@
+import { ScrollEdgeFade } from "@/components/ui/scroll-edge-fade";
 import DailyBreakdown from "@/components/breakdown";
-import { RefreshProvider } from "@/lib/pull-to-refresh";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // No ScrollView here: the calendar at the top handles its own vertical drag
@@ -12,10 +12,9 @@ export default function Breakdown() {
       edges={["top", "left", "right"]}
       className="flex-1 bg-background"
     >
-      {/* Pull-to-refresh on the content under the calendar. */}
-      <RefreshProvider>
-        <DailyBreakdown />
-      </RefreshProvider>
+      <DailyBreakdown />
+      {/* The bottom is the card-coloured sheet, so fade into that. */}
+      <ScrollEdgeFade tone="card" />
     </SafeAreaView>
   );
 }

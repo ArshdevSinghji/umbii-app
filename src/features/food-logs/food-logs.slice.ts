@@ -70,12 +70,20 @@ const foodLogsSlice = createSlice({
         state.isListLoading = false;
       })
       .addCase(listPeriodFoodLogsAction.pending, (state, action) => {
-        state.isPeriodFoodLogsLoading = true;
         const params = action.meta.arg.params;
-        state.periodRange = {
+        const range = {
           startDate: params?.["dateRange.startDate"] ?? "",
           endDate: params?.["dateRange.endDate"] ?? "",
         };
+        // Skeleton only for a different range; reloading the same one (e.g.
+        // when Breakdown regains focus) updates quietly in place.
+        if (
+          range.startDate !== state.periodRange?.startDate ||
+          range.endDate !== state.periodRange?.endDate
+        ) {
+          state.isPeriodFoodLogsLoading = true;
+        }
+        state.periodRange = range;
       })
       .addCase(listPeriodFoodLogsAction.fulfilled, (state, action) => {
         state.isPeriodFoodLogsLoading = false;

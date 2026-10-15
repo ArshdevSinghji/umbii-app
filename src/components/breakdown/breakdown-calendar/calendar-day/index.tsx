@@ -97,11 +97,17 @@ export default function CalendarDay({
           />
         </View>
       )}
+      {/* Shape and colours as one inline style with every property always
+          set: toggling border / background classes at runtime can make
+          Android redraw the view without its corner radius (a square). */}
       <View
-        className={cn(
-          "h-[32px] w-[32px] items-center justify-center rounded-full",
-          isSelected ? "bg-primary" : isToday && "border border-foreground",
-        )}
+        className="h-[32px] w-[32px] items-center justify-center"
+        style={{
+          borderRadius: 16,
+          borderWidth: !isSelected && isToday ? 1 : 0,
+          borderColor: theme.foreground,
+          backgroundColor: isSelected ? theme.primary : "transparent",
+        }}
       >
         <Text
           className={cn(

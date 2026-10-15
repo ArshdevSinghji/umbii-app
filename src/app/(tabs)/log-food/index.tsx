@@ -1,3 +1,4 @@
+import { ScrollEdgeFade } from "@/components/ui/scroll-edge-fade";
 import LogFoodComponent from "@/components/log-food";
 import Meals from "@/components/log-food/meals";
 import Recipes from "@/components/log-food/recipes";
@@ -41,6 +42,8 @@ export default function LogFood() {
           </View>
         </RefreshableScrollView>
       </RefreshProvider>
+      {/* Between the list and the food input floating over it. */}
+      <ScrollEdgeFade coversFoodInput />
       <LogFoodComponent />
     </SafeAreaView>
   );

@@ -8,10 +8,10 @@ export const createNutritionTargetAction = createAsyncThunk(
   NutritionTargetActionTypes.CREATE_NUTRITION_TARGET,
   async (request: NutritionTargetRequest, thunkAPI) => {
     try {
-        const response = await createNutritionTargetService(request);
-        return response.data;
-    } catch(error) {
-        return thunkAPI.rejectWithValue(toRequestError(error));
+      const response = await createNutritionTargetService(request);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(toRequestError(error));
     }
   },
 );

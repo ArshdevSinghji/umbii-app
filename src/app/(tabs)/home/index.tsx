@@ -1,3 +1,4 @@
+import { ScrollEdgeFade } from "@/components/ui/scroll-edge-fade";
 import HomeDashboard from "@/components/home";
 import { FLOATING_TAB_BAR_CLEARANCE } from "@/lib/floating-tab-bar";
 import { RefreshProvider, RefreshableScrollView } from "@/lib/pull-to-refresh";
@@ -17,6 +18,7 @@ export default function Home() {
           <HomeDashboard />
         </RefreshableScrollView>
       </RefreshProvider>
+      <ScrollEdgeFade />
     </SafeAreaView>
   );
 }

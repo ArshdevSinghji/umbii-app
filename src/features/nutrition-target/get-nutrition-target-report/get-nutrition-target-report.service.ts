@@ -4,9 +4,14 @@ import {
   NutritionTargetReportResponse,
 } from "./get-nutrition-target-report.types";
 
-export const getNutritionTargetReportService = async (request: GetNutritionTargetReportRequest) => {
+export const getNutritionTargetReportService = async (
+  request: GetNutritionTargetReportRequest,
+) => {
   const { userId, params } = request;
-  return await http.get<ApiResponse<NutritionTargetReportResponse>>(`/users/${userId}/nutrition-target/report`, {
-    params,
-  });
+  return await http.get<ApiResponse<NutritionTargetReportResponse>>(
+    `/users/${userId}/nutrition-target/report`,
+    {
+      params,
+    },
+  );
 };

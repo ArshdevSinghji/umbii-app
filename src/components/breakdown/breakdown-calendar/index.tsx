@@ -1,7 +1,6 @@
 import { Text } from "@/components/ui/text";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { reportRequestError } from "@/lib/http-client";
-import { useRefresh } from "@/lib/pull-to-refresh";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
 import { parseLocalDateKey, toLocalDateKey } from "@/utils/date";
@@ -11,11 +10,11 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
 import { View } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { DateData, ExpandableCalendar } from "react-native-calendars";
 import { DayState, MarkedDates } from "react-native-calendars/src/types";
 import CalendarDay from "./calendar-day";
@@ -149,8 +148,12 @@ export default function BreakdownCalendar({
   const theme = THEME[colorScheme ?? "light"];
 
   const { user } = useAppSelector((state) => state.userSlice);
-  const { report, isReportLoading, fetchNutritionTargetReport } =
-    useNutritionTargetActionsHook();
+  // Breakdown's own month report, so it never replaces Home's week circles.
+  const {
+    calendarReport: report,
+    isCalendarReportLoading: isReportLoading,
+    fetchCalendarNutritionTargetReport,
+  } = useNutritionTargetActionsHook();
 
   const [isOpen, setIsOpen] = useState(true);
   const minDate = getAccountStartDate(user.createdAt);
@@ -170,15 +173,17 @@ export default function BreakdownCalendar({
     visibleDate.slice(0, 7),
   );
 
-  useEffect(() => {
-    if (!user.id) return;
-    fetchNutritionTargetReport(user.id, { startDate, endDate }).catch((error) =>
-      reportRequestError("Error fetching report:", error),
-    );
-  }, [user.id, startDate, endDate]);
-
-  // Pull-to-refresh: the visible month's dots.
-  useRefresh(() => fetchNutritionTargetReport(user.id, { startDate, endDate }));
+  // On every focus too, so the dots reflect meals logged on another tab;
+  // reloading the same month keeps the dots up meanwhile.
+  useFocusEffect(
+    useCallback(() => {
+      if (!user.id) return;
+      fetchCalendarNutritionTargetReport(user.id, { startDate, endDate }).catch(
+        (error) => reportRequestError("Error fetching report:", error),
+      );
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user.id, startDate, endDate]),
+  );
 
   // Before the first request starts `report` is still null; no dots until
   // it has loaded, so they never flash in late.

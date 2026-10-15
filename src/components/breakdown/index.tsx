@@ -1,5 +1,4 @@
 import { reportRequestError } from "@/lib/http-client";
-import { RefreshableScrollView, useRefresh } from "@/lib/pull-to-refresh";
 import { toLocalDateKey } from "@/utils/date";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
@@ -9,7 +8,8 @@ import { useAppSelector } from "@/store/hooks";
 import { FLOATING_TAB_BAR_CLEARANCE } from "@/lib/floating-tab-bar";
 import { StatsPeriod, getDaysInRange } from "@/utils/get-date-range-for-period";
 import { useColorScheme } from "nativewind";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollView, View } from "react-native";
 import { CalendarProvider } from "react-native-calendars";
@@ -44,9 +44,11 @@ export default function DailyBreakdown() {
     fetchPeriodFoodLogs,
   } = useFoodLogsActionsHook();
   const {
-    isLoading: isTargetLoading,
-    nutritionTarget,
-    fetchNutritionTarget,
+    // Breakdown's own target state, so a week / month total never replaces
+    // the daily target Home shows.
+    isPeriodTargetLoading: isTargetLoading,
+    periodNutritionTarget: nutritionTarget,
+    fetchPeriodNutritionTarget,
   } = useNutritionTargetActionsHook();
 
   // The picked day, or its week / month / year (up to today).
@@ -58,30 +60,22 @@ export default function DailyBreakdown() {
   );
   const days = getDaysInRange(startDate, endDate);
 
-  useEffect(() => {
-    if (!user.id) return;
-    fetchNutritionTarget(
-      user.id,
-      period === "day" ? { date: selectedDate } : { startDate, endDate },
-    ).catch((error) => reportRequestError("Error fetching target:", error));
-  }, [user.id, period, selectedDate, startDate, endDate]);
-
-  useEffect(() => {
-    if (!user.id) return;
-    fetchPeriodFoodLogs(user.id, { startDate, endDate }).catch((error) =>
-      reportRequestError("Error fetching food logs:", error),
-    );
-  }, [user.id, startDate, endDate]);
-
-  // Pull-to-refresh: the same two requests, for the current period.
-  useRefresh(() =>
-    Promise.all([
-      fetchNutritionTarget(
+  // Tabs stay mounted, so a plain useEffect wouldn't reload when you come
+  // back to Breakdown (e.g. after logging a meal). useFocusEffect runs on
+  // every focus and when the period / day changes. Reloading the same period
+  // updates in place; only a new period or day shows the skeleton.
+  useFocusEffect(
+    useCallback(() => {
+      if (!user.id) return;
+      fetchPeriodNutritionTarget(
         user.id,
         period === "day" ? { date: selectedDate } : { startDate, endDate },
-      ),
-      fetchPeriodFoodLogs(user.id, { startDate, endDate }),
-    ]),
+      ).catch((error) => reportRequestError("Error fetching target:", error));
+      fetchPeriodFoodLogs(user.id, { startDate, endDate }).catch((error) =>
+        reportRequestError("Error fetching food logs:", error),
+      );
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user.id, period, selectedDate, startDate, endDate]),
   );
 
   const isLoading = isFoodLogsLoading || isTargetLoading;
@@ -137,11 +131,7 @@ export default function DailyBreakdown() {
   const periodSelect = <PeriodSelect value={period} onChange={setPeriod} />;
 
   return (
-    // The pull-to-refresh spans the whole page from the top, like the other
-    // tabs, rather than starting on the sheet right below the calendar's drag
-    // handle. Its content is exactly screen-high, so it never scrolls itself;
-    // it only allows the pull. The sheet inside scrolls on its own.
-    <RefreshableScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <View className="flex-1">
       {/* Remount on theme change: the calendar reads its colours once. */}
       <CalendarProvider
         key={colorScheme}
@@ -163,8 +153,6 @@ export default function DailyBreakdown() {
 
         <ScrollView
           className="flex-1 bg-card"
-          // Android: scroll inside the page's (non-scrolling) refresh view.
-          nestedScrollEnabled
           // One section on the page, not separate cards: calories, then the
           // health score and nutrients.
           contentContainerStyle={{
@@ -193,6 +181,6 @@ export default function DailyBreakdown() {
           )}
         </ScrollView>
       </CalendarProvider>
-    </RefreshableScrollView>
+    </View>
   );
 }
