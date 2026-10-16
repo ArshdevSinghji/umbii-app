@@ -12,12 +12,6 @@ import { useAppSelector } from "@/store/hooks";
 import { useState } from "react";
 import { errorToast } from "@/components/ui/app-toaster";
 
-const MAX_DEFAULT_NAME = 60;
-
-// Starting name: the meal as it was described, trimmed to a sensible length.
-export const getDefaultRecipeName = (log: IFoodLog) =>
-  log.rawInputText.trim().slice(0, MAX_DEFAULT_NAME);
-
 // Saves a logged meal as a recipe, with the error handling from the API guide:
 // 400 inline, 409 refresh the log, 404 meal gone, 404 user → sign out.
 // Resolves true when the caller should close the form.

@@ -5,7 +5,7 @@ import { Text } from "@/components/ui/text";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { useEffect, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
-import { getDefaultRecipeName, useSaveRecipe } from "../hooks/use-save-recipe";
+import { useSaveRecipe } from "../hooks/use-save-recipe";
 
 interface IProps {
   log: IFoodLog;
@@ -23,7 +23,8 @@ export default function SaveRecipeForm({
   onCancel,
   onSavingChange,
 }: IProps) {
-  const [name, setName] = useState(() => getDefaultRecipeName(log));
+  // Starts empty: the user names the recipe (the placeholder suggests one).
+  const [name, setName] = useState("");
   const { save, isSaving, error, clearError } = useSaveRecipe();
   const inputRef = useRef<TextInput>(null);
 

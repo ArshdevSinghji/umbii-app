@@ -32,13 +32,13 @@ export default function RecipeSearch({ value, onChange }: IProps) {
         ref={inputRef}
         value={value}
         onChangeText={onChange}
-        placeholder="MagnifyingGlass recipes..."
+        placeholder="Search recipes..."
         returnKeyType="search"
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="never"
         className="h-full flex-1 border-0 bg-transparent px-0 dark:bg-transparent"
-        accessibilityLabel="MagnifyingGlass recipes"
+        accessibilityLabel="Search recipes"
       />
       {value.length > 0 && (
         <Pressable

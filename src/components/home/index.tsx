@@ -19,13 +19,15 @@ export default function HomeDashboard() {
 
   const handleDatePress = (selectedDate: string) => setDate(selectedDate);
 
+  // Newest first, so the latest meal leads Today's meals (new logs are added
+  // at the top too).
   // Tabs stay mounted, so a plain useEffect wouldn't run again when you come
   // back to Home (e.g. after logging a meal on Log Food). useFocusEffect runs
   // on every focus, and again when the selected day changes.
   useFocusEffect(
     useCallback(() => {
       if (!user.id) return;
-      fetchFoodLogs(user.id, { date }).catch((error) =>
+      fetchFoodLogs(user.id, { date, order: "desc" }).catch((error) =>
         reportRequestError("Error fetching food logs:", error),
       );
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -33,7 +35,7 @@ export default function HomeDashboard() {
   );
 
   // Pull-to-refresh: the meals of the day being shown.
-  useRefresh(() => fetchFoodLogs(user.id, { date }));
+  useRefresh(() => fetchFoodLogs(user.id, { date, order: "desc" }));
 
   return (
     <View>

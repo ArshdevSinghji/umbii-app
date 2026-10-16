@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
@@ -13,6 +13,7 @@ import SaveRecipeForm from "@/components/save-recipe/save-recipe-form";
 import { ActionButton } from "@/components/ui/action-button";
 import ChildSheet from "@/components/meal-sheet/child-sheet";
 import TodaysMealsSkeleton from "./loading";
+import MealAvatars from "./meal-avatars";
 import MealSheet from "@/components/meal-sheet";
 import MealSheetContent from "@/components/meal-sheet/content";
 
@@ -103,14 +104,14 @@ export default function TodaysMeals() {
                 onPress={() => handleLogPress(log)}
                 className="active:opacity-70"
               >
-                <Card className="gap-2 py-4">
-                  <CardHeader className="px-4">
+                {/* Name and calories on the left, the meal's photos at
+                    the bottom right, level with the calories. */}
+                <Card className="flex-row items-end justify-between gap-4 px-4 py-4">
+                  <View className="flex-1 gap-2">
                     <Text className="font-sans-bold" numberOfLines={1}>
                       {log.rawInputText}
                     </Text>
-                  </CardHeader>
-                  <CardContent className="flex-row justify-between items-center px-4">
-                    <View className="flex-row gap-2">
+                    <View className="flex-row items-center gap-2">
                       <View
                         // Translucent flame orange: a soft tint on light and dark cards alike.
                         style={{ backgroundColor: "rgba(255, 90, 0, 0.12)" }}
@@ -122,11 +123,8 @@ export default function TodaysMeals() {
                         {`${totalCalories.toFixed(0)} Kcal`}
                       </Text>
                     </View>
-                    <Text className="text-muted-foreground text-xs">
-                      {log.details.length}{" "}
-                      {log.details.length === 1 ? "item" : "items"}
-                    </Text>
-                  </CardContent>
+                  </View>
+                  <MealAvatars itemCount={log.details.length} seed={log.id} />
                 </Card>
               </Pressable>
             );

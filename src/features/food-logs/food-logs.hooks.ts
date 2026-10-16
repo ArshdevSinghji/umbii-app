@@ -23,7 +23,12 @@ export function useFoodLogsActionsHook() {
 
   const fetchFoodLogs = async (
     userId: number,
-    params?: { date?: string; startDate?: string; endDate?: string },
+    params?: {
+      date?: string;
+      startDate?: string;
+      endDate?: string;
+      order?: "asc" | "desc";
+    },
   ) => {
     await dispatch(
       listFoodLogsAction({
@@ -32,6 +37,7 @@ export function useFoodLogsActionsHook() {
           date: params?.date,
           "dateRange.startDate": params?.startDate,
           "dateRange.endDate": params?.endDate,
+          order: params?.order,
         },
       }),
     ).unwrap();
@@ -65,6 +71,9 @@ export function useFoodLogsActionsHook() {
         params: {
           "dateRange.startDate": toLocalDateKey(start),
           "dateRange.endDate": toLocalDateKey(end),
+          // Newest first, so the latest meals lead the list (new logs are
+          // added at the top too).
+          order: "desc",
         },
       }),
     ).unwrap();
