@@ -23,6 +23,8 @@ interface IProps {
   onRetry: () => void;
   // All-time latest entry: carries weight into a week with no weigh-ins.
   latest: IWeightJournal;
+  // The profile's goal weight; null for maintenance (no progress to show).
+  targetWeightKg: number | null;
 }
 
 // Loads on its own: the rest of the page shows as soon as the latest entry
@@ -32,6 +34,7 @@ export default function WeightChart({
   status,
   onRetry,
   latest,
+  targetWeightKg,
 }: IProps) {
   const { startDate, endDate } = getWeightPeriodRange("week");
   const isReady = status === "ready";
@@ -45,7 +48,23 @@ export default function WeightChart({
       );
     }
 
-    const progress = getPeriodProgress(entries, latest, startDate);
+    const progress = getPeriodProgress(
+      entries,
+      latest,
+      startDate,
+      targetWeightKg,
+    );
+    // Maintenance has no goal weight to make progress toward.
+    if (progress === null) {
+      return (
+        <Text className="font-sans-bold text-2xl">
+          {`${latest.weightKg} kg`}
+          <Text className="text-sm text-muted-foreground">
+            {"  "}maintaining this week
+          </Text>
+        </Text>
+      );
+    }
     return (
       <Text className="font-sans-bold text-2xl">
         {progress.toFixed(0)}%
@@ -80,13 +99,14 @@ export default function WeightChart({
       startDate,
       endDate,
       latest,
+      targetWeightKg,
     );
     return (
       <WeightLineChart
         key={entries.length}
         points={points}
         unit="kg"
-        targetWeight={parseFloat(latest.targetWeight)}
+        targetWeight={targetWeightKg}
       />
     );
   };

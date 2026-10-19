@@ -8,6 +8,7 @@ export interface WeightChartPoint {
   label: string;
   // null until the user's first ever entry.
   weight: number | null;
+  // Toward the goal weight; null without one (maintenance).
   progress: number | null;
   // false when the weight is carried forward from an earlier day.
   isLogged: boolean;
@@ -79,12 +80,14 @@ const getDatesInRange = (startDate: string, endDate: string) => {
 
 // One point for every day in [startDate, endDate]. Days without an entry
 // carry the last logged weight forward, so missed days draw a flat line.
+// `targetWeightKg` is the profile's goal weight (null for maintenance).
 const buildWeightChartPoints = (
   journals: IWeightJournal[],
   period: WeightPeriod,
   startDate: string,
   endDate: string,
-  latest?: IWeightJournal | null,
+  latest: IWeightJournal | null,
+  targetWeightKg: number | null,
 ): WeightChartPoint[] => {
   const sorted = sortByDate(journals);
 
@@ -96,7 +99,7 @@ const buildWeightChartPoints = (
 
   // Progress within the period: from the weight going into it.
   const startEntry = carriedIn ?? sorted[0];
-  const startWeight = startEntry ? parseFloat(startEntry.currentWeight) : 0;
+  const startWeight = startEntry ? startEntry.weightKg : 0;
 
   let cursor = 0;
   let lastEntry: IWeightJournal | null = carriedIn;
@@ -114,19 +117,15 @@ const buildWeightChartPoints = (
       cursor += 1;
     }
 
-    const weight = lastEntry ? parseFloat(lastEntry.currentWeight) : null;
+    const weight = lastEntry ? lastEntry.weightKg : null;
 
     return {
       date,
       label: formatPointLabel(date, period),
       weight,
       progress:
-        lastEntry && weight !== null
-          ? calculateGoalProgress(
-              startWeight,
-              weight,
-              parseFloat(lastEntry.targetWeight),
-            )
+        weight !== null && targetWeightKg !== null
+          ? calculateGoalProgress(startWeight, weight, targetWeightKg)
           : null,
       isLogged,
     };
@@ -135,23 +134,21 @@ const buildWeightChartPoints = (
 
 // Progress toward the goal made within the period: from the earliest weight
 // in range (or the latest entry before it, if nothing was logged in range)
-// to the user's latest weight.
+// to the user's latest weight. Null without a goal weight (maintenance).
 const getPeriodProgress = (
   journals: IWeightJournal[],
   latest: IWeightJournal | null,
   startDate: string,
+  targetWeightKg: number | null,
 ) => {
+  if (targetWeightKg === null) return null;
   if (!latest) return 0;
 
   const sorted = sortByDate(journals);
   const start =
     toDateKey(latest.createdAt) < startDate ? latest : (sorted[0] ?? latest);
 
-  return calculateGoalProgress(
-    parseFloat(start.currentWeight),
-    parseFloat(latest.currentWeight),
-    parseFloat(latest.targetWeight),
-  );
+  return calculateGoalProgress(start.weightKg, latest.weightKg, targetWeightKg);
 };
 
 export {

@@ -6,8 +6,9 @@ import { View } from "react-native";
 interface IProps {
   weight: number;
   label: string;
-  actionLabel: string;
-  onActionPress: () => void;
+  // Omit both for a read-only card.
+  actionLabel?: string;
+  onActionPress?: () => void;
 }
 
 export default function WeightCard({
@@ -22,9 +23,11 @@ export default function WeightCard({
         <Text className="font-sans-bold text-lg">{weight} kg</Text>
         <Text className="text-muted-foreground text-sm">{label}</Text>
       </View>
-      <Button className="rounded-full" onPress={onActionPress}>
-        <Text>{actionLabel}</Text>
-      </Button>
+      {actionLabel && onActionPress && (
+        <Button className="rounded-full" onPress={onActionPress}>
+          <Text>{actionLabel}</Text>
+        </Button>
+      )}
     </Card>
   );
 }

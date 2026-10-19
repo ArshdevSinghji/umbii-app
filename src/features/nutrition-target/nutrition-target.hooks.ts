@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
 import { getNutritionTargetReportAction } from "./get-nutrition-target-report/get-nutrition-target-report.action";
 import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-target.action";
+import { generateNutritionTargetAction } from "./generate-nutrition-target/generate-nutrition-target.action";
 import { getPeriodNutritionTargetAction } from "./get-period-nutrition-target/get-period-nutrition-target.action";
 import { getCalendarNutritionTargetReportAction } from "./get-calendar-nutrition-target-report/get-calendar-nutrition-target-report.action";
 
@@ -17,6 +18,7 @@ export function useNutritionTargetActionsHook() {
     isPeriodTargetLoading,
     calendarReport,
     isCalendarReportLoading,
+    isGenerating,
   } = useAppSelector((state) => state.nutritionTargetSlice);
 
   const createNutritionTarget = async (
@@ -93,7 +95,15 @@ export function useNutritionTargetActionsHook() {
     ).unwrap();
   };
 
+  // Works out a new target from the profile and latest weigh-in. Resolves
+  // with it (including the safety notes that applied).
+  const generateNutritionTarget = async (userId: number) => {
+    return await dispatch(generateNutritionTargetAction({ userId })).unwrap();
+  };
+
   return {
+    isGenerating,
+    generateNutritionTarget,
     isLoading,
     isReportLoading,
     nutritionTarget,

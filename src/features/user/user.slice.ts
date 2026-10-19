@@ -1,4 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { deleteUserAction } from "./delete-user/delete-user.action";
+import { getUserAction } from "./get-user/get-user.action";
+import { saveUserOnboardingAction } from "./save-user-onboarding/save-user-onboarding.action";
 import { signInAction } from "./sign-in/sign-in.action";
 import { updateUserAction } from "./update-user/update-user.action";
 import { IUser, UserState } from "./user.types";
@@ -7,6 +10,10 @@ const initialState: UserState = {
   isLoading: false,
   isUpdating: false,
   user: {} as IUser,
+  profile: null,
+  profileStatus: "idle",
+  isSavingOnboarding: false,
+  isDeleting: false,
 };
 
 const userSlice = createSlice({
@@ -17,6 +24,10 @@ const userSlice = createSlice({
       state.user = {} as IUser;
       state.isLoading = false;
       state.isUpdating = false;
+      state.profile = null;
+      state.profileStatus = "idle";
+      state.isSavingOnboarding = false;
+      state.isDeleting = false;
     },
   },
   extraReducers: (builder) => {
@@ -41,6 +52,41 @@ const userSlice = createSlice({
       })
       .addCase(updateUserAction.rejected, (state) => {
         state.isUpdating = false;
+      })
+      .addCase(getUserAction.pending, (state) => {
+        // A refresh keeps showing what's already loaded.
+        if (state.profileStatus !== "ready") state.profileStatus = "loading";
+      })
+      // Refreshes the persisted account (merged: the response has no token)
+      // and holds the profile apart, unpersisted.
+      .addCase(getUserAction.fulfilled, (state, action) => {
+        const { profile, ...account } = action.payload;
+        state.user = { ...state.user, ...account };
+        state.profile = profile;
+        state.profileStatus = "ready";
+      })
+      .addCase(getUserAction.rejected, (state) => {
+        if (state.profileStatus !== "ready") state.profileStatus = "error";
+      })
+      .addCase(saveUserOnboardingAction.pending, (state) => {
+        state.isSavingOnboarding = true;
+      })
+      .addCase(saveUserOnboardingAction.fulfilled, (state) => {
+        // The saved profile is reloaded right after (GET /users/{id}).
+        state.isSavingOnboarding = false;
+      })
+      .addCase(saveUserOnboardingAction.rejected, (state) => {
+        state.isSavingOnboarding = false;
+      })
+      // On success the caller signs out, which clears the user.
+      .addCase(deleteUserAction.pending, (state) => {
+        state.isDeleting = true;
+      })
+      .addCase(deleteUserAction.fulfilled, (state) => {
+        state.isDeleting = false;
+      })
+      .addCase(deleteUserAction.rejected, (state) => {
+        state.isDeleting = false;
       });
   },
 });

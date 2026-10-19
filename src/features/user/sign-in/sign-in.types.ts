@@ -3,6 +3,4 @@ export interface SignInRequest {
   email: string;
   imageUrl?: string;
   phoneNumber?: string;
-  // Centimeters.
-  height?: number;
 }

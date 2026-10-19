@@ -39,14 +39,9 @@ export function useWeightJournalsActionsHook() {
     ).unwrap();
   };
 
-  const createWeightJournal = async (
-    userId: number,
-    currentWeight: string,
-    targetWeight: string,
-  ) => {
-    await dispatch(
-      createWeightJournalAction({ userId, currentWeight, targetWeight }),
-    ).unwrap();
+  // Today's weigh-in (an upsert: a second save today replaces it).
+  const createWeightJournal = async (userId: number, weightKg: number) => {
+    await dispatch(createWeightJournalAction({ userId, weightKg })).unwrap();
   };
 
   const fetchWeightJournalById = async (
@@ -61,16 +56,10 @@ export function useWeightJournalsActionsHook() {
   const updateWeightJournal = async (
     userId: number,
     weightJournalId: number,
-    currentWeight: string,
-    targetWeight: string,
+    weightKg: number,
   ) => {
     await dispatch(
-      updateWeightJournalAction({
-        userId,
-        weightJournalId,
-        currentWeight,
-        targetWeight,
-      }),
+      updateWeightJournalAction({ userId, weightJournalId, weightKg }),
     ).unwrap();
   };
 

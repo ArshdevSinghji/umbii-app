@@ -1,3 +1,5 @@
+import AppSplash from "@/components/app-splash";
+import { useOnboardingGate } from "@/components/onboarding/hooks/use-onboarding-gate";
 import { CARD_GRADIENT } from "@/components/ui/gradient-card";
 import { Text } from "@/components/ui/text";
 import {
@@ -16,6 +18,7 @@ import { ChartBar } from "phosphor-react-native/src/icons/ChartBar";
 import { ForkKnife } from "phosphor-react-native/src/icons/ForkKnife";
 import { House } from "phosphor-react-native/src/icons/House";
 import { Target } from "phosphor-react-native/src/icons/Target";
+import { UserCircle } from "phosphor-react-native/src/icons/UserCircle";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 
@@ -31,6 +34,8 @@ const TABS: {
   { name: "log-food", title: "Log Food", icon: ForkKnife },
   // Weight and goal progress.
   { name: "stats", title: "Goals", icon: Target },
+  // Account, plan and settings.
+  { name: "profile", title: "Profile", icon: UserCircle },
 ];
 
 function FloatingTabBar({
@@ -140,6 +145,10 @@ function FloatingTabBar({
 }
 
 export default function TabsLayout() {
+  // Sends first-time users to onboarding; the splash covers the tabs while
+  // that's being worked out.
+  const { isChecking } = useOnboardingGate();
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -165,6 +174,7 @@ export default function TabsLayout() {
           />
         ))}
       </Tabs>
+      {isChecking && <AppSplash />}
     </>
   );
 }

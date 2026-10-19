@@ -1,7 +1,6 @@
 import { getErrorMessage } from "@/lib/http-client";
 import { ActionButton } from "@/components/ui/action-button";
 import { Text } from "@/components/ui/text";
-import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
 import { useEffect, useState } from "react";
@@ -59,13 +58,12 @@ interface IProps {
 
 export default function HealthDetailsForm({ mode }: IProps) {
   const router = useRouter();
-  const { user } = useAppSelector((state) => state.userSlice);
-  const { latest, isSaving, save } = useSaveHealthDetails(mode);
+  const { latest, profile, isSaving, save } = useSaveHealthDetails(mode);
 
   const [values, setValues] = useState<HealthDetailsValues>(() => ({
-    currentWeight: latest ? parseFloat(latest.currentWeight) : DEFAULT_WEIGHT,
-    targetWeight: latest ? parseFloat(latest.targetWeight) : DEFAULT_WEIGHT,
-    height: user.height ?? DEFAULT_HEIGHT,
+    currentWeight: latest?.weightKg ?? DEFAULT_WEIGHT,
+    targetWeight: profile?.targetWeightKg ?? latest?.weightKg ?? DEFAULT_WEIGHT,
+    height: profile?.heightCm ?? DEFAULT_HEIGHT,
   }));
   const [errors, setErrors] = useState<
     Partial<Record<HealthDetailsField, string>>

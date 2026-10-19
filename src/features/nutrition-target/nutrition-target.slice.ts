@@ -1,7 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { saveUserOnboardingAction } from "@/features/user/save-user-onboarding/save-user-onboarding.action";
 import { createNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
 import { getNutritionTargetReportAction } from "./get-nutrition-target-report/get-nutrition-target-report.action";
 import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-target.action";
+import { generateNutritionTargetAction } from "./generate-nutrition-target/generate-nutrition-target.action";
 import { getPeriodNutritionTargetAction } from "./get-period-nutrition-target/get-period-nutrition-target.action";
 import { getCalendarNutritionTargetReportAction } from "./get-calendar-nutrition-target-report/get-calendar-nutrition-target-report.action";
 import { NutritionTargetState } from "./nutrition-target.types";
@@ -10,6 +12,7 @@ import { NutritionTargetState } from "./nutrition-target.types";
 const toQueryKey = (arg: unknown) => JSON.stringify(arg);
 
 const initialState: NutritionTargetState = {
+  isGenerating: false,
   isLoading: false,
   isReportLoading: false,
   targetQuery: null,
@@ -52,6 +55,22 @@ const nutritionTargetSlice = createSlice({
       })
       .addCase(getNutritionTargetAction.rejected, (state) => {
         state.isLoading = false;
+      })
+      // Onboarding generates the first target (in effect from today): it's
+      // Home's current target straight away.
+      .addCase(saveUserOnboardingAction.fulfilled, (state, action) => {
+        state.nutritionTarget = action.payload;
+      })
+      .addCase(generateNutritionTargetAction.pending, (state) => {
+        state.isGenerating = true;
+      })
+      // The new target is in effect from today: Home's current target.
+      .addCase(generateNutritionTargetAction.fulfilled, (state, action) => {
+        state.isGenerating = false;
+        state.nutritionTarget = action.payload;
+      })
+      .addCase(generateNutritionTargetAction.rejected, (state) => {
+        state.isGenerating = false;
       })
       .addCase(getNutritionTargetReportAction.pending, (state, action) => {
         const query = toQueryKey(action.meta.arg);

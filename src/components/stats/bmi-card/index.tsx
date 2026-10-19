@@ -13,7 +13,9 @@ import BmiScale from "./bmi-scale";
 interface IProps {
   weight: number;
   height: number | null;
-  onUpdateHeight: () => void;
+  // Omit to show height read-only (no edit until the profile can be
+  // updated on its own).
+  onUpdateHeight?: () => void;
 }
 
 export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
@@ -28,9 +30,11 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
         <Text className="text-sm text-muted-foreground">
           Add your height to see your Body Mass Index.
         </Text>
-        <Button className="self-start rounded-full" onPress={onUpdateHeight}>
-          <Text>Add height</Text>
-        </Button>
+        {onUpdateHeight && (
+          <Button className="self-start rounded-full" onPress={onUpdateHeight}>
+            <Text>Add height</Text>
+          </Button>
+        )}
       </Card>
     );
   }
@@ -45,6 +49,7 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
         <Text className="font-sans-bold text-lg">Your BMI</Text>
         <Pressable
           onPress={onUpdateHeight}
+          disabled={!onUpdateHeight}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Edit height"
@@ -54,7 +59,9 @@ export default function BmiCard({ weight, height, onUpdateHeight }: IProps) {
           <Text className="text-xs font-sans-bold">
             {Number(height.toFixed(1))} cm
           </Text>
-          <PencilSimple size={12} color={theme.foreground} />
+          {onUpdateHeight && (
+            <PencilSimple size={12} color={theme.foreground} />
+          )}
         </Pressable>
       </View>
 

@@ -3,8 +3,8 @@ import { IWeightJournal } from "../weight-journals.types";
 export interface UpdateWeightJournalRequest {
   userId: number;
   weightJournalId: number;
-  currentWeight: string;
-  targetWeight: string;
+  // Kilograms.
+  weightKg: number;
 }
 
 export type UpdateWeightJournalResponse = IWeightJournal;

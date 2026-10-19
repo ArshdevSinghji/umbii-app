@@ -1,4 +1,6 @@
 import { HealthDetailsMode } from "@/components/health-details/health-details.schema";
+import { useUserActionsHook } from "@/features/user/user.hook";
+import { GoalType } from "@/features/user/user.types";
 import { useWeightJournalsActionsHook } from "@/features/weight-journals/weight-journals.hooks";
 import { getWeightPeriodRange } from "@/features/weight-journals/weight-journals.utils";
 import { useAppSelector } from "@/store/hooks";
@@ -25,6 +27,8 @@ export default function GoalProgress() {
     fetchLatestWeightJournal,
     fetchWeightChart,
   } = useWeightJournalsActionsHook();
+  // Goal weight and height live on the profile (saved by onboarding).
+  const { profile, profileStatus, fetchUser } = useUserActionsHook();
   const router = useRouter();
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -32,8 +36,8 @@ export default function GoalProgress() {
   // what the page shows; the chart fills in independently and can fail
   // without taking the page down.
   const loadLatest = () =>
-    fetchLatestWeightJournal(user.id).catch((error) =>
-      reportRequestError("Error fetching latest weight:", error),
+    Promise.all([fetchLatestWeightJournal(user.id), fetchUser(user.id)]).catch(
+      (error) => reportRequestError("Error fetching weight or profile:", error),
     );
   const loadChart = () =>
     fetchWeightChart(user.id, getWeightPeriodRange("week")).catch((error) =>
@@ -51,6 +55,7 @@ export default function GoalProgress() {
   useRefresh(() =>
     Promise.all([
       fetchLatestWeightJournal(user.id),
+      fetchUser(user.id),
       fetchWeightChart(user.id, getWeightPeriodRange("week")),
     ]),
   );
@@ -64,13 +69,17 @@ export default function GoalProgress() {
   const openHealthDetails = (mode: HealthDetailsMode) =>
     router.push({ pathname: "/health-details", params: { mode } });
 
+  const isLoading = (status: typeof latestStatus) =>
+    status === "idle" || status === "loading";
+
   const renderContent = () => {
-    if (latestStatus === "idle" || latestStatus === "loading") {
-      return <GoalProgressSkeleton hasHeight={!!user.height} />;
+    if (isLoading(latestStatus) || isLoading(profileStatus)) {
+      // After onboarding there's always a height, so the BMI card shows.
+      return <GoalProgressSkeleton hasHeight />;
     }
 
     // Not the empty state: "Get started" would create a duplicate first entry.
-    if (latestStatus === "error") {
+    if (latestStatus === "error" || profileStatus === "error") {
       return (
         <ErrorState
           title="Couldn't load your weight data"
@@ -80,22 +89,26 @@ export default function GoalProgress() {
       );
     }
 
-    if (!latest) {
+    // Onboarding records the first weigh-in and the goal, so that's where
+    // "Get started" goes.
+    if (!latest || !profile) {
       return (
-        <WeightEmptyState onGetStarted={() => openHealthDetails("start")} />
+        <WeightEmptyState onGetStarted={() => router.push("/onboarding")} />
       );
     }
 
+    const isMaintaining = profile.goalType === GoalType.Maintenance;
+
+    // Goal weight and height are read-only for now: the profile can only be
+    // changed by redoing onboarding until it gets its own update endpoint.
     return (
       <View className="gap-3">
         <WeightCard
-          weight={parseFloat(latest.targetWeight)}
-          label="Goal weight"
-          actionLabel="Update my goal"
-          onActionPress={() => openHealthDetails("goal")}
+          weight={profile.targetWeightKg ?? latest.weightKg}
+          label={isMaintaining ? "Goal: maintain" : "Goal weight"}
         />
         <WeightCard
-          weight={parseFloat(latest.currentWeight)}
+          weight={latest.weightKg}
           label="Current weight"
           actionLabel="Update weight"
           onActionPress={() => openHealthDetails("weight")}
@@ -105,12 +118,9 @@ export default function GoalProgress() {
           status={chartStatus}
           onRetry={loadChart}
           latest={latest}
+          targetWeightKg={profile.targetWeightKg}
         />
-        <BmiCard
-          weight={parseFloat(latest.currentWeight)}
-          height={user.height ?? null}
-          onUpdateHeight={() => openHealthDetails("height")}
-        />
+        <BmiCard weight={latest.weightKg} height={profile.heightCm} />
       </View>
     );
   };

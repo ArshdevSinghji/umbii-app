@@ -7,10 +7,12 @@ export enum WeightJournalActionTypes {
   GET_LATEST_WEIGHT_JOURNAL = "weight-journals/get-latest-weight-journal",
 }
 
+// One weigh-in (one per user per day). The goal weight lives on the
+// profile, not here.
 export interface IWeightJournal {
   id: number;
-  currentWeight: string;
-  targetWeight: string;
+  // Kilograms.
+  weightKg: number;
   createdAt: string;
   updatedAt: string;
 }

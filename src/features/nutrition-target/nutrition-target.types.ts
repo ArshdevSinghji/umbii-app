@@ -1,7 +1,10 @@
+import type { NutritionValues } from "@/features/food-logs/food-logs.types";
+import type { GoalType } from "@/features/user/user.types";
 import type { NutritionTargetResponse } from "./create-nutrition-target/create-nutrition-target.types";
 import type { NutritionTargetReportResponse } from "./get-nutrition-target-report/get-nutrition-target-report.types";
 
 export enum NutritionTargetActionTypes {
+  GENERATE_NUTRITION_TARGET = "GENERATE_NUTRITION_TARGET",
   CREATE_NUTRITION_TARGET = "CREATE_NUTRITION_TARGET",
   GET_NUTRITION_TARGET = "GET_NUTRITION_TARGET",
   GET_NUTRITION_TARGET_REPORT = "GET_NUTRITION_TARGET_REPORT",
@@ -9,7 +12,29 @@ export enum NutritionTargetActionTypes {
   GET_CALENDAR_NUTRITION_TARGET_REPORT = "GET_CALENDAR_NUTRITION_TARGET_REPORT",
 }
 
+// A target generated from the profile (now in effect), plus how it was
+// worked out: saving the onboarding answers and POST
+// /nutrition-target/generate both return this.
+export interface IGeneratedNutritionTarget extends NutritionValues {
+  id: number;
+  source: "GENERATED";
+  formulaVersion: string;
+  // The weight it was computed from (the latest weigh-in).
+  weightKg: number;
+  bmr: number;
+  maintenanceCalories: number;
+  // Usually the profile's goal; maintenance when the target weight is
+  // reached or a safety rule rules out a deficit.
+  goal: GoalType;
+  // Safety rules that changed the result, in plain language.
+  notes: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface NutritionTargetState {
+  // Recalculating the plan from the profile.
+  isGenerating: boolean;
   isLoading: boolean;
   isReportLoading: boolean;
   // What the last target / report request asked for. Repeating the same
