@@ -39,12 +39,6 @@
           }
         }
       ],
-      [
-        "expo-audio",
-        {
-          "microphonePermission": "Allow Umbii to access your microphone to log meals by voice."
-        }
-      ],
       "expo-font",
       "expo-secure-store",
       [
@@ -55,7 +49,14 @@
           }
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Umbii to use the microphone to log meals by voice.",
+          "speechRecognitionPermission": "Allow Umbii to turn what you say into a meal log."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -11,7 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ArrowUp } from "phosphor-react-native/src/icons/ArrowUp";
 import { Microphone } from "phosphor-react-native/src/icons/Microphone";
 import { useColorScheme } from "nativewind";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -23,7 +23,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { errorToast } from "@/components/ui/app-toaster";
+import { useFocusEffect } from "expo-router";
+import { useVoiceInput } from "../hooks/use-voice-input";
 import GenerateMealSheet from "./generate-meal-sheet";
+import RecordingBar from "./recording";
 
 export default function FoodInput() {
   const { colorScheme } = useColorScheme();
@@ -50,16 +54,58 @@ export default function FoodInput() {
   const { generateFoodLogs, createFoodLogs, isLoading } =
     useFoodLogsActionsHook();
 
-  const handleSendText = async () => {
-    if (!log.trim()) return;
+  const voice = useVoiceInput();
+  const isRecording = voice.status !== "idle";
+
+  // Log Food stays mounted behind other tabs: drop a recording on leaving it.
+  useFocusEffect(
+    useCallback(() => {
+      return () => voice.cancel();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
+
+  const submit = async (text: string) => {
+    if (!text.trim()) return;
 
     try {
-      await generateFoodLogs(user.id, log);
+      await generateFoodLogs(user.id, text);
       setIsSheetVisible(true);
       setLog("");
     } catch (error) {
       console.error("Error generating food logs:", error);
     }
+  };
+
+  const handleSendText = () => submit(log);
+
+  const startRecording = () => {
+    inputRef.current?.blur();
+    voice.start();
+  };
+
+  // Words go after anything already typed.
+  const finishRecording = async () => {
+    const text = await voice.finish();
+    if (!text) {
+      errorToast("Didn't catch that", {
+        id: "voice-input",
+        description: "Try again a little closer to the mic.",
+      });
+      return null;
+    }
+    const combined = [log.trim(), text].filter(Boolean).join(" ");
+    setLog(combined);
+    return combined;
+  };
+
+  const handleStopRecording = async () => {
+    if (await finishRecording()) inputRef.current?.focus();
+  };
+
+  const handleSendRecording = async () => {
+    const text = await finishRecording();
+    if (text) await submit(text);
   };
 
   const handleSaveMeal = async () => {
@@ -122,37 +168,54 @@ export default function FoodInput() {
             style={{ borderRadius: 999 }}
           >
             <View className="flex-row items-end px-3 py-2">
-              <Input
-                ref={inputRef}
-                multiline
-                value={log}
-                placeholder="What did you eat?"
-                onChangeText={setLog}
-                onFocus={() => {
-                  isFocused.value = true;
-                }}
-                onBlur={() => {
-                  isFocused.value = false;
-                }}
-                className="min-h-10 flex-1 border-0 bg-transparent dark:bg-transparent px-2 py-0 font-sans"
-              />
-
-              {log.length === 0 ? (
-                <View className="h-9 w-9 items-center justify-center">
-                  <Microphone size={20} color={theme.mutedForeground} />
-                </View>
+              {isRecording ? (
+                <RecordingBar
+                  level={voice.level}
+                  isFinishing={voice.status === "finishing"}
+                  onCancel={voice.cancel}
+                  onStop={handleStopRecording}
+                  onSend={handleSendRecording}
+                />
               ) : (
-                <Pressable
-                  onPress={handleSendText}
-                  disabled={isLoading}
-                  className="h-9 w-9 items-center justify-center rounded-full bg-blue-500"
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color={theme.primaryForeground} />
+                <>
+                  <Input
+                    ref={inputRef}
+                    multiline
+                    value={log}
+                    placeholder="What did you eat?"
+                    onChangeText={setLog}
+                    onFocus={() => {
+                      isFocused.value = true;
+                    }}
+                    onBlur={() => {
+                      isFocused.value = false;
+                    }}
+                    className="min-h-10 flex-1 border-0 bg-transparent dark:bg-transparent px-2 py-0 font-sans"
+                  />
+
+                  {log.length === 0 ? (
+                    <Pressable
+                      onPress={startRecording}
+                      hitSlop={6}
+                      accessibilityLabel="Log by voice"
+                      className="h-9 w-9 items-center justify-center rounded-full"
+                    >
+                      <Microphone size={20} color={theme.mutedForeground} />
+                    </Pressable>
                   ) : (
-                    <ArrowUp size={18} color={theme.primaryForeground} />
+                    <Pressable
+                      onPress={handleSendText}
+                      disabled={isLoading}
+                      className="h-9 w-9 items-center justify-center rounded-full bg-blue-500"
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color={theme.primaryForeground} />
+                      ) : (
+                        <ArrowUp size={18} color={theme.primaryForeground} />
+                      )}
+                    </Pressable>
                   )}
-                </Pressable>
+                </>
               )}
             </View>
           </LinearGradient>

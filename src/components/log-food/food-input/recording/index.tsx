@@ -1,40 +1,71 @@
 import { THEME } from "@/lib/theme";
-import { PaperPlaneRight } from "phosphor-react-native/src/icons/PaperPlaneRight";
+import { ArrowUp } from "phosphor-react-native/src/icons/ArrowUp";
+import { Stop } from "phosphor-react-native/src/icons/Stop";
 import { X } from "phosphor-react-native/src/icons/X";
 import { useColorScheme } from "nativewind";
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import type { SharedValue } from "react-native-reanimated";
 import Waveform from "../waveform";
 
 interface IProps {
-  audioLevelRef: React.MutableRefObject<number>;
+  level: SharedValue<number>;
+  // Waiting for the last words after stop / send.
+  isFinishing: boolean;
   onCancel: () => void;
+  // Stop and put the words in the input to edit.
+  onStop: () => void;
+  // Stop and log the words straight away.
   onSend: () => void;
 }
 
-export default function RecordingUI({
-  audioLevelRef,
+// Replaces the input row while dictating: cancel, live waveform, stop, send.
+export default function RecordingBar({
+  level,
+  isFinishing,
   onCancel,
+  onStop,
   onSend,
 }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
 
   return (
-    <View className="bg-card border border-border rounded-3xl flex-row items-center px-3 py-3 gap-3">
+    <View className="min-h-10 flex-1 flex-row items-center gap-2">
       <Pressable
         onPress={onCancel}
-        className="h-9 w-9 items-center justify-center rounded-full bg-muted"
+        hitSlop={6}
+        accessibilityLabel="Cancel recording"
+        className="h-9 w-9 items-center justify-center rounded-full border border-border"
       >
-        <X size={18} color={theme.foreground} />
+        <X size={16} color={theme.foreground} />
       </Pressable>
 
-      <Waveform audioLevelRef={audioLevelRef} isRecording={true} />
+      <View className="mx-1 flex-1">
+        <Waveform level={level} />
+      </View>
+
+      <Pressable
+        onPress={onStop}
+        disabled={isFinishing}
+        hitSlop={6}
+        accessibilityLabel="Stop recording"
+        className="h-9 w-9 items-center justify-center rounded-full border border-border"
+      >
+        <Stop size={14} weight="fill" color={theme.foreground} />
+      </Pressable>
 
       <Pressable
         onPress={onSend}
-        className="h-9 w-9 items-center justify-center rounded-full bg-primary"
+        disabled={isFinishing}
+        hitSlop={6}
+        accessibilityLabel="Log what you said"
+        className="h-9 w-9 items-center justify-center rounded-full bg-blue-500"
       >
-        <PaperPlaneRight size={16} color={theme.primaryForeground} />
+        {isFinishing ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <ArrowUp size={18} color="white" />
+        )}
       </Pressable>
     </View>
   );
