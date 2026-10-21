@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { deleteUserAction } from "./delete-user/delete-user.action";
 import { patchUserProfileAction } from "./patch-user-profile/patch-user-profile.action";
 import { getUserAction } from "./get-user/get-user.action";
@@ -22,6 +22,11 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
+    // At launch, from the saved session; the rest of the account is loaded
+    // with GET /users/{id}.
+    setUserId: (state, action: PayloadAction<number>) => {
+      state.user = { id: action.payload } as IUser;
+    },
     clearUser: (state) => {
       state.user = {} as IUser;
       state.isLoading = false;
@@ -40,7 +45,9 @@ const userSlice = createSlice({
       })
       .addCase(signInAction.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        // The tokens go to SecureStore only.
+        const { token, refreshToken, ...user } = action.payload;
+        state.user = user;
       })
       .addCase(signInAction.rejected, (state) => {
         state.isLoading = false;
@@ -50,7 +57,7 @@ const userSlice = createSlice({
       })
       .addCase(updateUserAction.fulfilled, (state, action) => {
         state.isUpdating = false;
-        // Merge so the persisted token survives; the response has no token.
+        // Merge: the response leaves out fields kept from sign-in.
         state.user = { ...state.user, ...action.payload };
       })
       .addCase(updateUserAction.rejected, (state) => {
@@ -60,8 +67,7 @@ const userSlice = createSlice({
         // A refresh keeps showing what's already loaded.
         if (state.profileStatus !== "ready") state.profileStatus = "loading";
       })
-      // Refreshes the persisted account (merged: the response has no token)
-      // and holds the profile apart, unpersisted.
+      // Refreshes the account and holds the profile apart.
       .addCase(getUserAction.fulfilled, (state, action) => {
         const { profile, ...account } = action.payload;
         state.user = { ...state.user, ...account };
@@ -107,5 +113,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearUser } = userSlice.actions;
+export const { setUserId, clearUser } = userSlice.actions;
 export const userReducer = userSlice.reducer;

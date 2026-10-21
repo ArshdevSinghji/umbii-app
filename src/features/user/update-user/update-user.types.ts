@@ -10,5 +10,4 @@ export interface UpdateUserRequest {
   phoneNumber: string | null;
 }
 
-// Profile only; the token isn't returned here.
-export type UpdateUserResponse = Omit<IUser, "token">;
+export type UpdateUserResponse = IUser;

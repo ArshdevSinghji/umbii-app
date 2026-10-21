@@ -1,6 +1,11 @@
-import { SignInRequest } from "./sign-in.types";
+import { ApiResponse } from "@/lib/http-client";
+import { SignInRequest, SignInResponse } from "./sign-in.types";
 
-export const signInService = async (request: SignInRequest) => {
+// No access token needed. Returns the account with an access token and a
+// refresh token.
+export const signInService = async (
+  request: SignInRequest,
+): Promise<ApiResponse<SignInResponse>> => {
   const url = process.env.EXPO_PUBLIC_API_URL;
   const response = await fetch(`${url}/sign-in`, {
     method: "POST",

@@ -1,8 +1,9 @@
 import { eventBus } from './event-bus';
-import { deleteToken, getToken } from './token';
+import { AuthTokens, clearSession, getRefreshToken, getToken, saveTokens } from './token';
 
-// Thrown on 401. By then the token is cleared and the app is already heading
-// to sign-in, so callers should treat it as expected, not as a failure.
+// Thrown when the session can't be recovered (a 401 a refresh can't fix). By
+// then the tokens are cleared and the app is already heading to sign-in, so
+// callers should treat it as expected, not as a failure.
 export class UnauthorizedError extends Error {
   constructor() {
     super('UNAUTHORIZED');
@@ -72,7 +73,69 @@ type RequestOptions = {
 };
 
 
-async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+// 401 messages the client acts on.
+const TOKEN_EXPIRED = 'Token expired';
+const SESSION_ENDED = 'Session ended';
+
+// Why the user was sent back to sign-in, for the note shown there.
+// `session-ended`: the account signed in on another device.
+export type SignOutReason = 'session-ended' | 'expired';
+
+// Clears the session and sends the app to sign-in. No reason when no token
+// was sent (nothing to explain).
+async function endSession(reason?: SignOutReason): Promise<never> {
+  await clearSession();
+  eventBus.emit('auth:unauthorized', { reason });
+  throw new UnauthorizedError();
+}
+
+let refreshInFlight: Promise<void> | null = null;
+
+// Swaps the refresh token for a new pair. Refresh tokens are single use and
+// the server treats two refreshes with the same one as theft (it ends the
+// session), so concurrent 401s share one refresh.
+function refreshTokens(staleToken: string) {
+  refreshInFlight ??= runRefresh(staleToken).finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function runRefresh(staleToken: string) {
+  // Another request already refreshed after this one was sent.
+  if ((await getToken()) !== staleToken) return;
+
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) return endSession('expired');
+
+  const response = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  // Session ended (signed in elsewhere), refresh token expired or invalid.
+  if (response.status === 401) {
+    const error = await response.json().catch(() => ({}));
+    const isSessionEnded = String(error.message ?? '').startsWith(SESSION_ENDED);
+    return endSession(isSessionEnded ? 'session-ended' : 'expired');
+  }
+
+  // Anything else (5xx, network) keeps the tokens: the request just fails.
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new HttpError(response.status, error.message ?? 'Something went wrong');
+  }
+
+  const { data } = (await response.json()) as ApiResponse<AuthTokens>;
+  await saveTokens(data);
+}
+
+async function request<T>(
+  endpoint: string,
+  options: RequestOptions = {},
+  isRetry = false,
+): Promise<T> {
   const token = await getToken();
 
   const headers: Record<string, string> = {
@@ -100,9 +163,14 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   });
 
   if (response.status === 401) {
-    await deleteToken();
-    eventBus.emit('auth:unauthorized');
-    throw new UnauthorizedError();
+    const error = await response.json().catch(() => ({}));
+    // Refresh once, then retry with the new token.
+    if (error.message === TOKEN_EXPIRED && token && !isRetry) {
+      await refreshTokens(token);
+      return request<T>(endpoint, options, true);
+    }
+    // Invalid token / Token not found.
+    return endSession(token ? 'expired' : undefined);
   }
 
   if (!response.ok) {

@@ -77,11 +77,15 @@ function ErrorToast({ id, message, description, action }: ErrorToastProps) {
 
 let toastCount = 0;
 
+// Pass an `id` to show a toast once even when it's raised several times
+// (a toast with the same id replaces the shown one).
 export function errorToast(
   message: string,
-  options: { description?: string; action?: ToastAction } = {},
+  {
+    id = `error-${++toastCount}`,
+    ...options
+  }: { id?: string; description?: string; action?: ToastAction } = {},
 ) {
-  const id = `error-${++toastCount}`;
   return toast.custom(<ErrorToast id={id} message={message} {...options} />, {
     id,
   });

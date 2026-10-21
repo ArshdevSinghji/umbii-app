@@ -14,7 +14,6 @@ export enum UserActionTypes {
 export interface IUser {
   id: number;
   email: string;
-  token: string;
   username: string;
   imageUrl: string | null;
   phoneNumber: string | null;
@@ -77,8 +76,7 @@ export enum HealthFlag {
 }
 
 // The onboarding answers, nested in GET /users/{userId} as `profile` (null
-// before onboarding). Targets are generated from it. Health flags are
-// sensitive, so it's kept in state but not persisted with the user.
+// before onboarding). Targets are generated from it.
 export interface IUserProfile {
   sex: Sex;
   // "YYYY-MM-DD".
@@ -109,7 +107,7 @@ export interface UserState {
   // Account updates; never blocks the sign-in screen.
   isUpdating: boolean;
   user: IUser;
-  // Not persisted (see IUserProfile). Null until loaded and before
+  // Null until loaded and before
   // onboarding; `profileStatus` tells those apart.
   profile: IUserProfile | null;
   profileStatus: LoadStatus;

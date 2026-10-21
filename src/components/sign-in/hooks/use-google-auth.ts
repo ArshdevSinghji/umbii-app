@@ -1,6 +1,6 @@
 import { signInAction } from "@/features/user/sign-in/sign-in.action";
 import { eventBus } from "@/lib/event-bus";
-import { saveToken } from "@/lib/token";
+import { saveSession } from "@/lib/token";
 import { useAppDispatch } from "@/store/hooks";
 import {
   GoogleSignin,
@@ -34,8 +34,8 @@ export function useGoogleAuth() {
 
         const res = await dispatch(signInAction(payload));
         if (signInAction.fulfilled.match(res)) {
-          const { token } = res.payload;
-          await saveToken(token);
+          const { token, refreshToken, id } = res.payload;
+          await saveSession({ token, refreshToken, userId: id });
           eventBus.emit("auth:signin", { token });
         }
       }

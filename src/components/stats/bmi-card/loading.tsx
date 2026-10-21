@@ -6,7 +6,7 @@ import { View } from "react-native";
 import BmiLegend from "./bmi-legend";
 
 interface IProps {
-  // Known from the persisted user, so the skeleton matches the variant
+  // Known from the loaded profile, so the skeleton matches the variant
   // that will actually render.
   hasHeight: boolean;
 }

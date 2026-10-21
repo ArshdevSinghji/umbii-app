@@ -4,8 +4,7 @@ export interface GetUserRequest {
   userId: number;
 }
 
-// The account (no token) plus the onboarding profile, null before
-// onboarding.
-export type GetUserResponse = Omit<IUser, "token"> & {
+// The account plus the onboarding profile, null before onboarding.
+export type GetUserResponse = IUser & {
   profile: IUserProfile | null;
 };

@@ -1,5 +1,7 @@
+import { setUserId } from '@/features/user/user.slice';
 import { eventBus } from '@/lib/event-bus';
-import { getToken } from '@/lib/token';
+import { getToken, getUserId } from '@/lib/token';
+import { store } from '@/store/store';
 import { useEffect, useState } from 'react';
 
 export function useAuth() {
@@ -7,8 +9,11 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getToken().then((t) => {
-      setToken(t);
+    // Restore the session before any screen renders: screens need the user
+    // id for their requests; the rest of the account is loaded on launch.
+    Promise.all([getToken(), getUserId()]).then(([token, userId]) => {
+      if (token && userId) store.dispatch(setUserId(userId));
+      setToken(token && userId ? token : null);
       setIsLoading(false);
     });
 
