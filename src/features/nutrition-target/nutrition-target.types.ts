@@ -12,12 +12,18 @@ export enum NutritionTargetActionTypes {
   GET_CALENDAR_NUTRITION_TARGET_REPORT = "GET_CALENDAR_NUTRITION_TARGET_REPORT",
 }
 
-// A target generated from the profile (now in effect), plus how it was
-// worked out: saving the onboarding answers and POST
-// /nutrition-target/generate both return this.
+// Where a target came from: worked out from the profile, or set by hand.
+export enum TargetSource {
+  Generated = "GENERATED",
+  Manual = "MANUAL",
+}
+
+// A target generated from the profile, plus how it was worked out: saving
+// the onboarding answers and POST /nutrition-target/generate return this,
+// and so does GET /nutrition-target when the target in effect was generated.
 export interface IGeneratedNutritionTarget extends NutritionValues {
   id: number;
-  source: "GENERATED";
+  source: TargetSource.Generated;
   formulaVersion: string;
   // The weight it was computed from (the latest weigh-in).
   weightKg: number;
