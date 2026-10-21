@@ -64,10 +64,18 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
+// Android pads text with the font's own ascent/descent space. Caudex's is
+// lopsided, so labels sat off-centre in buttons and pills; without it the
+// glyphs centre in their line.
+const ANDROID_TEXT_STYLE = Platform.select({
+  android: { includeFontPadding: false },
+});
+
 function Text({
   className,
   asChild = false,
   variant = 'default',
+  style,
   ...props
 }: React.ComponentProps<typeof RNText> &
   React.RefAttributes<typeof RNText> &
@@ -81,6 +89,7 @@ function Text({
       className={cn(textVariants({ variant }), textClass, className)}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
+      style={[ANDROID_TEXT_STYLE, style]}
       {...props}
     />
   );

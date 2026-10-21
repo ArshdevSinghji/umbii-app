@@ -99,13 +99,17 @@ export default function GoalProgress() {
 
     const isMaintaining = profile.goalType === GoalType.Maintenance;
 
-    // Goal weight and height are read-only for now: the profile can only be
-    // changed by redoing onboarding until it gets its own update endpoint.
+    // Changing goal weight or height regenerates the plan; the edit screen
+    // asks first. Maintenance has no goal weight to change.
     return (
       <View className="gap-3">
         <WeightCard
           weight={profile.targetWeightKg ?? latest.weightKg}
           label={isMaintaining ? "Goal: maintain" : "Goal weight"}
+          {...(!isMaintaining && {
+            actionLabel: "Update my goal",
+            onActionPress: () => openHealthDetails("goal"),
+          })}
         />
         <WeightCard
           weight={latest.weightKg}
@@ -120,7 +124,11 @@ export default function GoalProgress() {
           latest={latest}
           targetWeightKg={profile.targetWeightKg}
         />
-        <BmiCard weight={latest.weightKg} height={profile.heightCm} />
+        <BmiCard
+          weight={latest.weightKg}
+          height={profile.heightCm}
+          onUpdateHeight={() => openHealthDetails("height")}
+        />
       </View>
     );
   };

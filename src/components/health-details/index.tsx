@@ -1,5 +1,7 @@
 import { getErrorMessage } from "@/lib/http-client";
 import { ActionButton } from "@/components/ui/action-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getTargetWeightRange } from "@/components/onboarding/onboarding.utils";
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -34,11 +36,13 @@ const COPY: Record<HealthDetailsMode, { title: string; description: string }> =
     },
     goal: {
       title: "Set your goal weight",
-      description: "Slide to the weight you're aiming for.",
+      description:
+        "Slide to the weight you're aiming for. Your plan is recalculated from it.",
     },
     height: {
       title: "Update your height",
-      description: "We use it to work out your BMI.",
+      description:
+        "We use it for your BMI and your plan, which is recalculated from it.",
     },
   };
 
@@ -70,6 +74,19 @@ export default function HealthDetailsForm({ mode }: IProps) {
   >({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isDone, setIsDone] = useState(false);
+  // Goal weight and height regenerate the nutrition target: ask first.
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const recalculatesPlan = mode === "goal" || mode === "height";
+
+  // Goal weight: within -30/+20 kg of the latest weigh-in, as the server
+  // allows (it also checks the direction against the goal).
+  const fields = {
+    ...FIELDS,
+    targetWeight: {
+      ...FIELDS.targetWeight,
+      range: latest ? getTargetWeightRange(latest.weightKg) : WEIGHT_RANGE,
+    },
+  };
 
   // Block back gestures / hardware back until the request resolves.
   usePreventRemove(isSaving && !isDone, () => {});
@@ -96,6 +113,15 @@ export default function HealthDetailsForm({ mode }: IProps) {
       return;
     }
 
+    if (recalculatesPlan) {
+      setIsConfirmOpen(true);
+      return;
+    }
+    await submit();
+  };
+
+  const submit = async () => {
+    setSubmitError(null);
     try {
       await save(values);
       setIsDone(true);
@@ -118,7 +144,7 @@ export default function HealthDetailsForm({ mode }: IProps) {
         {MODE_FIELDS[mode].map((field) => (
           <MeasurementField
             key={field}
-            {...FIELDS[field]}
+            {...fields[field]}
             value={values[field]}
             onChange={handleChange(field)}
             error={errors[field]}
@@ -133,6 +159,18 @@ export default function HealthDetailsForm({ mode }: IProps) {
           </Text>
         )}
         <ActionButton label="Save" onPress={handleSave} isLoading={isSaving} />
+        {/* Kept inside the bottom group: as its own child of the page it
+            took a slot in justify-between and pushed Save up. */}
+        <ConfirmDialog
+          open={isConfirmOpen}
+          onOpenChange={setIsConfirmOpen}
+          title="Update your plan?"
+          description={`Changing your ${
+            mode === "height" ? "height" : "goal weight"
+          } recalculates your daily nutrition targets from today, replacing your current ones.`}
+          confirmLabel="Update"
+          onConfirm={submit}
+        />
       </View>
     </View>
   );

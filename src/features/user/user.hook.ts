@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { deleteUserAction } from "./delete-user/delete-user.action";
+import { patchUserProfileAction } from "./patch-user-profile/patch-user-profile.action";
 import { getUserAction } from "./get-user/get-user.action";
 import { saveUserOnboardingAction } from "./save-user-onboarding/save-user-onboarding.action";
 import { UserOnboardingAnswers } from "./save-user-onboarding/save-user-onboarding.types";
@@ -13,6 +14,7 @@ export function useUserActionsHook() {
     profileStatus,
     isSavingOnboarding,
     isDeleting,
+    isPatchingProfile,
   } = useAppSelector((state) => state.userSlice);
 
   // The account and its onboarding profile. Resolves with the profile, or
@@ -37,7 +39,20 @@ export function useUserActionsHook() {
     await dispatch(deleteUserAction({ userId })).unwrap();
   };
 
+  // Changes height and/or target weight. This regenerates the nutrition
+  // target, so ask the user first. Resolves with the new profile and target.
+  const patchUserProfile = async (
+    userId: number,
+    changes: { heightCm?: number; targetWeightKg?: number },
+  ) => {
+    return await dispatch(
+      patchUserProfileAction({ userId, ...changes }),
+    ).unwrap();
+  };
+
   return {
+    isPatchingProfile,
+    patchUserProfile,
     isDeleting,
     deleteUser,
     user,

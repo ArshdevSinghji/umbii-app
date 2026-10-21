@@ -1,12 +1,8 @@
 import { useUserActionsHook } from "@/features/user/user.hook";
 import { reportRequestError } from "@/lib/http-client";
 import { useAppSelector } from "@/store/hooks";
-import { withMinDuration } from "@/utils/with-min-duration";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-
-// The splash shows at least this long, so the animation reads.
-const MIN_SPLASH_MS = 1200;
 
 // First-time users go to onboarding: once per signed-in user, load the
 // account (which also refreshes the saved copy) and, if it has no profile
@@ -22,8 +18,8 @@ export function useOnboardingGate() {
 
   useEffect(() => {
     if (!user.id) return;
-    const request = fetchUser(user.id);
-    withMinDuration(request, isChecking ? MIN_SPLASH_MS : 0)
+    // The loading screen is up only as long as this request takes.
+    fetchUser(user.id)
       .then((profile) => {
         if (!profile) router.replace("/onboarding");
       })

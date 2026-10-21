@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { saveUserOnboardingAction } from "@/features/user/save-user-onboarding/save-user-onboarding.action";
+import { patchUserProfileAction } from "@/features/user/patch-user-profile/patch-user-profile.action";
 import { createNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
 import { getNutritionTargetReportAction } from "./get-nutrition-target-report/get-nutrition-target-report.action";
 import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-target.action";
@@ -60,6 +61,10 @@ const nutritionTargetSlice = createSlice({
       // Home's current target straight away.
       .addCase(saveUserOnboardingAction.fulfilled, (state, action) => {
         state.nutritionTarget = action.payload;
+      })
+      // Changing height or target weight regenerates the target.
+      .addCase(patchUserProfileAction.fulfilled, (state, action) => {
+        state.nutritionTarget = action.payload.nutritionTarget;
       })
       .addCase(generateNutritionTargetAction.pending, (state) => {
         state.isGenerating = true;

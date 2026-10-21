@@ -6,6 +6,7 @@ export enum UserActionTypes {
   SAVE_USER_ONBOARDING = "user/save-user-onboarding",
   UPDATE_USER = "user/update-user",
   DELETE_USER = "user/delete-user",
+  PATCH_USER_PROFILE = "user/patch-user-profile",
   LIST_FOOD_LOGS = "user/list-food-logs",
   CREATE_FOOD_LOGS = "user/create-food-logs",
 }
@@ -114,4 +115,6 @@ export interface UserState {
   profileStatus: LoadStatus;
   isSavingOnboarding: boolean;
   isDeleting: boolean;
+  // Saving a height or target-weight change.
+  isPatchingProfile: boolean;
 }

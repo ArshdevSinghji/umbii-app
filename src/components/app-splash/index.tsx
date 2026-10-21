@@ -1,32 +1,19 @@
 import { Text } from "@/components/ui/text";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { THEME } from "@/lib/theme";
 import { useColorScheme } from "nativewind";
-import { View } from "react-native";
-
-// One clip per theme. Both are the egg until the light and dark versions
-// arrive; swap the files here.
-const SPLASH_VIDEO = {
-  light: require("@/assets/videos/jumping-egg.mp4"),
-  dark: require("@/assets/videos/jumping-egg.mp4"),
-};
-
-const VIDEO_SIZE = 220;
+import { ActivityIndicator, View } from "react-native";
 
 interface IProps {
-  // A line under the video, e.g. "Building your plan".
+  // A line under the spinner, e.g. "Building your plan".
   caption?: string;
 }
 
-// Full-screen loading screen with the looping animation: shown while the
-// account loads after sign-in, and while a plan is being built. Covers
-// whatever is behind it.
+// Full-screen loading screen, shown only while the account loads after
+// sign-in. A plain spinner for now; the egg animation can come back later.
+// Covers whatever is behind it.
 export default function AppSplash({ caption }: IProps) {
   const { colorScheme } = useColorScheme();
-  const player = useVideoPlayer(SPLASH_VIDEO[colorScheme ?? "light"], (p) => {
-    p.loop = true;
-    p.muted = true;
-    p.play();
-  });
+  const theme = THEME[colorScheme ?? "light"];
 
   return (
     <View
@@ -34,13 +21,7 @@ export default function AppSplash({ caption }: IProps) {
       accessibilityRole="progressbar"
       accessibilityLabel={caption ?? "Loading"}
     >
-      <VideoView
-        player={player}
-        style={{ width: VIDEO_SIZE, height: VIDEO_SIZE }}
-        nativeControls={false}
-        contentFit="contain"
-        allowsPictureInPicture={false}
-      />
+      <ActivityIndicator size="large" color={theme.foreground} />
       {caption && (
         <Text className="text-sm text-muted-foreground">{caption}</Text>
       )}

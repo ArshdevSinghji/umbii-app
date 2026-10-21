@@ -112,10 +112,26 @@ export default function MyPlan() {
               <SettingsRow
                 label="Target weight"
                 value={`${profile.targetWeightKg} kg`}
+                // Editing asks first: it recalculates the plan.
+                onPress={() =>
+                  router.push({
+                    pathname: "/health-details",
+                    params: { mode: "goal" },
+                  })
+                }
               />
             )}
             {pace && <SettingsRow label="Pace" value={pace} />}
-            <SettingsRow label="Height" value={`${profile.heightCm} cm`} />
+            <SettingsRow
+              label="Height"
+              value={`${profile.heightCm} cm`}
+              onPress={() =>
+                router.push({
+                  pathname: "/health-details",
+                  params: { mode: "height" },
+                })
+              }
+            />
             <SettingsRow label="Age" value={`${getAge(profile.dateOfBirth)}`} />
             <SettingsRow
               label="Workouts per week"

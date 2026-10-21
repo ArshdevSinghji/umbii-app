@@ -94,7 +94,7 @@ function AlertDialogTitle({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
   return (
     <AlertDialogPrimitive.Title
-      className={cn('text-foreground text-lg font-semibold', className)}
+      className={cn('text-foreground font-sans-bold text-lg', className)}
       {...props}
     />
   );
@@ -106,18 +106,22 @@ function AlertDialogDescription({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
   return (
     <AlertDialogPrimitive.Description
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn('text-muted-foreground font-sans text-sm', className)}
       {...props}
     />
   );
 }
 
+// `className` styles the button only; label styles go in `textClassName`
+// (passing the button's classes to the label too, e.g. a height, made the
+// label box as tall as the button and pushed the text off-centre).
 function AlertDialogAction({
   className,
+  textClassName,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action> & { textClassName?: string }) {
   return (
-    <TextClassContext.Provider value={buttonTextVariants({ className })}>
+    <TextClassContext.Provider value={buttonTextVariants({ className: textClassName })}>
       <AlertDialogPrimitive.Action className={cn(buttonVariants(), className)} {...props} />
     </TextClassContext.Provider>
   );
@@ -125,10 +129,12 @@ function AlertDialogAction({
 
 function AlertDialogCancel({
   className,
+  textClassName,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel> & { textClassName?: string }) {
   return (
-    <TextClassContext.Provider value={buttonTextVariants({ className, variant: 'outline' })}>
+    <TextClassContext.Provider
+      value={buttonTextVariants({ className: textClassName, variant: 'outline' })}>
       <AlertDialogPrimitive.Cancel
         className={cn(buttonVariants({ variant: 'outline' }), className)}
         {...props}

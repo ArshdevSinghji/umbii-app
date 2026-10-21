@@ -2,11 +2,7 @@ import PageHeader from "@/components/settings-list/page-header";
 import SettingsGroup from "@/components/settings-list/settings-group";
 import SettingsRow from "@/components/settings-list/settings-row";
 import { Text } from "@/components/ui/text";
-import { useSignOut } from "@/components/home/hooks/use-sign-out";
-import { errorToast } from "@/components/ui/app-toaster";
 import { usePreferencesActionsHook } from "@/features/preferences/preferences.hooks";
-import { useUserActionsHook } from "@/features/user/user.hook";
-import { getErrorMessage, isUnauthorizedError } from "@/lib/http-client";
 import { ColorSchemePreference } from "@/features/preferences/preferences.types";
 import { useAppSelector } from "@/store/hooks";
 import { cn } from "@/lib/utils";
@@ -22,9 +18,8 @@ import { PencilSimple } from "phosphor-react-native/src/icons/PencilSimple";
 import { Ruler } from "phosphor-react-native/src/icons/Ruler";
 import { Scales } from "phosphor-react-native/src/icons/Scales";
 import { ShieldCheck } from "phosphor-react-native/src/icons/ShieldCheck";
-import { Trash } from "phosphor-react-native/src/icons/Trash";
 import { useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 const THEME_OPTIONS: { label: string; value: ColorSchemePreference }[] = [
   { label: "Light", value: "light" },
@@ -40,37 +35,6 @@ export default function Settings() {
   const { user } = useAppSelector((state) => state.userSlice);
   const { colorSchemePreference, updateColorScheme } =
     usePreferencesActionsHook();
-
-  const { deleteUser, isDeleting } = useUserActionsHook();
-  const { signOut } = useSignOut();
-
-  // Deletes the account for good, then signs out (back to sign-in). Asks
-  // first, spelling out that it can't be undone.
-  const confirmDeleteAccount = () =>
-    Alert.alert(
-      "Delete your account?",
-      "This permanently deletes your account, meals, recipes, weigh-ins and plan. It can't be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete account",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteUser(user.id);
-            } catch (error) {
-              if (!isUnauthorizedError(error)) {
-                errorToast("Couldn't delete your account", {
-                  description: getErrorMessage(error),
-                });
-              }
-              return;
-            }
-            await signOut();
-          },
-        },
-      ],
-    );
 
   // Placeholders until reminders exist.
   const [mealReminders, setMealReminders] = useState(true);
@@ -140,13 +104,6 @@ export default function Settings() {
           <SettingsRow icon={Envelope} label="Email" value={user.email} />
           <SettingsRow icon={PencilSimple} label="Edit profile" comingSoon />
           <SettingsRow icon={Lock} label="Privacy" comingSoon />
-          <SettingsRow
-            icon={Trash}
-            label="Delete account"
-            destructive
-            onPress={confirmDeleteAccount}
-            isLoading={isDeleting}
-          />
         </SettingsGroup>
 
         <SettingsGroup title="About">

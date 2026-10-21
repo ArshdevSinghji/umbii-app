@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { deleteUserAction } from "./delete-user/delete-user.action";
+import { patchUserProfileAction } from "./patch-user-profile/patch-user-profile.action";
 import { getUserAction } from "./get-user/get-user.action";
 import { saveUserOnboardingAction } from "./save-user-onboarding/save-user-onboarding.action";
 import { signInAction } from "./sign-in/sign-in.action";
@@ -14,6 +15,7 @@ const initialState: UserState = {
   profileStatus: "idle",
   isSavingOnboarding: false,
   isDeleting: false,
+  isPatchingProfile: false,
 };
 
 const userSlice = createSlice({
@@ -28,6 +30,7 @@ const userSlice = createSlice({
       state.profileStatus = "idle";
       state.isSavingOnboarding = false;
       state.isDeleting = false;
+      state.isPatchingProfile = false;
     },
   },
   extraReducers: (builder) => {
@@ -87,6 +90,19 @@ const userSlice = createSlice({
       })
       .addCase(deleteUserAction.rejected, (state) => {
         state.isDeleting = false;
+      })
+      .addCase(patchUserProfileAction.pending, (state) => {
+        state.isPatchingProfile = true;
+      })
+      // The saved profile comes back whole; the new target goes to the
+      // nutrition-target slice.
+      .addCase(patchUserProfileAction.fulfilled, (state, action) => {
+        state.isPatchingProfile = false;
+        state.profile = action.payload.profile;
+        state.profileStatus = "ready";
+      })
+      .addCase(patchUserProfileAction.rejected, (state) => {
+        state.isPatchingProfile = false;
       });
   },
 });
