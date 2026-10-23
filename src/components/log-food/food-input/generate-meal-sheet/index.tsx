@@ -43,7 +43,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
                 <View>
                   <Text className="font-sans-bold">{log.name}</Text>
                   <Text className="text-muted-foreground text-xs">
-                    {log.servingQuantity} g
+                    {log.servingQuantity} {log.servingUnit}
                   </Text>
                 </View>
                 <Text className="text-sm">
@@ -88,7 +88,7 @@ export default function GenerateMealSheet({ foodLog }: IProps) {
                   <Pulse size={14} color={theme.foreground} />
                   <Text>Sodium</Text>
                 </View>
-                <Text className="font-sans-bold">{log.sodium} g</Text>
+                <Text className="font-sans-bold">{log.sodium} mg</Text>
               </View>
 
               <View className="flex-row justify-between items-center mt-2">
