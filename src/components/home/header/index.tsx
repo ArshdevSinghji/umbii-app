@@ -4,7 +4,7 @@ import { BellRinging } from "phosphor-react-native/src/icons/BellRinging";
 import { CircleIcon } from "phosphor-react-native/src/icons/Circle";
 import { useColorScheme } from "nativewind";
 import { View } from "react-native";
-import { ProfileDropdown } from "./profile-dropdown";
+import { ProfileAvatar } from "./profile-avatar";
 
 export default function HomeDashboardHeader() {
   const { colorScheme } = useColorScheme();
@@ -26,7 +26,7 @@ export default function HomeDashboardHeader() {
           </View>
         </View>
 
-        <ProfileDropdown />
+        <ProfileAvatar />
       </View>
     </View>
   );
