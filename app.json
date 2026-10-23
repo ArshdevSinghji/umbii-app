@@ -8,7 +8,11 @@
     "scheme": "umbiiapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow Umbii to turn what you say into a meal log.",
+        "NSMicrophoneUsageDescription": "Allow Umbii to use the microphone to log meals by voice."
+      }
     },
     "android": {
       "package": "com.umbii",
@@ -19,7 +23,10 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -56,11 +63,27 @@
           "microphonePermission": "Allow Umbii to use the microphone to log meals by voice.",
           "speechRecognitionPermission": "Allow Umbii to turn what you say into a meal log."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "color": "#18181B",
+          "defaultChannel": "default"
+        }
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5f715112-c05f-467d-96a2-daba42d12073"
+      }
+    },
+    "owner": "arshdev_singh"
   }
 }

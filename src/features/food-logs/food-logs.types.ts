@@ -38,7 +38,11 @@ export interface IFoodLogDetail {
 export interface IFoodLog {
   id: number;
   rawInputText: string;
+  // The user's calendar day ("yyyy-MM-dd", in their zone when logged).
   createdAt: string;
+  // Exact moment it was logged, ISO UTC (e.g. "2026-10-23T07:42:13.512Z");
+  // convert to local time for display.
+  loggedAt: string;
   // Id of the recipe saved from this log, or null if it isn't one.
   recipeId: number | null;
   details: IFoodLogDetail[];

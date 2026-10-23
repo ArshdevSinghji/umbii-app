@@ -18,6 +18,7 @@ import { Target } from "phosphor-react-native/src/icons/Target";
 import { Trash } from "phosphor-react-native/src/icons/Trash";
 import { UserPlus } from "phosphor-react-native/src/icons/UserPlus";
 import { Share, View } from "react-native";
+import AppearanceCard from "./appearance-card";
 import ProfileHeader from "./profile-header";
 
 // The app's Play Store page (package com.umbii); live once published.
@@ -80,6 +81,8 @@ export default function Profile() {
           />
         </SettingsGroup>
 
+        <AppearanceCard />
+
         <SettingsGroup>
           <SettingsRow
             icon={UserPlus}
@@ -91,7 +94,11 @@ export default function Profile() {
             label="Settings"
             onPress={() => router.push("/settings")}
           />
-          <SettingsRow icon={Bell} label="Notifications" comingSoon />
+          <SettingsRow
+            icon={Bell}
+            label="Notifications"
+            onPress={() => router.push("/notifications")}
+          />
           <SettingsRow icon={Question} label="Help and support" comingSoon />
         </SettingsGroup>
 

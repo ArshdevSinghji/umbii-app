@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useColorScheme } from "nativewind";
 import type { Icon as PhosphorIcon } from "phosphor-react-native";
 import { CaretRight } from "phosphor-react-native/src/icons/CaretRight";
+import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
 interface IProps {
@@ -20,6 +21,8 @@ interface IProps {
   // Not built yet: a small "Soon" tag, and it does nothing.
   comingSoon?: boolean;
   isLoading?: boolean;
+  // Custom control on the right (e.g. a time picker), in place of a value.
+  accessory?: ReactNode;
 }
 
 // One row: icon chip, label, then a value and chevron, or a switch. Rows
@@ -33,6 +36,7 @@ export default function SettingsRow({
   destructive = false,
   comingSoon = false,
   isLoading = false,
+  accessory,
 }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
@@ -73,6 +77,7 @@ export default function SettingsRow({
           {value}
         </Text>
       )}
+      {accessory}
       {isLoading && <ActivityIndicator size="small" color={color} />}
       {toggle && (
         <Switch checked={toggle.value} onCheckedChange={toggle.onChange} />

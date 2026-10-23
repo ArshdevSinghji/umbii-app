@@ -5,6 +5,7 @@ import { nutritionTargetReducer } from '@/features/nutrition-target/nutrition-ta
 import { recipesReducer } from '@/features/recipes/recipes.slice';
 import { weightJournalsReducer } from '@/features/weight-journals/weight-journals.slice';
 import { preferencesReducer } from '@/features/preferences/preferences.slice';
+import { notificationsReducer } from '@/features/notifications/notifications.slice';
 
 // Nothing here is persisted. The session (tokens, user id) is in SecureStore
 // (lib/token.ts), the theme in AsyncStorage (preferences.storage.ts); server
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   recipesSlice: recipesReducer,
   weightJournalsSlice: weightJournalsReducer,
   preferencesSlice: preferencesReducer,
+  notificationsSlice: notificationsReducer,
 });
 
 export const store = configureStore({

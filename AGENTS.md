@@ -11,7 +11,7 @@ Stack: Expo SDK 56, React Native 0.85, React 19.2 (React Compiler on), expo-rout
 
 AI calorie / nutrition tracker (Android-first; package `com.umbii`). Users sign in with Google, onboard (body stats, goal, pace, food prefs) → server generates a nutrition target. They log meals by typing what they ate; the server AI turns the text into items with macros (`food-logs/generate`), the user confirms (`food-logs` POST). Also: saved recipes (re-log a meal), weight journal + BMI, period breakdown (day/week/month/year) with a health score.
 
-Backend is a separate repo (not here). Base URL `EXPO_PUBLIC_API_URL` (dev: `http://localhost:8080`, tunnelled to devices by `scripts/adb-reverse.sh`). Responses are `{ message, data }` (`ApiResponse<T>`).
+Backend is a separate repo (not here). Base URL `EXPO_PUBLIC_API_URL` (dev: `http://localhost:8080`, tunnelled to devices by `scripts/adb-reverse.sh`). Responses are `{ message, data }` (`ApiResponse<T>`). Every `http` request sends `X-Timezone` (IANA zone, `lib/timezone.ts`, read per request): the server uses it for the user's calendar day, default "today" and reminder timing, and 400s an invalid zone, so omit rather than guess. `createdAt`/`updatedAt` are `yyyy-MM-dd` days; food logs also have `loggedAt` (ISO UTC).
 
 ## Commands
 
@@ -28,14 +28,15 @@ src/app/            routes only — thin wrappers that render a component from s
   (sign-in)/        Google sign-in
   (tabs)/           home | breakdown ("Stats") | log-food | stats ("Goals") | profile
                     custom FloatingTabBar; useOnboardingGate sends profile-less users to /onboarding
-  onboarding/ plan/ health-details/ recipes/ settings/   stack screens
+  onboarding/ plan/ health-details/ recipes/ settings/ notifications/   stack screens
 src/components/<screen>/<part>/index.tsx   one folder per component; loading.tsx = skeleton,
                     hooks/ = screen-specific hooks, *.schema.ts (zod), *.utils.ts, *.types.ts
 src/components/ui/  react-native-reusables (shadcn for RN, components.json) + app primitives
                     (gradient-card, confirm-dialog, app-toaster, error-state, skeleton, …)
 src/features/<domain>/   Redux data layer (see below): user, food-logs, nutrition-target,
-                    recipes, weight-journals, preferences
+                    recipes, weight-journals, preferences (theme), notifications (push device + reminder prefs)
 src/lib/            http-client, token (SecureStore), use-auth, event-bus, pull-to-refresh,
+                    push-notifications (permission/token/channel), use-push-notifications,
                     use-initial-load, theme (THEME mirrors global.css), floating-tab-bar, utils (cn)
 src/utils/          pure helpers: date keys, BMI, health score, period ranges, initials
 src/store/          store.ts (combineReducers, slice keys `<name>Slice`), hooks.ts (useAppDispatch/Selector)
@@ -53,7 +54,7 @@ Domain level: `<domain>.types.ts` (ActionTypes enum, entity `I<Entity>`, `<Domai
 
 **One thunk per API route.** Add a second action for the same route only when its result would overwrite data already mounted elsewhere (tabs stay mounted in RN). Existing accepted splits: food-logs → `listFoodLogs` (Home's day) / `listPeriodFoodLogs` (Breakdown) / `listRecentFoodLogs` (Log Food, last 7 days); nutrition-target and weight-journals similar (latest vs chart/period). Ask the user if unsure.
 
-Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST /` (onboarding), `PATCH /profile`; `food-logs` GET/POST, `food-logs/generate` POST, `food-logs/{id}` GET; `nutrition-target` GET/POST, `/generate` POST, `/report` GET; `recipes` GET/POST, `recipes/{id}` GET/PUT/DELETE; `weight-journals` GET/POST, `/{id}` GET/PUT/DELETE. No auth: `POST /sign-in`, `POST /auth/refresh`, `POST /auth/sign-out`.
+Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST /` (onboarding), `PATCH /profile`; `food-logs` GET/POST, `food-logs/generate` POST, `food-logs/{id}` GET; `nutrition-target` GET/POST, `/generate` POST, `/report` GET; `recipes` GET/POST, `recipes/{id}` GET/PUT/DELETE; `weight-journals` GET/POST, `/{id}` GET/PUT/DELETE; `push-devices` POST (upsert), `/{id}` DELETE; `notification-preferences` GET/PATCH (partial). No auth: `POST /sign-in`, `POST /auth/refresh`, `POST /auth/sign-out`.
 
 ## Auth & session
 
@@ -63,6 +64,15 @@ Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST 
 - Nothing in Redux is persisted. Session → SecureStore; theme preference → AsyncStorage; everything else refetched. The user profile is loaded by `useOnboardingGate` on launch.
 - `firebaseConfig.js` exists but nothing in `src` uses it.
 
+## Push notifications
+
+- expo-notifications, single Android channel `default` (backend sends no channelId). Foreground banners via `showNotificationsInForeground()` in the root layout.
+- `usePushNotifications()` in the tabs layout: once the user has a profile (so the OS prompt comes after onboarding, asked automatically only once), registers on every launch/sign-in and on token change; handles taps (`data.route`, incl. cold start) and `data.type === "signed_out_elsewhere"` → `endSessionLocally`. The refresh 401 stays the reliable sign-out signal.
+- Push on/off is per device (AsyncStorage `push_notifications`); off = DELETE push device. Sign-out needs no DELETE (server drops it). Reminder prefs are per account (server).
+- `data.route` must be an expo-router path (e.g. `/home`, `/plan`). The server's `signed_out_elsewhere` route `/sign-in` isn't one; it's handled by `type`.
+- Android fires the push-token event on every token fetch, not just on change. Never re-fetch/re-register from `addPushTokenListener` without checking `isKnownDeviceToken` — it loops (spams POST /push-devices and floods "Fetch request has been canceled" warnings).
+- Needs a physical device and an EAS project id (`extra.eas.projectId`); emulators get no token.
+
 ## UI conventions
 
 - NativeWind v4 (Tailwind 3) classes; `cn()` for merging. Colors are CSS vars in `src/global.css`; anything coloured in JS (charts, icons, nav) uses `THEME[colorScheme]` from `lib/theme.ts`, which must mirror global.css.
@@ -71,7 +81,8 @@ Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST 
 - Tab screens: `SafeAreaView` + `RefreshProvider` + `RefreshableScrollView`, bottom padding `FLOATING_TAB_BAR_CLEARANCE`. Components register reloads with `useRefresh(fn)`; first load uses `useInitialLoad` (skeleton → error card with retry).
 - Lists newest first (sort by `createdAt`, then `id`). Dates are local `yyyy-MM-dd` keys (`utils/date.ts`).
 - Toasts: sonner-native via `components/ui/app-toaster` (`errorToast`, …). Confirmations: `ConfirmDialog`. Sheets/overlays mount into `PortalHost`.
-- Other libs in use: flash-list, reanimated 4, gesture-handler, keyboard-controller (use it, not KeyboardAvoidingView), expo-image, react-native-calendars, ruler-picker, d3-shape (charts), @shopify/react-native-skia (UI-thread drawing), expo-speech-recognition (pin to the SDK's major, e.g. ^56 — `expo install` picks the wrong one), zod.
+- Other libs in use: flash-list, reanimated 4, gesture-handler, keyboard-controller (use it, not KeyboardAvoidingView), expo-image, react-native-calendars, ruler-picker, d3-shape (charts), @shopify/react-native-skia (UI-thread drawing), expo-localization (timezone fallback; localization later), expo-speech-recognition (pin to the SDK's major, e.g. ^56 — `expo install` picks the wrong one), zod.
+- rn-primitives treat `value={undefined}` as uncontrolled, so a controlled Accordion (etc.) can't be "closed" by passing undefined — it falls back to stale internal state (needs two taps). Leave it uncontrolled and just listen with `onValueChange`.
 - Prefer an established library over hand-rolled UI for anything non-trivial (charts, pickers, gestures); native deps are fine.
 
 ## Code style

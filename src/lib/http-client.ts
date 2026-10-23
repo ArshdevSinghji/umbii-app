@@ -1,4 +1,5 @@
 import { eventBus } from './event-bus';
+import { getTimezone } from './timezone';
 import { AuthTokens, clearSession, getRefreshToken, getToken, saveTokens } from './token';
 
 // Thrown when the session can't be recovered (a 401 a refresh can't fix). By
@@ -84,9 +85,16 @@ export type SignOutReason = 'session-ended' | 'expired';
 // Clears the session and sends the app to sign-in. No reason when no token
 // was sent (nothing to explain).
 async function endSession(reason?: SignOutReason): Promise<never> {
+  await endSessionLocally(reason);
+  throw new UnauthorizedError();
+}
+
+// Same, without a failed request: e.g. a push saying the account signed in
+// on another device. Does nothing if already signed out.
+export async function endSessionLocally(reason?: SignOutReason) {
+  if (!(await getToken())) return;
   await clearSession();
   eventBus.emit('auth:unauthorized', { reason });
-  throw new UnauthorizedError();
 }
 
 let refreshInFlight: Promise<void> | null = null;
@@ -145,6 +153,15 @@ async function request<T>(
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // The server files meals, weigh-ins and targets under the user's calendar
+  // day, defaults "today" to it, and times reminders by it (saved on the
+  // user). Read per request so travel is picked up at once; left out when
+  // unknown, as the server rejects invalid zones (400).
+  const timezone = getTimezone();
+  if (timezone) {
+    headers['X-Timezone'] = timezone;
   }
 
   let url = `${BASE_URL}${endpoint}`;

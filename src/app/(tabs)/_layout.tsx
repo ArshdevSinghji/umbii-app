@@ -7,6 +7,7 @@ import {
   FLOATING_TAB_BAR_HEIGHT,
 } from "@/lib/floating-tab-bar";
 import { THEME } from "@/lib/theme";
+import { usePushNotifications } from "@/lib/use-push-notifications";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack } from "expo-router";
 import { Tabs, type BottomTabBarProps } from "expo-router/js-tabs";
@@ -148,6 +149,8 @@ export default function TabsLayout() {
   // Sends first-time users to onboarding; the splash covers the tabs while
   // that's being worked out.
   const { isChecking } = useOnboardingGate();
+  // Registers for push (asking once, after onboarding) and handles taps.
+  usePushNotifications();
 
   return (
     <>

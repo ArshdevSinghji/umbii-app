@@ -3,6 +3,7 @@ import AppTheme from "@/components/app-theme";
 import { errorToast } from "@/components/ui/app-toaster";
 import { eventBus } from "@/lib/event-bus";
 import type { SignOutReason } from "@/lib/http-client";
+import { showNotificationsInForeground } from "@/lib/push-notifications";
 import { useAuth } from "@/lib/use-auth";
 import { loadColorSchemePreference } from "@/features/preferences/preferences.storage";
 import { setColorSchemePreference } from "@/features/preferences/preferences.slice";
@@ -18,6 +19,8 @@ import {
   initialWindowMetrics,
 } from "react-native-safe-area-context";
 import "../global.css";
+
+showNotificationsInForeground();
 
 const SIGN_OUT_NOTES: Record<
   SignOutReason,
