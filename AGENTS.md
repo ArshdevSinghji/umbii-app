@@ -18,7 +18,9 @@ Backend is a separate repo (not here). Base URL `EXPO_PUBLIC_API_URL` (dev: `htt
 - `npm run android` — dev build on device (runs adb reverse first). User rebuilds native themselves; just say when a native rebuild is needed.
 - `npm start` — Metro only. `npm run lint` — ESLint. No test suite.
 - `postinstall` applies `patches/` (react-native-calendars, react-native-ruler-picker) via patch-package.
-- `/android` and `/ios` are generated (gitignored); configure native via `app.json` plugins.
+- `/android` and `/ios` are generated (gitignored); configure native via `app.json` plugins. `expo run:android` doesn't re-run prebuild when `android/` exists: after app.json changes run `npx expo prebuild -p android --clean`.
+- Standalone APK: `npx expo run:android --variant release` (from the root; builds + installs). Release bundles load `.env.production.local` first (live Railway API URL), dev keeps `.env.local` (localhost). Signed with the debug keystore, so Google Sign-In's registered SHA-1 still matches. Builds are arm64-v8a only with R8 minify + resource shrinking (expo-build-properties), so no x86 emulators.
+- Android-only: iOS was considered and dropped (no Mac / Apple Developer account).
 
 ## Layout
 
