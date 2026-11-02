@@ -1,4 +1,6 @@
+import { errorToast } from "@/components/ui/app-toaster";
 import { signInAction } from "@/features/user/sign-in/sign-in.action";
+import { getErrorMessage } from "@/lib/http-client";
 import { eventBus } from "@/lib/event-bus";
 import { saveSession } from "@/lib/token";
 import { useAppDispatch } from "@/store/hooks";
@@ -37,6 +39,12 @@ export function useGoogleAuth() {
           const { token, refreshToken, id } = res.payload;
           await saveSession({ token, refreshToken, userId: id });
           eventBus.emit("auth:signin", { token });
+        } else {
+          // Otherwise the button just stops spinning and nothing happens.
+          errorToast("Couldn't sign in", {
+            id: "sign-in",
+            description: getErrorMessage(res.payload),
+          });
         }
       }
     } catch (error) {
@@ -53,7 +61,17 @@ export function useGoogleAuth() {
             break;
           default:
             console.error(error);
+            errorToast("Couldn't sign in with Google", {
+              id: "sign-in",
+              description: getErrorMessage(error),
+            });
         }
+      } else {
+        console.error(error);
+        errorToast("Couldn't sign in", {
+          id: "sign-in",
+          description: getErrorMessage(error),
+        });
       }
     } finally {
       setIsLoading(false);

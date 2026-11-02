@@ -85,7 +85,10 @@ export type SignOutReason = 'session-ended' | 'expired';
 // Clears the session and sends the app to sign-in. No reason when no token
 // was sent (nothing to explain).
 async function endSession(reason?: SignOutReason): Promise<never> {
-  await endSessionLocally(reason);
+  // Unconditional: whatever is (or isn't) saved, a failed session always
+  // ends on sign-in.
+  await clearSession();
+  eventBus.emit('auth:unauthorized', { reason });
   throw new UnauthorizedError();
 }
 

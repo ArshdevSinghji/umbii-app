@@ -59,7 +59,7 @@ Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST 
 ## Auth & session
 
 - Google Sign-In → `POST /sign-in` → `saveSession` stores access token (15 min), refresh token (30 days, **single use**) and userId in SecureStore → `eventBus.emit("auth:signin")`.
-- `http-client` on 401 `"Token expired"`: one shared in-flight refresh (concurrent refreshes = theft → server ends session), retry once. Unrecoverable 401 → `clearSession`, emit `auth:unauthorized` with reason (`session-ended` | `expired`), throw `UnauthorizedError`. Root layout shows a toast and redirects.
+- `http-client` on 401 `"Token expired"`: one shared in-flight refresh (concurrent refreshes = theft → server ends session), retry once. Unrecoverable 401 (incl. any 401 from `/auth/refresh`) → `clearSession` unconditionally, emit `auth:unauthorized` with reason (`session-ended` | `expired`), throw `UnauthorizedError`. `useAuth` then dispatches `clearUser` (same as sign-out) and the root layout shows a toast and redirects to sign-in.
 - Treat `UnauthorizedError` as expected: use `reportRequestError` / `isUnauthorizedError` (no error UI for 401s).
 - Nothing in Redux is persisted. Session → SecureStore; theme preference → AsyncStorage; everything else refetched. The user profile is loaded by `useOnboardingGate` on launch.
 - `firebaseConfig.js` exists but nothing in `src` uses it.

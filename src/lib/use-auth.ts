@@ -1,4 +1,4 @@
-import { setUserId } from '@/features/user/user.slice';
+import { clearUser, setUserId } from '@/features/user/user.slice';
 import { eventBus } from '@/lib/event-bus';
 import { getToken, getUserId } from '@/lib/token';
 import { store } from '@/store/store';
@@ -17,7 +17,13 @@ export function useAuth() {
       setIsLoading(false);
     });
 
-    const clearAuth = () => setToken(null);
+    // Sign-out clears the user itself; an ended session (401) must too, so
+    // the next sign-in, maybe another account, doesn't start from stale
+    // state.
+    const clearAuth = () => {
+      store.dispatch(clearUser());
+      setToken(null);
+    };
     const setAuth = ({ token }: { token: string }) => setToken(token);
 
     eventBus.on('auth:signin', setAuth);
