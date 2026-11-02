@@ -28,7 +28,7 @@ src/app/            routes only — thin wrappers that render a component from s
   (sign-in)/        Google sign-in
   (tabs)/           home | breakdown ("Stats") | log-food | stats ("Goals") | profile
                     custom FloatingTabBar; useOnboardingGate sends profile-less users to /onboarding
-  onboarding/ plan/ health-details/ recipes/ settings/ notifications/   stack screens
+  onboarding/ plan/ health-details/ recipes/ notifications/   stack screens (no settings screen: app prefs live on Profile)
 src/components/<screen>/<part>/index.tsx   one folder per component; loading.tsx = skeleton,
                     hooks/ = screen-specific hooks, *.schema.ts (zod), *.utils.ts, *.types.ts
 src/components/ui/  react-native-reusables (shadcn for RN, components.json) + app primitives

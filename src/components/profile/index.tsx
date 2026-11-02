@@ -9,10 +9,15 @@ import SettingsRow from "@/components/settings-list/settings-row";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { useUserActionsHook } from "@/features/user/user.hook";
 import { useRefresh } from "@/lib/pull-to-refresh";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { Bell } from "phosphor-react-native/src/icons/Bell";
-import { GearSix } from "phosphor-react-native/src/icons/GearSix";
+import { FileText } from "phosphor-react-native/src/icons/FileText";
+import { Info } from "phosphor-react-native/src/icons/Info";
+import { Lock } from "phosphor-react-native/src/icons/Lock";
+import { PencilSimple } from "phosphor-react-native/src/icons/PencilSimple";
 import { Question } from "phosphor-react-native/src/icons/Question";
+import { ShieldCheck } from "phosphor-react-native/src/icons/ShieldCheck";
 import { SignOut } from "phosphor-react-native/src/icons/SignOut";
 import { Target } from "phosphor-react-native/src/icons/Target";
 import { Trash } from "phosphor-react-native/src/icons/Trash";
@@ -24,13 +29,15 @@ import ProfileHeader from "./profile-header";
 // The app's Play Store page (package com.umbii); live once published.
 const INVITE_URL = "https://play.google.com/store/apps/details?id=com.umbii";
 
-// The Profile tab: who you are, the way to your plan and settings, and out
-// (sign out, or delete the account).
+// The Profile tab: who you are, your plan, app preferences, and out (sign
+// out, or delete the account). There's no separate settings screen.
 export default function Profile() {
   const router = useRouter();
   const { user, fetchUser, deleteUser, isDeleting } = useUserActionsHook();
   const { nutritionTarget } = useNutritionTargetActionsHook();
   const { signOut } = useSignOut();
+
+  const version = Constants.expoConfig?.version ?? "-";
 
   useRefresh(() => fetchUser(user.id));
 
@@ -85,21 +92,24 @@ export default function Profile() {
 
         <SettingsGroup>
           <SettingsRow
-            icon={UserPlus}
-            label="Invite a friend"
-            onPress={inviteFriend}
-          />
-          <SettingsRow
-            icon={GearSix}
-            label="Settings"
-            onPress={() => router.push("/settings")}
-          />
-          <SettingsRow
             icon={Bell}
             label="Notifications"
             onPress={() => router.push("/notifications")}
           />
+          <SettingsRow icon={PencilSimple} label="Edit profile" comingSoon />
+          <SettingsRow icon={Lock} label="Privacy" comingSoon />
+        </SettingsGroup>
+
+        <SettingsGroup>
+          <SettingsRow
+            icon={UserPlus}
+            label="Invite a friend"
+            onPress={inviteFriend}
+          />
           <SettingsRow icon={Question} label="Help and support" comingSoon />
+          <SettingsRow icon={FileText} label="Terms of service" comingSoon />
+          <SettingsRow icon={ShieldCheck} label="Privacy policy" comingSoon />
+          <SettingsRow icon={Info} label="Version" value={version} />
         </SettingsGroup>
 
         <SettingsGroup>

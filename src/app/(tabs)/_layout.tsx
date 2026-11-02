@@ -35,7 +35,7 @@ const TABS: {
   { name: "log-food", title: "Log Food", icon: ForkKnife },
   // Weight and goal progress.
   { name: "stats", title: "Goals", icon: Target },
-  // Account, plan and settings.
+  // Account, plan and app preferences.
   { name: "profile", title: "Profile", icon: UserCircle },
 ];
 
