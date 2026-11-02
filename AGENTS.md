@@ -83,6 +83,7 @@ Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST 
 - Toasts: sonner-native via `components/ui/app-toaster` (`errorToast`, …). Confirmations: `ConfirmDialog`. Sheets/overlays mount into `PortalHost`.
 - Other libs in use: flash-list, reanimated 4, gesture-handler, keyboard-controller (use it, not KeyboardAvoidingView), expo-image, react-native-calendars, ruler-picker, d3-shape (charts), @shopify/react-native-skia (UI-thread drawing), expo-localization (timezone fallback; localization later), expo-speech-recognition (pin to the SDK's major, e.g. ^56 — `expo install` picks the wrong one), zod.
 - rn-primitives treat `value={undefined}` as uncontrolled, so a controlled Accordion (etc.) can't be "closed" by passing undefined — it falls back to stale internal state (needs two taps). Leave it uncontrolled and just listen with `onValueChange`.
+- Launch: native splash (expo-splash-screen in app.json: "umbii" wordmark PNGs, light/dark by system theme) → `components/launch-screen` draws an identical copy, hides the native one once its image displays (`preventAutoHideAsync` at module scope in the root layout), then zooms/fades out. Keep its colours, images and `WORDMARK_WIDTH` in sync with app.json. The wordmark must fit Android 12's 192dp icon circle. `app-splash` is the separate in-app spinner shown while the profile loads.
 - Prefer an established library over hand-rolled UI for anything non-trivial (charts, pickers, gestures); native deps are fine.
 
 ## Code style

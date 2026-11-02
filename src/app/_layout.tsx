@@ -1,5 +1,6 @@
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import AppTheme from "@/components/app-theme";
+import LaunchScreen from "@/components/launch-screen";
 import { errorToast } from "@/components/ui/app-toaster";
 import { eventBus } from "@/lib/event-bus";
 import type { SignOutReason } from "@/lib/http-client";
@@ -21,6 +22,10 @@ import {
 import "../global.css";
 
 showNotificationsInForeground();
+
+// expo-router would hide the native splash once navigation is ready, maybe
+// before LaunchScreen has drawn its copy; LaunchScreen hides it instead.
+SplashScreen.preventAutoHideAsync();
 
 const SIGN_OUT_NOTES: Record<
   SignOutReason,
@@ -62,11 +67,9 @@ export default function RootLayout() {
   const appReady =
     (fontsLoaded || !!fontError) && !authLoading && preferencesLoaded;
 
-  // splash (theme is applied by <AppTheme /> from the saved preference)
-  useEffect(() => {
-    if (!appReady) return;
-    SplashScreen.hideAsync();
-  }, [appReady]);
+  // The native splash stays up until the app is ready; then LaunchScreen
+  // takes over from it and animates out.
+  const [isLaunching, setIsLaunching] = useState(true);
 
   // Say why the user is back on sign-in. Concurrent requests can all fail
   // at once, so the fixed id shows the note once.
@@ -109,6 +112,7 @@ export default function RootLayout() {
           </StoreProvider>
         </KeyboardProvider>
       </SafeAreaProvider>
+      {isLaunching && <LaunchScreen onDone={() => setIsLaunching(false)} />}
     </GestureHandlerRootView>
   );
 }
