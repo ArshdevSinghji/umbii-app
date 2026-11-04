@@ -16,8 +16,6 @@ const RGB = {
   dark: { background: "12, 12, 14", card: "34, 34, 38" },
 };
 
-// The food input: py-2 + a 40px line + its 1px border.
-const FOOD_INPUT_HEIGHT = 58;
 // How far above the floating controls the fade begins.
 const FADE_EXTRA = 36;
 
@@ -25,7 +23,8 @@ interface IProps {
   // What's behind the scrolling content at the bottom of the screen.
   tone?: "background" | "card";
   // Log Food: also fade under the food input floating above the tab bar.
-  coversFoodInput?: boolean;
+  // Its current height, since it grows with the text.
+  foodInputHeight?: number;
 }
 
 // Scroll edge effect: content scrolling under the floating tab bar fades
@@ -34,7 +33,7 @@ interface IProps {
 // food input), so it sits between the two. Touches pass through.
 export function ScrollEdgeFade({
   tone = "background",
-  coversFoodInput = false,
+  foodInputHeight,
 }: IProps) {
   const { colorScheme } = useColorScheme();
   const insets = useSafeAreaInsets();
@@ -42,8 +41,8 @@ export function ScrollEdgeFade({
 
   const height =
     insets.bottom +
-    (coversFoodInput
-      ? FLOATING_INPUT_BAR_BOTTOM_OFFSET + FOOD_INPUT_HEIGHT
+    (foodInputHeight !== undefined
+      ? FLOATING_INPUT_BAR_BOTTOM_OFFSET + foodInputHeight
       : FLOATING_TAB_BAR_BOTTOM_MARGIN + FLOATING_TAB_BAR_HEIGHT) +
     FADE_EXTRA;
 

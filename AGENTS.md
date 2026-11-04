@@ -99,7 +99,8 @@ Endpoints (all under `/users/{userId}` unless noted): `GET/PUT/DELETE /`, `POST 
 
 ## Status / known gaps
 
-- Voice logging (Log Food input): on-device speech-to-text via expo-speech-recognition (`hooks/use-voice-input.ts`); the transcript goes through the normal text flow (`food-logs/generate`). No audio is uploaded. Waveform = Skia paths driven by a Reanimated frame callback (`food-input/waveform`). Language is the library default `en-US`; there's no auto-detection (one language per session).
+- Voice logging (Log Food input): on-device speech-to-text via expo-speech-recognition (`hooks/use-voice-input.ts`); the transcript goes through the normal text flow (`food-logs/generate`). Recording with text already typed appends the words after it: while recording the composer is a pill with only the recording bar (the text is kept, hidden), then shows the combined text. No audio is uploaded. Waveform = Skia paths driven by a Reanimated frame callback (`food-input/waveform`). Language is the library default `en-US`; there's no auto-detection (one language per session).
+- Generating a meal (Log Food): the field clears and the message floats above the composer (`food-input/pending-meal`) and a pulsing status chip ("Reading your meal…") sits in the input in place of the placeholder over a dimmed, tap-blocking backdrop (`food-input/generation-status`, stages in `hooks/use-meal-generation.ts`) instead of a spinner; on failure the text returns.
 - Localization is planned but not started. When it lands, pass the app locale as `lang` in `use-voice-input.ts` `start()`.
 - `.mock-server/` is empty.
 

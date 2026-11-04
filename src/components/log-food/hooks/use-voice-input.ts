@@ -9,8 +9,21 @@ import { useSharedValue } from "react-native-reanimated";
 // idle → listening → (stop / send) finishing → idle. Cancel goes straight to idle.
 export type VoiceInputStatus = "idle" | "listening" | "finishing";
 
-// `volumechange` reports -2..10; below 0 is silence. Speech sits around 2-8.
-const toLevel = (value: number) => Math.min(1, Math.max(0, value / 8));
+// `volumechange` reports Android's mic level in dB, about -2..10.
+const MAX_DB = 10;
+// Above the room's own noise, quieter than this is still silence.
+const SPEECH_MARGIN_DB = 1;
+// How fast the noise floor creeps back up (dB per reading, every 50ms), so
+// it follows a room getting louder without counting long speech as noise.
+const FLOOR_RISE_DB = 0.01;
+
+// Volume above the noise floor as 0..1. Square-rooted so quiet speech still
+// shows clearly (loudness is perceived roughly that way).
+const toLevel = (db: number, floor: number) => {
+  const range = MAX_DB - floor - SPEECH_MARGIN_DB;
+  const level = (db - floor - SPEECH_MARGIN_DB) / range;
+  return Math.sqrt(Math.min(1, Math.max(0, level)));
+};
 
 // Errors that aren't failures: the user cancelled, or said nothing (the empty
 // transcript already covers that).
@@ -22,6 +35,9 @@ const QUIET_ERRORS = new Set(["aborted", "no-speech", "speech-timeout"]);
 export function useVoiceInput() {
   const [status, setStatus] = useState<VoiceInputStatus>("idle");
   const level = useSharedValue(0);
+  // The room's background level in dB: drops to any quieter reading at once
+  // and rises slowly, so steady noise (a fan, traffic) reads as silence.
+  const noiseFloor = useRef(0);
 
   // Android's continuous mode reports in segments: each final result closes
   // one and later results start the next, so finals are appended. iOS sends a
@@ -44,7 +60,11 @@ export function useVoiceInput() {
   });
 
   useSpeechRecognitionEvent("volumechange", (event) => {
-    level.set(toLevel(event.value));
+    noiseFloor.current = Math.min(
+      event.value,
+      noiseFloor.current + FLOOR_RISE_DB,
+    );
+    level.set(toLevel(event.value, noiseFloor.current));
   });
 
   useSpeechRecognitionEvent("error", (event) => {
@@ -90,6 +110,7 @@ export function useVoiceInput() {
 
     finalText.current = "";
     interimText.current = "";
+    noiseFloor.current = 0;
     onFinished.current = null;
     setStatus("listening");
     ExpoSpeechRecognitionModule.start({
