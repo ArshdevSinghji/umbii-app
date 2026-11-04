@@ -59,7 +59,7 @@ export default function MeasurementField({
           // Settle quickly on a tick instead of gliding past the value.
           decelerationRate="fast"
           // Steps hang from the top with a number under every long one;
-          // long steps land on whole numbers (every 10th from `min`).
+          // long steps land on whole numbers, whatever the range starts at.
           stepAlignment="top"
           showLabels
           stepWidth={1}

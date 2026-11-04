@@ -43,7 +43,7 @@ index c756239..e888ba7 100644
  //# sourceMappingURL=RulerPicker.d.ts.map
 \ No newline at end of file
 diff --git a/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts b/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts
-index eed0f9e..a7bcdf7 100644
+index eed0f9e..97ccaac 100644
 --- a/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts
 +++ b/node_modules/react-native-ruler-picker/lib/typescript/components/RulerPickerItem.d.ts
 @@ -1,4 +1,6 @@
@@ -53,12 +53,13 @@ index eed0f9e..a7bcdf7 100644
  export type RulerPickerItemProps = {
      /**
       * Gap between steps
-@@ -36,11 +38,46 @@ export type RulerPickerItemProps = {
+@@ -36,11 +38,47 @@ export type RulerPickerItemProps = {
       * @default 'gray'
       */
      longStepColor: string;
 +    /**
-+     * Every how many steps a long step is drawn (counted from `min`)
++     * Every how many steps a long step is drawn (on multiples of
++     * `longStepEvery * step`, whatever `min` is)
 +     *
 +     * @default 10
 +     */
@@ -524,7 +525,7 @@ index 8d1f0d1..de4f7e4 100644
    valueText: {
      color: 'black',
 diff --git a/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx b/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx
-index e95a6d7..8f939d3 100644
+index e95a6d7..5565c54 100644
 --- a/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx
 +++ b/node_modules/react-native-ruler-picker/src/components/RulerPickerItem.tsx
 @@ -1,6 +1,11 @@
@@ -540,12 +541,13 @@ index e95a6d7..8f939d3 100644
  
  export type RulerPickerItemProps = {
    /**
-@@ -39,49 +44,111 @@ export type RulerPickerItemProps = {
+@@ -39,49 +44,116 @@ export type RulerPickerItemProps = {
     * @default 'gray'
     */
    longStepColor: string;
 +  /**
-+   * Every how many steps a long step is drawn (counted from `min`)
++   * Every how many steps a long step is drawn (on multiples of
++   * `longStepEvery * step`, whatever `min` is)
 +   *
 +   * @default 10
 +   */
@@ -611,7 +613,11 @@ index e95a6d7..8f939d3 100644
 +    labelFractionDigits,
    }: Props) => {
 -    const isLong = index % 10 === 0;
-+    const isLong = index % longStepEvery === 0;
++    // Long steps sit on whole multiples of `longStepEvery * step` (e.g.
++    // whole kilos), not every nth step from `min`: with a min like 80.5
++    // they'd otherwise land on 80.5, 81.5, … and read as rounded labels.
++    const stepsFromZero = Math.round((min + index * step) / step);
++    const isLong = stepsFromZero % longStepEvery === 0;
      const height = isLong ? longStepHeight : shortStepHeight;
  
      return (
