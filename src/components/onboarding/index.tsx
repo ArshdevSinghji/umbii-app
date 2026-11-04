@@ -128,8 +128,11 @@ export default function Onboarding() {
   );
 
   // Target weight, kept inside the ruler's range around the current weight
-  // (which may have changed since it was set).
-  const targetRange = getTargetWeightRange(values.weightKg);
+  // (which may have changed since it was set) on the goal's side.
+  const targetRange = getTargetWeightRange(
+    values.weightKg,
+    values.goalType ?? undefined,
+  );
   const targetWeightKg = clamp(
     values.targetWeightKg ?? values.weightKg,
     targetRange.min,

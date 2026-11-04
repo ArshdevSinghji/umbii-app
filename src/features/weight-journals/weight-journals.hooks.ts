@@ -1,3 +1,5 @@
+import { getNutritionTargetAction } from "@/features/nutrition-target/get-nutrition-target/get-nutrition-target.action";
+import { reportRequestError } from "@/lib/http-client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createWeightJournalAction } from "./create-weight-journal/create-weight-journal.action";
 import { deleteWeightJournalAction } from "./delete-weight-journal/delete-weight-journal.action";
@@ -39,9 +41,20 @@ export function useWeightJournalsActionsHook() {
     ).unwrap();
   };
 
+  // A weigh-in can replace the target: the server regenerates it when the
+  // weight moved 1 kg+ from the one it was worked out with, or the goal
+  // weight is reached. The response doesn't say, so reload Home's current
+  // target. Not awaited: the weigh-in itself is saved either way.
+  const refreshTarget = (userId: number) => {
+    dispatch(getNutritionTargetAction({ userId, params: {} }))
+      .unwrap()
+      .catch((error) => reportRequestError("Error refreshing target:", error));
+  };
+
   // Today's weigh-in (an upsert: a second save today replaces it).
   const createWeightJournal = async (userId: number, weightKg: number) => {
     await dispatch(createWeightJournalAction({ userId, weightKg })).unwrap();
+    refreshTarget(userId);
   };
 
   const fetchWeightJournalById = async (
@@ -61,6 +74,8 @@ export function useWeightJournalsActionsHook() {
     await dispatch(
       updateWeightJournalAction({ userId, weightJournalId, weightKg }),
     ).unwrap();
+    // Correcting the latest entry can replace the target too.
+    if (latestWeightJournal?.id === weightJournalId) refreshTarget(userId);
   };
 
   const deleteWeightJournal = async (

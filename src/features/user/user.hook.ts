@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { deleteUserAction } from "./delete-user/delete-user.action";
 import { patchUserProfileAction } from "./patch-user-profile/patch-user-profile.action";
+import type { ProfileChanges } from "./patch-user-profile/patch-user-profile.types";
 import { getUserAction } from "./get-user/get-user.action";
 import { saveUserOnboardingAction } from "./save-user-onboarding/save-user-onboarding.action";
 import { UserOnboardingAnswers } from "./save-user-onboarding/save-user-onboarding.types";
@@ -39,12 +40,9 @@ export function useUserActionsHook() {
     await dispatch(deleteUserAction({ userId })).unwrap();
   };
 
-  // Changes height and/or target weight. This regenerates the nutrition
-  // target, so ask the user first. Resolves with the new profile and target.
-  const patchUserProfile = async (
-    userId: number,
-    changes: { heightCm?: number; targetWeightKg?: number },
-  ) => {
+  // Changes any onboarding answers (allergies aside). This regenerates the
+  // nutrition target. Resolves with the new profile and target.
+  const patchUserProfile = async (userId: number, changes: ProfileChanges) => {
     return await dispatch(
       patchUserProfileAction({ userId, ...changes }),
     ).unwrap();

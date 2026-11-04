@@ -113,6 +113,6 @@ export interface UserState {
   profileStatus: LoadStatus;
   isSavingOnboarding: boolean;
   isDeleting: boolean;
-  // Saving a height or target-weight change.
+  // Saving a change to the profile (PATCH).
   isPatchingProfile: boolean;
 }

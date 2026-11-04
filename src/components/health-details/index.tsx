@@ -1,7 +1,9 @@
 import { getErrorMessage } from "@/lib/http-client";
 import { ActionButton } from "@/components/ui/action-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { GoalType } from "@/components/onboarding/onboarding.types";
 import { getTargetWeightRange } from "@/components/onboarding/onboarding.utils";
+import TargetMarginNote from "@/components/profile-fields/target-margin-note";
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -78,15 +80,21 @@ export default function HealthDetailsForm({ mode }: IProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const recalculatesPlan = mode === "goal" || mode === "height";
 
-  // Goal weight: within -30/+20 kg of the latest weigh-in, as the server
-  // allows (it also checks the direction against the goal).
+  // Goal weight: within -30/+20 kg of the latest weigh-in and at least the
+  // margin past it on the goal's side, as the server allows.
   const fields = {
     ...FIELDS,
     targetWeight: {
       ...FIELDS.targetWeight,
-      range: latest ? getTargetWeightRange(latest.weightKg) : WEIGHT_RANGE,
+      range: latest
+        ? getTargetWeightRange(latest.weightKg, profile?.goalType)
+        : WEIGHT_RANGE,
     },
   };
+  const marginGoal =
+    profile && profile.goalType !== GoalType.Maintenance
+      ? profile.goalType
+      : null;
 
   // Block back gestures / hardware back until the request resolves.
   usePreventRemove(isSaving && !isDone, () => {});
@@ -150,6 +158,9 @@ export default function HealthDetailsForm({ mode }: IProps) {
             error={errors[field]}
           />
         ))}
+        {MODE_FIELDS[mode].includes("targetWeight") && marginGoal && latest && (
+          <TargetMarginNote goalType={marginGoal} weightKg={latest.weightKg} />
+        )}
       </View>
 
       <View className="gap-2">

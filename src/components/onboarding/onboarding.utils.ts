@@ -33,12 +33,26 @@ export const getSteps = (goalType: GoalType | null): StepId[] =>
     ? ["about", "body", "goal", "week", "food"]
     : ["about", "body", "goal", "pace", "week", "food"];
 
-// Target weight ruler: current weight -30 to +20 kg.
-export const getTargetWeightRange = (weightKg: number) => ({
-  min: Math.max(30, Math.round(weightKg - 30)),
-  max: Math.min(200, Math.round(weightKg + 20)),
-  step: 0.1,
-});
+// How far past the current weight a target must be. Within it the server
+// treats the target as reached and plans for maintenance, so a closer one
+// is rejected.
+export const TARGET_MARGIN_KG = 0.5;
+
+const toOneDecimal = (value: number) => Math.round(value * 10) / 10;
+
+// Target weight ruler: current weight -30 to +20 kg, and for fat loss /
+// muscle gain only the side the goal heads to, from the margin on.
+export const getTargetWeightRange = (weightKg: number, goalType?: GoalType) => {
+  const min = Math.max(30, Math.round(weightKg - 30));
+  const max = Math.min(200, Math.round(weightKg + 20));
+  if (goalType === GoalType.FatLoss) {
+    return { min, max: toOneDecimal(weightKg - TARGET_MARGIN_KG), step: 0.1 };
+  }
+  if (goalType === GoalType.Hypertrophy) {
+    return { min: toOneDecimal(weightKg + TARGET_MARGIN_KG), max, step: 0.1 };
+  }
+  return { min, max, step: 0.1 };
+};
 
 // Age in whole years today, from a "YYYY-MM-DD" date of birth.
 export const getAge = (dateOfBirth: string, today = new Date()) => {

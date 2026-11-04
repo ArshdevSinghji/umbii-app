@@ -4,10 +4,16 @@ import {
   DietType,
   GoalType,
   HealthFlag,
+  Sex,
   TrainingType,
 } from "@/features/user/user.types";
 
 // How each saved answer reads back to the user.
+
+export const SEX_LABELS: Record<Sex, string> = {
+  [Sex.Male]: "Male",
+  [Sex.Female]: "Female",
+};
 
 export const GOAL_LABELS: Record<GoalType, string> = {
   [GoalType.FatLoss]: "Lose fat",

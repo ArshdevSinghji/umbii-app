@@ -5,30 +5,27 @@ import {
   DIET_LABELS,
   GOAL_LABELS,
   HEALTH_LABELS,
+  SEX_LABELS,
   TRAINING_LABELS,
   getSessionLabel,
 } from "@/components/plan-targets/profile-labels";
+import DetailSheet from "./detail-sheet";
+import { DetailField } from "./detail-sheet/detail-sheet.utils";
 import TargetBreakdown from "@/components/plan-targets/target-breakdown";
 import TargetsOverview from "@/components/plan-targets/targets-overview";
 import PageHeader from "@/components/settings-list/page-header";
 import SettingsGroup from "@/components/settings-list/settings-group";
 import SettingsRow from "@/components/settings-list/settings-row";
-import { errorToast } from "@/components/ui/app-toaster";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { isGeneratedTarget } from "@/features/nutrition-target/nutrition-target.utils";
 import { useUserActionsHook } from "@/features/user/user.hook";
 import { GoalType } from "@/features/user/user.types";
-import {
-  getErrorMessage,
-  isUnauthorizedError,
-  reportRequestError,
-} from "@/lib/http-client";
+import { useWeightJournalsActionsHook } from "@/features/weight-journals/weight-journals.hooks";
+import { reportRequestError } from "@/lib/http-client";
 import { useRouter } from "expo-router";
-import { ArrowsClockwise } from "phosphor-react-native/src/icons/ArrowsClockwise";
-import { ClipboardText } from "phosphor-react-native/src/icons/ClipboardText";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 // Your plan: today's targets, how they were worked out (for a generated
@@ -37,12 +34,10 @@ import { View } from "react-native";
 export default function MyPlan() {
   const router = useRouter();
   const { user, profile, profileStatus, fetchUser } = useUserActionsHook();
-  const {
-    nutritionTarget,
-    fetchNutritionTarget,
-    isGenerating,
-    generateNutritionTarget,
-  } = useNutritionTargetActionsHook();
+  const { nutritionTarget, fetchNutritionTarget } =
+    useNutritionTargetActionsHook();
+  const { latestWeightJournal, fetchLatestWeightJournal } =
+    useWeightJournalsActionsHook();
 
   // Fresh on every open: the target in effect today (with how it was
   // worked out, if it was generated), and the profile if not loaded yet.
@@ -51,6 +46,12 @@ export default function MyPlan() {
     fetchNutritionTarget(user.id).catch((error) =>
       reportRequestError("Error fetching target:", error),
     );
+    // For the Weight row (and the goal screen's target weight range).
+    if (!latestWeightJournal) {
+      fetchLatestWeightJournal(user.id).catch((error) =>
+        reportRequestError("Error fetching latest weight:", error),
+      );
+    }
     if (profileStatus !== "ready") {
       fetchUser(user.id).catch((error) =>
         reportRequestError("Error fetching profile:", error),
@@ -60,16 +61,16 @@ export default function MyPlan() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
-  const recalculate = async () => {
-    try {
-      await generateNutritionTarget(user.id);
-    } catch (error) {
-      if (!isUnauthorizedError(error)) {
-        errorToast("Couldn't recalculate your plan", {
-          description: getErrorMessage(error),
-        });
-      }
-    }
+  // Each detail edits in its own sheet. It's remounted per opening (the
+  // key), so its draft starts from what's saved; the field stays set while
+  // it slides away.
+  const [sheetField, setSheetField] = useState<DetailField | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [sheetKey, setSheetKey] = useState(0);
+  const edit = (field: DetailField) => {
+    setSheetField(field);
+    setSheetKey((key) => key + 1);
+    setIsSheetOpen(true);
   };
 
   const isMaintaining = profile?.goalType === GoalType.Maintenance;
@@ -107,60 +108,75 @@ export default function MyPlan() {
 
         {profile && (
           <SettingsGroup title="Your details">
-            <SettingsRow label="Goal" value={GOAL_LABELS[profile.goalType]} />
+            <SettingsRow
+              label="Goal"
+              value={GOAL_LABELS[profile.goalType]}
+              onPress={() => edit("goal")}
+            />
             {!isMaintaining && profile.targetWeightKg != null && (
               <SettingsRow
                 label="Target weight"
                 value={`${profile.targetWeightKg} kg`}
-                // Editing asks first: it recalculates the plan.
-                onPress={() =>
-                  router.push({
-                    pathname: "/health-details",
-                    params: { mode: "goal" },
-                  })
-                }
+                onPress={() => edit("targetWeight")}
               />
             )}
-            {pace && <SettingsRow label="Pace" value={pace} />}
+            {pace && (
+              <SettingsRow
+                label="Pace"
+                value={pace}
+                onPress={() => edit("pace")}
+              />
+            )}
+            {latestWeightJournal && (
+              <SettingsRow
+                label="Weight"
+                value={`${latestWeightJournal.weightKg} kg`}
+                onPress={() => edit("weight")}
+              />
+            )}
             <SettingsRow
               label="Height"
               value={`${profile.heightCm} cm`}
-              onPress={() =>
-                router.push({
-                  pathname: "/health-details",
-                  params: { mode: "height" },
-                })
-              }
+              onPress={() => edit("height")}
             />
-            <SettingsRow label="Age" value={`${getAge(profile.dateOfBirth)}`} />
+            <SettingsRow
+              label="Sex"
+              value={SEX_LABELS[profile.sex]}
+              onPress={() => edit("sex")}
+            />
+            <SettingsRow
+              label="Age"
+              value={`${getAge(profile.dateOfBirth)}`}
+              onPress={() => edit("dateOfBirth")}
+            />
             <SettingsRow
               label="Workouts per week"
               value={`${profile.workoutsPerWeek}`}
+              onPress={() => edit("workouts")}
             />
             {trains && profile.trainingType && (
               <SettingsRow
                 label="Training"
                 value={TRAINING_LABELS[profile.trainingType]}
+                onPress={() => edit("trainingType")}
               />
             )}
             {trains && profile.avgSessionMinutes != null && (
               <SettingsRow
                 label="Session length"
                 value={getSessionLabel(profile.avgSessionMinutes)}
+                onPress={() => edit("session")}
               />
             )}
             <SettingsRow
               label="Rest of your day"
               value={ACTIVITY_LABELS[profile.activityLevel]}
+              onPress={() => edit("activity")}
             />
-            <SettingsRow label="Diet" value={DIET_LABELS[profile.dietType]} />
             <SettingsRow
-              label="Allergies"
-              value={
-                profile.allergies.length > 0
-                  ? profile.allergies.map((a) => ALLERGY_LABELS[a]).join(", ")
-                  : "None"
-              }
+              label="Diet"
+              value={DIET_LABELS[profile.dietType]}
+              onPress={() => edit("diet")}
             />
             <SettingsRow
               label="Health"
@@ -169,28 +185,34 @@ export default function MyPlan() {
                   ? profile.healthFlags.map((f) => HEALTH_LABELS[f]).join(", ")
                   : "None"
               }
+              onPress={() => edit("health")}
+            />
+            {/* PATCH /profile can't change allergies: read-only. */}
+            <SettingsRow
+              label="Allergies"
+              value={
+                profile.allergies.length > 0
+                  ? profile.allergies.map((a) => ALLERGY_LABELS[a]).join(", ")
+                  : "None"
+              }
             />
           </SettingsGroup>
         )}
 
-        <SettingsGroup>
-          <SettingsRow
-            icon={ArrowsClockwise}
-            label="Recalculate my plan"
-            onPress={recalculate}
-            isLoading={isGenerating}
-          />
-          <SettingsRow
-            icon={ClipboardText}
-            label="Redo onboarding"
-            onPress={() => router.push("/onboarding")}
-          />
-        </SettingsGroup>
-
         <Text className="text-center text-xs text-muted-foreground">
-          As your weight changes, recalculate your plan to keep it current.
+          Your targets update on their own when a weigh-in moves 1 kg or more
+          from the weight they were worked out with.
         </Text>
       </View>
+
+      {sheetField && (
+        <DetailSheet
+          key={sheetKey}
+          field={sheetField}
+          visible={isSheetOpen}
+          onClose={() => setIsSheetOpen(false)}
+        />
+      )}
     </View>
   );
 }

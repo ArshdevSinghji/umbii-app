@@ -4,7 +4,6 @@ import type { NutritionTargetResponse } from "./create-nutrition-target/create-n
 import type { NutritionTargetReportResponse } from "./get-nutrition-target-report/get-nutrition-target-report.types";
 
 export enum NutritionTargetActionTypes {
-  GENERATE_NUTRITION_TARGET = "GENERATE_NUTRITION_TARGET",
   CREATE_NUTRITION_TARGET = "CREATE_NUTRITION_TARGET",
   GET_NUTRITION_TARGET = "GET_NUTRITION_TARGET",
   GET_NUTRITION_TARGET_REPORT = "GET_NUTRITION_TARGET_REPORT",
@@ -39,8 +38,6 @@ export interface IGeneratedNutritionTarget extends NutritionValues {
 }
 
 export interface NutritionTargetState {
-  // Recalculating the plan from the profile.
-  isGenerating: boolean;
   isLoading: boolean;
   isReportLoading: boolean;
   // What the last target / report request asked for. Repeating the same

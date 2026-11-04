@@ -4,7 +4,6 @@ import { patchUserProfileAction } from "@/features/user/patch-user-profile/patch
 import { createNutritionTargetAction } from "./create-nutrition-target/create-nutrition-target.action";
 import { getNutritionTargetReportAction } from "./get-nutrition-target-report/get-nutrition-target-report.action";
 import { getNutritionTargetAction } from "./get-nutrition-target/get-nutrition-target.action";
-import { generateNutritionTargetAction } from "./generate-nutrition-target/generate-nutrition-target.action";
 import { getPeriodNutritionTargetAction } from "./get-period-nutrition-target/get-period-nutrition-target.action";
 import { getCalendarNutritionTargetReportAction } from "./get-calendar-nutrition-target-report/get-calendar-nutrition-target-report.action";
 import { NutritionTargetState } from "./nutrition-target.types";
@@ -13,7 +12,6 @@ import { NutritionTargetState } from "./nutrition-target.types";
 const toQueryKey = (arg: unknown) => JSON.stringify(arg);
 
 const initialState: NutritionTargetState = {
-  isGenerating: false,
   isLoading: false,
   isReportLoading: false,
   targetQuery: null,
@@ -62,20 +60,9 @@ const nutritionTargetSlice = createSlice({
       .addCase(saveUserOnboardingAction.fulfilled, (state, action) => {
         state.nutritionTarget = action.payload;
       })
-      // Changing height or target weight regenerates the target.
+      // Changing any profile answer regenerates the target.
       .addCase(patchUserProfileAction.fulfilled, (state, action) => {
         state.nutritionTarget = action.payload.nutritionTarget;
-      })
-      .addCase(generateNutritionTargetAction.pending, (state) => {
-        state.isGenerating = true;
-      })
-      // The new target is in effect from today: Home's current target.
-      .addCase(generateNutritionTargetAction.fulfilled, (state, action) => {
-        state.isGenerating = false;
-        state.nutritionTarget = action.payload;
-      })
-      .addCase(generateNutritionTargetAction.rejected, (state) => {
-        state.isGenerating = false;
       })
       .addCase(getNutritionTargetReportAction.pending, (state, action) => {
         const query = toQueryKey(action.meta.arg);
