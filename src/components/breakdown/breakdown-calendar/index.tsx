@@ -13,18 +13,21 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { View } from "react-native";
+import { LayoutChangeEvent, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { DateData, ExpandableCalendar } from "react-native-calendars";
 import { DayState, MarkedDates } from "react-native-calendars/src/types";
 import CalendarDay from "./calendar-day";
 import {
+  CALENDAR_WEEK_HEIGHT,
   DayStatus,
   FIRST_DAY,
   getMonthGridReportRange,
   getAccountStartDate,
+  getWeeksInMonth,
   isAtEarliestPage,
   isAtLatestPage,
   monthsBetween,
@@ -132,11 +135,19 @@ interface IProps {
   // The day the calendar is showing (follows arrows and swipes), from the
   // CalendarProvider around it.
   visibleDate: string;
+  // Where the calendar sits in its parent (`top`) and the height of its
+  // month title + weekday row, so the sheet can rest just under the grid.
+  onMeasure: (frame: ICalendarFrame) => void;
 }
 
-// Month grid that drags (or taps on its handle) up into a single week strip.
-// Must sit inside a CalendarProvider and outside any ScrollView, since it
-// handles the vertical drag itself.
+export interface ICalendarFrame {
+  top: number;
+  headerHeight: number;
+}
+
+// Month grid, always open: it never folds into its week strip (re-laying out
+// every month page is heavy). The content sheet over it is what you drag
+// (see Breakdown). Must sit inside a CalendarProvider.
 // Everything handed to the calendar is kept stable (memoised) between
 // renders: its month pages are memoised on their props, and a new object or
 // function would re-render all of them.
@@ -145,6 +156,7 @@ export default function BreakdownCalendar({
   onSelectDate,
   range,
   visibleDate,
+  onMeasure,
 }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
@@ -157,7 +169,8 @@ export default function BreakdownCalendar({
     fetchCalendarNutritionTargetReport,
   } = useNutritionTargetActionsHook();
 
-  const [isOpen, setIsOpen] = useState(true);
+  const headerHeight = useRef<number | null>(null);
+  const lastTop = useRef<number | null>(null);
   const minDate = getAccountStartDate(user.createdAt);
   // How far the month list may scroll, counted from the month it first
   // rendered on (fixed after mount): forward to the current month, back to
@@ -166,10 +179,7 @@ export default function BreakdownCalendar({
   const [pastScrollRange] = useState(() =>
     minDate ? monthsBetween(minDate, selectedDate) : 24,
   );
-  const dayCellContext = useMemo(
-    () => ({ isOpen, minDate }),
-    [isOpen, minDate],
-  );
+  const dayCellContext = useMemo(() => ({ isOpen: true, minDate }), [minDate]);
 
   const { startDate, endDate } = getMonthGridReportRange(
     visibleDate.slice(0, 7),
@@ -223,8 +233,8 @@ export default function BreakdownCalendar({
     return marks as MarkedDates;
   }, [isLoading, report, rangeStart, rangeEnd, selectedDate]);
 
-  const isLatest = isAtLatestPage(visibleDate, isOpen);
-  const isEarliest = isAtEarliestPage(visibleDate, isOpen, minDate);
+  const isLatest = isAtLatestPage(visibleDate, true);
+  const isEarliest = isAtEarliestPage(visibleDate, true, minDate);
 
   const renderArrow = useCallback(
     (direction: "left" | "right") => {
@@ -242,14 +252,29 @@ export default function BreakdownCalendar({
     [isLatest, isEarliest, theme.foreground],
   );
 
+  // The library doesn't expose its header height, so work it out once from
+  // the open grid's height: header + one row per week of the month shown.
+  // (Its first layout comes before the header is measured, hence `> 0`.)
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const { y, height } = event.nativeEvent.layout;
+    if (headerHeight.current === null) {
+      const header =
+        height - CALENDAR_WEEK_HEIGHT * getWeeksInMonth(visibleDate);
+      if (header <= 0) return;
+      headerHeight.current = header;
+    }
+    // Height changes (months with more or fewer weeks) don't move the top.
+    if (y === lastTop.current) return;
+    lastTop.current = y;
+    onMeasure({ top: y, headerHeight: headerHeight.current });
+  };
+
   const handleDayPress = useCallback(
     (date: DateData) => onSelectDate(date.dateString),
     [onSelectDate],
   );
 
-  // `expandableKnobColor` (the drag handle) is read by the library but
-  // missing from its Theme type, hence a variable rather than an inline
-  // object literal.
+  // Memoised: a new theme object re-renders every month page.
   const calendarTheme = useMemo(
     () => ({
       calendarBackground: theme.background,
@@ -258,31 +283,8 @@ export default function BreakdownCalendar({
       textDayHeaderFontSize: 13,
       weekVerticalMargin: 2,
       arrowStyle: { padding: 6 },
-      // Same colour as the sheets' grab bar.
-      expandableKnobColor: theme.mutedForeground,
-      stylesheet: {
-        expandable: {
-          main: {
-            // The handle strip becomes the top edge of the card-coloured
-            // content under the calendar (see Breakdown), so the content
-            // reads as a sheet you drag.
-            knobContainer: {
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 24,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: theme.card,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-            },
-          },
-        },
-      },
     }),
-    [theme.background, theme.card, theme.mutedForeground],
+    [theme.background, theme.mutedForeground],
   );
 
   return (
@@ -292,26 +294,30 @@ export default function BreakdownCalendar({
         <LegendDot color={theme.chart2} label="Goal met" />
         <LegendDot color={theme.chart4} label="Goal missed" />
       </View>
-      <ExpandableCalendar
-        initialPosition={ExpandableCalendar.positions.OPEN}
-        onCalendarToggled={setIsOpen}
-        // Stay open after picking a day; drag the handle to collapse.
-        closeOnDayPress={false}
-        allowShadow={false}
-        firstDay={FIRST_DAY}
-        pastScrollRange={pastScrollRange}
-        futureScrollRange={futureScrollRange}
-        minDate={minDate ?? undefined}
-        maxDate={toLocalDateKey()}
-        disableArrowLeft={isEarliest}
-        disableArrowRight={isLatest}
-        renderArrow={renderArrow}
-        renderHeader={renderHeader}
-        dayComponent={DayCell}
-        markedDates={markedDates}
-        onDayPress={handleDayPress}
-        theme={calendarTheme}
-      />
+      <View onLayout={handleLayout}>
+        <ExpandableCalendar
+          initialPosition={ExpandableCalendar.positions.OPEN}
+          // The sheet over it does the dragging, so no pan or knob here.
+          disablePan
+          hideKnob
+          // Stay open after picking a day.
+          closeOnDayPress={false}
+          allowShadow={false}
+          firstDay={FIRST_DAY}
+          pastScrollRange={pastScrollRange}
+          futureScrollRange={futureScrollRange}
+          minDate={minDate ?? undefined}
+          maxDate={toLocalDateKey()}
+          disableArrowLeft={isEarliest}
+          disableArrowRight={isLatest}
+          renderArrow={renderArrow}
+          renderHeader={renderHeader}
+          dayComponent={DayCell}
+          markedDates={markedDates}
+          onDayPress={handleDayPress}
+          theme={calendarTheme}
+        />
+      </View>
     </DayCellContext.Provider>
   );
 }

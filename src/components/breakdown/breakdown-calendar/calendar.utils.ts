@@ -6,6 +6,22 @@ export type DayStatus = "completed" | "incomplete" | "none";
 // Weeks start on Monday, in the calendar and in the "Weekly" range.
 export const FIRST_DAY = 1;
 
+// Row height of the library's month grid and week strip (its WEEK_HEIGHT).
+// The calendar sizes itself from this, not from the day cells.
+export const CALENDAR_WEEK_HEIGHT = 46;
+
+// Rows the month grid shows for the month `date` falls in (4–6).
+export const getWeeksInMonth = (date: string) => {
+  const first = parseLocalDateKey(`${date.slice(0, 7)}-01`);
+  const daysInMonth = new Date(
+    first.getFullYear(),
+    first.getMonth() + 1,
+    0,
+  ).getDate();
+  const leadingDays = (first.getDay() - FIRST_DAY + 7) % 7;
+  return Math.ceil((leadingDays + daysInMonth) / 7);
+};
+
 const minKey = (a: string, b: string) => (a < b ? a : b);
 
 const addDays = (date: Date, days: number) => {

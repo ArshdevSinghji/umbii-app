@@ -5,22 +5,27 @@ import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
 import { NutritionValues } from "@/features/food-logs/food-logs.types";
 import { useNutritionTargetActionsHook } from "@/features/nutrition-target/nutrition-target.hooks";
 import { useAppSelector } from "@/store/hooks";
-import { FLOATING_TAB_BAR_CLEARANCE } from "@/lib/floating-tab-bar";
 import { StatsPeriod, getDaysInRange } from "@/utils/get-date-range-for-period";
 import { useColorScheme } from "nativewind";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { CalendarProvider } from "react-native-calendars";
-import BreakdownCalendar, { KEEP_SELECTION_ON } from "./breakdown-calendar";
+import BreakdownCalendar, {
+  ICalendarFrame,
+  KEEP_SELECTION_ON,
+} from "./breakdown-calendar";
 import {
+  CALENDAR_WEEK_HEIGHT,
   formatBreakdownRange,
   getAccountStartDate,
   getBreakdownRange,
+  getWeeksInMonth,
 } from "./breakdown-calendar/calendar.utils";
 import CalorieSummary, { getCalorieLabels } from "./calorie-summary";
 import PeriodSelect from "./calorie-summary/period-select";
+import ContentSheet from "./content-sheet";
 import BreakdownHeader from "./header";
 import DailyBreakdownSkeleton from "./loading";
 import NutrientsList from "./nutrients-list";
@@ -36,6 +41,9 @@ export default function DailyBreakdown() {
   // The day the calendar is showing; moves with its arrows and swipes.
   const [visibleDate, setVisibleDate] = useState(selectedDate);
   const { colorScheme } = useColorScheme();
+  const [calendarFrame, setCalendarFrame] = useState<ICalendarFrame | null>(
+    null,
+  );
 
   const { user } = useAppSelector((state) => state.userSlice);
   const {
@@ -130,6 +138,14 @@ export default function DailyBreakdown() {
   // Picking a day keeps the period: the week / month / year moves with it.
   const periodSelect = <PeriodSelect value={period} onChange={setPeriod} />;
 
+  // The sheet rests under the month grid, which grows and shrinks with the
+  // month's weeks.
+  const restingTop = calendarFrame
+    ? calendarFrame.top +
+      calendarFrame.headerHeight +
+      CALENDAR_WEEK_HEIGHT * getWeeksInMonth(visibleDate)
+    : 0;
+
   return (
     <View className="flex-1">
       {/* Remount on theme change: the calendar reads its colours once. */}
@@ -142,26 +158,18 @@ export default function DailyBreakdown() {
         <View className="px-4 pt-8">
           <BreakdownHeader action={periodSelect} />
         </View>
-        {/* Its drag handle strip is drawn as the rounded top of the card
-            below, so the content looks like a sheet over the calendar. */}
         <BreakdownCalendar
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           range={period === "day" ? null : { startDate, endDate }}
           visibleDate={visibleDate}
+          onMeasure={setCalendarFrame}
         />
+      </CalendarProvider>
 
-        <ScrollView
-          className="flex-1 bg-card"
-          // One section on the page, not separate cards: calories, then the
-          // health score and nutrients.
-          contentContainerStyle={{
-            gap: 12,
-            paddingTop: 8,
-            paddingHorizontal: 16,
-            paddingBottom: FLOATING_TAB_BAR_CLEARANCE,
-          }}
-        >
+      {/* Measured from the calendar, so it waits for its first layout. */}
+      {calendarFrame && (
+        <ContentSheet restingTop={restingTop}>
           {isLoading ? (
             <DailyBreakdownSkeleton calorieTitle={calorieLabels.title} />
           ) : (
@@ -179,8 +187,8 @@ export default function DailyBreakdown() {
               <NutrientsList consumed={average} target={target} />
             </>
           )}
-        </ScrollView>
-      </CalendarProvider>
+        </ContentSheet>
+      )}
     </View>
   );
 }
