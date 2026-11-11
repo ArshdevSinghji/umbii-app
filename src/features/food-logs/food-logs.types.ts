@@ -5,6 +5,7 @@ export enum FoodLogActionTypes {
   CREATE_FOOD_LOGS = "food-logs/create-food-logs",
   GENERATE_FOOD_LOGS = "food-logs/generate-food-logs",
   GET_FOOD_LOG = "food-logs/get-food-log",
+  DELETE_FOOD_LOG = "food-logs/delete-food-log",
 }
 
 export interface NutritionValues {

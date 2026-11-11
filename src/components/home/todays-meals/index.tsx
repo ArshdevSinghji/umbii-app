@@ -3,24 +3,19 @@ import { Text } from "@/components/ui/text";
 import { useFoodLogsActionsHook } from "@/features/food-logs/food-logs.hooks";
 import { IFoodLog } from "@/features/food-logs/food-logs.types";
 import { calculateNutrition } from "@/features/food-logs/food-logs.utils";
-import { THEME } from "@/lib/theme";
-import { BookmarkSimple } from "phosphor-react-native/src/icons/BookmarkSimple";
 import { Fire } from "phosphor-react-native/src/icons/Fire";
-import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import SaveRecipeForm from "@/components/save-recipe/save-recipe-form";
-import { ActionButton } from "@/components/ui/action-button";
 import ChildSheet from "@/components/meal-sheet/child-sheet";
 import TodaysMealsSkeleton from "./loading";
 import MealAvatars from "./meal-avatars";
 import MealSheet from "@/components/meal-sheet";
 import MealSheetContent from "@/components/meal-sheet/content";
+import DeleteMealSheet from "@/components/meal-sheet/delete-meal-sheet";
+import MealFooter from "@/components/meal-sheet/meal-footer";
 
 export default function TodaysMeals() {
-  const { colorScheme } = useColorScheme();
-  const theme = THEME[colorScheme ?? "light"];
-
   const { isListLoading: isLoading, listFoodLogs } = useFoodLogsActionsHook();
 
   // The day's list already has each meal's items, so the sheet opens straight
@@ -34,11 +29,14 @@ export default function TodaysMeals() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [isSavingRecipe, setIsSavingRecipe] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   // Bumped per opening so the save form remounts fresh (name, errors).
   const [saveCount, setSaveCount] = useState(0);
 
   const handleLogPress = (log: IFoodLog) => {
     setIsSaveOpen(false);
+    setIsDeleteOpen(false);
     setOpenedLog(log);
     setIsModalVisible(true);
   };
@@ -48,33 +46,13 @@ export default function TodaysMeals() {
     setIsSaveOpen(true);
   };
 
-  // Back / backdrop: close the save child sheet first, then the meal sheet.
-  // Nothing closes while a recipe is being saved. (Same as Log Food.)
+  // Back / backdrop: close a child sheet first, then the meal sheet.
+  // Nothing closes while saving or deleting. (Same as Log Food.)
   const handleClose = () => {
-    if (isSavingRecipe) return;
+    if (isSavingRecipe || isDeleting) return;
     if (isSaveOpen) setIsSaveOpen(false);
+    else if (isDeleteOpen) setIsDeleteOpen(false);
     else setIsModalVisible(false);
-  };
-
-  // Below the meal: "Save as recipe" (opens a child sheet in the same Modal)
-  // or "In your recipes" once it's linked to one (saved as, or eaten from).
-  const renderRecipeFooter = () => {
-    if (!selectedFoodLog) return null;
-
-    if (selectedFoodLog.recipeId !== null) {
-      return (
-        <View className="flex-row items-center justify-center gap-2 pt-4">
-          <BookmarkSimple size={16} color={theme.chart2} weight="fill" />
-          <Text className="text-sm text-muted-foreground">In your recipes</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View className="pt-4">
-        <ActionButton label="Save as recipe" onPress={openSave} />
-      </View>
-    );
   };
 
   return (
@@ -136,23 +114,43 @@ export default function TodaysMeals() {
         visible={isModalVisible}
         title="Meal details"
         onClose={handleClose}
-        footer={renderRecipeFooter()}
+        footer={
+          selectedFoodLog && (
+            <MealFooter
+              log={selectedFoodLog}
+              onSave={openSave}
+              onDelete={() => setIsDeleteOpen(true)}
+            />
+          )
+        }
         overlay={
           selectedFoodLog && (
-            <ChildSheet
-              visible={isSaveOpen}
-              title="Save as recipe"
-              description="Name it so you can find and log this meal again."
-              onClose={handleClose}
-            >
-              <SaveRecipeForm
-                key={`${selectedFoodLog.id}-${saveCount}`}
+            <>
+              <ChildSheet
+                visible={isSaveOpen}
+                title="Save as recipe"
+                description="Name it so you can find and log this meal again."
+                onClose={handleClose}
+              >
+                <SaveRecipeForm
+                  key={`${selectedFoodLog.id}-${saveCount}`}
+                  log={selectedFoodLog}
+                  onDone={() => setIsSaveOpen(false)}
+                  onCancel={() => setIsSaveOpen(false)}
+                  onSavingChange={setIsSavingRecipe}
+                />
+              </ChildSheet>
+              <DeleteMealSheet
+                visible={isDeleteOpen}
                 log={selectedFoodLog}
-                onDone={() => setIsSaveOpen(false)}
-                onCancel={() => setIsSaveOpen(false)}
-                onSavingChange={setIsSavingRecipe}
+                onClose={() => setIsDeleteOpen(false)}
+                onDeleted={() => {
+                  setIsDeleteOpen(false);
+                  setIsModalVisible(false);
+                }}
+                onBusyChange={setIsDeleting}
               />
-            </ChildSheet>
+            </>
           )
         }
       >

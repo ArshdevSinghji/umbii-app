@@ -1,8 +1,9 @@
 import { removeRecipe } from "@/features/recipes/recipes.slice";
 import { createRecipeAction } from "@/features/recipes/create-recipe/create-recipe.action";
 import { deleteRecipeAction } from "@/features/recipes/delete-recipe/delete-recipe.action";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createFoodLogsAction } from "./create-food-logs/create-food-logs.action";
+import { deleteFoodLogAction } from "./delete-food-log/delete-food-log.action";
 import {
   FoodLogState,
   GenerateFoodLogsDetails,
@@ -35,6 +36,15 @@ const replaceLog = (
   }
 };
 
+// Drop a log (by id) from every cached list and the selected one. Home's
+// totals and Breakdown are derived from the lists, so they follow.
+const dropLog = (state: FoodLogState, id: number) => {
+  state.listFoodLogs = state.listFoodLogs.filter((log) => log.id !== id);
+  state.periodFoodLogs = state.periodFoodLogs.filter((log) => log.id !== id);
+  state.recentFoodLogs = state.recentFoodLogs.filter((log) => log.id !== id);
+  if (state.selectedFoodLog?.id === id) state.selectedFoodLog = null;
+};
+
 const initialState: FoodLogState = {
   isLoading: false,
   listFoodLogs: [],
@@ -52,7 +62,12 @@ const initialState: FoodLogState = {
 const foodLogsSlice = createSlice({
   name: "foodLogs",
   initialState,
-  reducers: {},
+  reducers: {
+    // A log the server says is already gone (404 on delete).
+    removeFoodLog: (state, action: PayloadAction<number>) => {
+      dropLog(state, action.payload);
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(listFoodLogsAction.pending, (state, action) => {
@@ -146,6 +161,9 @@ const foodLogsSlice = createSlice({
           recipeId,
         }));
       })
+      .addCase(deleteFoodLogAction.fulfilled, (state, action) => {
+        dropLog(state, action.payload);
+      })
       .addCase(getFoodLogAction.rejected, (state) => {
         state.isFoodLogLoading = false;
       })
@@ -172,5 +190,5 @@ const foodLogsSlice = createSlice({
   },
 });
 
-export const {} = foodLogsSlice.actions;
+export const { removeFoodLog } = foodLogsSlice.actions;
 export const foodLogsReducer = foodLogsSlice.reducer;

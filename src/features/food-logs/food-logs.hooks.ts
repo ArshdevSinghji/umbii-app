@@ -4,6 +4,7 @@ import { listFoodLogsAction } from "./list-food-logs/list-food-logs.action";
 import { createFoodLogsAction } from "./create-food-logs/create-food-logs.action";
 import { generateFoodLogsAction } from "./generate-food-logs/generate-food-logs.action";
 import { getFoodLogAction } from "./get-food-log/get-food-log.action";
+import { deleteFoodLogAction } from "./delete-food-log/delete-food-log.action";
 import { IFoodLogDetail } from "./food-logs.types";
 import { listPeriodFoodLogsAction } from "./list-period-food-logs/list-period-food-logs.action";
 import { listRecentFoodLogsAction } from "./list-recent-food-logs/list-recent-food-logs.action";
@@ -100,6 +101,11 @@ export function useFoodLogsActionsHook() {
     await dispatch(getFoodLogAction({ userId, foodLogId })).unwrap();
   };
 
+  // The slice drops it from every list on success.
+  const deleteFoodLog = async (userId: number, foodLogId: number) => {
+    await dispatch(deleteFoodLogAction({ userId, foodLogId })).unwrap();
+  };
+
   return {
     isLoading,
     listFoodLogs,
@@ -115,5 +121,6 @@ export function useFoodLogsActionsHook() {
     selectedFoodLog,
     isFoodLogLoading,
     fetchFoodLogById,
+    deleteFoodLog,
   };
 }
