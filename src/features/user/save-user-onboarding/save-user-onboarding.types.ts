@@ -27,9 +27,10 @@ export interface UserOnboardingAnswers {
   // Only with at least one workout a week.
   trainingType?: TrainingType;
   avgSessionMinutes?: number;
-  dietType: DietType;
-  // Empty when "None".
-  allergies: Allergy[];
+  // Not asked during onboarding; nullable server-side, kept for meal
+  // suggestions later.
+  dietType?: DietType;
+  allergies?: Allergy[];
   healthFlags: HealthFlag[];
 }
 

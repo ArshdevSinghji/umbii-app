@@ -92,9 +92,10 @@ export interface IUserProfile {
   // Null when the athlete doesn't train.
   trainingType: TrainingType | null;
   avgSessionMinutes: number | null;
-  dietType: DietType;
-  // Empty when none.
-  allergies: Allergy[];
+  // Diet and allergies aren't asked in onboarding, so both can be null.
+  // Kept for meal suggestions later; diet can be set on the Plan screen.
+  dietType: DietType | null;
+  allergies: Allergy[] | null;
   healthFlags: HealthFlag[];
   // When onboarding was completed.
   createdAt: string;

@@ -10,7 +10,10 @@ import {
   getWeeklyRate,
 } from "@/components/onboarding/onboarding.utils";
 import type { ProfileChanges } from "@/features/user/patch-user-profile/patch-user-profile.types";
-import type { IUserProfile } from "@/features/user/user.types";
+import type { DietType, IUserProfile } from "@/features/user/user.types";
+
+// The onboarding answers plus diet, which only the Plan screen asks.
+export type PlanDraft = OnboardingValues & { dietType: DietType | null };
 
 // One row of "Your details", each edited in its own sheet. Weight is a
 // weigh-in; the rest are profile answers (PATCH /profile). Allergies can't
@@ -51,7 +54,7 @@ const toPace = (goalType: GoalType, weeklyRateKg: number | null) => {
 export const toDraft = (
   profile: IUserProfile,
   weightKg: number,
-): OnboardingValues => ({
+): PlanDraft => ({
   sex: profile.sex,
   dateOfBirth: profile.dateOfBirth,
   heightCm: profile.heightCm,
@@ -64,7 +67,6 @@ export const toDraft = (
   trainingType: profile.trainingType,
   avgSessionMinutes: profile.avgSessionMinutes,
   dietType: profile.dietType,
-  allergies: profile.allergies,
   healthFlags: profile.healthFlags,
 });
 
@@ -89,7 +91,7 @@ export const needsTraining = (draft: OnboardingValues) =>
 // What's still needed before Save, or null.
 export const getMissing = (
   field: DetailField,
-  draft: OnboardingValues,
+  draft: PlanDraft,
 ): string | null => {
   switch (field) {
     case "goal":
@@ -103,6 +105,8 @@ export const getMissing = (
         (!draft.trainingType || draft.avgSessionMinutes === null)
         ? "Pick a training type and session length"
         : null;
+    case "diet":
+      return draft.dietType === null ? "Pick a diet to save" : null;
     case "health":
       return draft.healthFlags === null ? "Pick one, or none of these" : null;
     default:
@@ -115,7 +119,7 @@ export const getMissing = (
 // 0 workouts rule out). Only called once getMissing is null.
 export const toProfileChanges = (
   field: Exclude<DetailField, "weight">,
-  draft: OnboardingValues,
+  draft: PlanDraft,
 ): ProfileChanges => {
   const signedRate = () => {
     const goalType = draft.goalType as Exclude<GoalType, GoalType.Maintenance>;

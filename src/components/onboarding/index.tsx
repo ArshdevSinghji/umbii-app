@@ -16,8 +16,8 @@ import { BackHandler, ScrollView, View } from "react-native";
 import AboutStep from "./about-step";
 import AgeGate from "./age-gate";
 import BodyStep from "./body-step";
-import FoodStep from "./food-step";
 import GoalStep from "./goal-step";
+import HealthStep from "./health-step";
 import OnboardingFooter from "./onboarding-footer";
 import OnboardingHeader from "./onboarding-header";
 import {
@@ -83,8 +83,6 @@ export default function Onboarding() {
     activityLevel: null,
     trainingType: null,
     avgSessionMinutes: null,
-    dietType: null,
-    allergies: null,
     healthFlags: null,
   }));
 
@@ -301,24 +299,18 @@ export default function Onboarding() {
           (values.trainingType !== null && values.avgSessionMinutes !== null)),
       hint: "Answer all to continue",
     },
-    food: {
-      title: "Food and health",
-      description: "Last one. So your plan fits how you eat.",
+    health: {
+      title: "Any health conditions?",
+      description:
+        "Last one. Some conditions change your targets, so we keep your plan safe. Not shared.",
       content: (
-        <FoodStep
-          dietType={values.dietType}
-          allergies={values.allergies}
+        <HealthStep
           healthFlags={values.healthFlags}
-          onDietTypeChange={(dietType) => set("dietType", dietType)}
-          onAllergiesChange={(allergies) => set("allergies", allergies)}
           onHealthFlagsChange={(flags) => set("healthFlags", flags)}
         />
       ),
-      isAnswered:
-        values.dietType !== null &&
-        values.allergies !== null &&
-        values.healthFlags !== null,
-      hint: "Answer all to continue",
+      isAnswered: values.healthFlags !== null,
+      hint: "Pick one, or none of these",
     },
   };
 

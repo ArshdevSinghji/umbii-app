@@ -6,7 +6,6 @@ import {
 import GoalStep from "@/components/onboarding/goal-step";
 import {
   GoalType,
-  OnboardingValues,
 } from "@/components/onboarding/onboarding.types";
 import { getTargetWeightRange } from "@/components/onboarding/onboarding.utils";
 import ActivityPicker from "@/components/profile-fields/activity-picker";
@@ -34,6 +33,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   DetailField,
   getMissing,
+  PlanDraft,
   getTargetWeight,
   isSameChange,
   needsTraining,
@@ -85,7 +85,7 @@ export default function DetailSheet({ field, visible, onClose }: IProps) {
 
   const latestWeight =
     latestWeightJournal?.weightKg ?? profile?.targetWeightKg ?? DEFAULT_WEIGHT;
-  const [draft, setDraft] = useState<OnboardingValues | null>(() =>
+  const [draft, setDraft] = useState<PlanDraft | null>(() =>
     profile ? toDraft(profile, latestWeight) : null,
   );
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +94,9 @@ export default function DetailSheet({ field, visible, onClose }: IProps) {
   if (!profile || !draft) return null;
   const saved = toDraft(profile, latestWeight);
 
-  const set = <K extends keyof OnboardingValues>(
+  const set = <K extends keyof PlanDraft>(
     key: K,
-    value: OnboardingValues[K],
+    value: PlanDraft[K],
   ) => {
     setDraft((prev) => prev && { ...prev, [key]: value });
     setError(null);

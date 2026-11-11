@@ -47,15 +47,13 @@ export interface OnboardingValues {
   // Asked only when there's at least one workout a week.
   trainingType: TrainingType | null;
   avgSessionMinutes: number | null;
-  dietType: DietType | null;
-  allergies: Allergy[] | null;
   healthFlags: HealthFlag[] | null;
 }
 
 // What "Build my plan" sends (POST /users/{userId}).
 export type PlanRequest = UserOnboardingAnswers;
 
-export type StepId = "about" | "body" | "goal" | "pace" | "week" | "food";
+export type StepId = "about" | "body" | "goal" | "pace" | "week" | "health";
 
 // Oldest date of birth the picker offers, in years back from today.
 export const MAX_AGE = 100;

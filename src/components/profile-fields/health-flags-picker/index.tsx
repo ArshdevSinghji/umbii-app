@@ -10,17 +10,34 @@ interface IProps {
   onChange: (healthFlags: HealthFlag[] | null) => void;
 }
 
+// Each subtitle is what the server's target calculator does for that flag,
+// so people see why their numbers differ. Keep in sync with the backend.
 const HEALTH_FLAGS = [
   {
     value: HealthFlag.PregnantOrBreastfeeding,
     label: "Pregnant or breastfeeding",
+    effect: "No calorie deficit: a fat-loss goal becomes maintenance.",
   },
-  { value: HealthFlag.Diabetes, label: "Diabetes" },
-  { value: HealthFlag.KidneyDisease, label: "Kidney disease" },
-  { value: HealthFlag.HighBloodPressure, label: "High blood pressure" },
+  {
+    value: HealthFlag.Diabetes,
+    label: "Diabetes",
+    effect:
+      "Carbs capped at 45% of calories (the rest moves to fat), and a lower sugar limit.",
+  },
+  {
+    value: HealthFlag.KidneyDisease,
+    label: "Kidney disease",
+    effect: "Protein capped at 0.8 g per kg of body weight, sodium at 1500 mg.",
+  },
+  {
+    value: HealthFlag.HighBloodPressure,
+    label: "High blood pressure",
+    effect: "Sodium capped at 1500 mg a day.",
+  },
   {
     value: HealthFlag.EatingDisorderHistory,
     label: "History of an eating disorder",
+    effect: "No calorie deficit: a fat-loss goal becomes maintenance.",
   },
 ];
 
@@ -29,10 +46,15 @@ export default function HealthFlagsPicker({ value, onChange }: IProps) {
 
   return (
     <View className="gap-2">
+      <Text className="text-xs text-muted-foreground">
+        Picking any of these also holds your weekly loss or gain to the slowest
+        pace.
+      </Text>
       {HEALTH_FLAGS.map((option) => (
         <ChoiceCard
           key={option.value}
           title={option.label}
+          subtitle={option.effect}
           multiple
           isSelected={(value ?? []).includes(option.value)}
           onPress={() => onChange(toggleChoice(value, option.value))}
@@ -47,7 +69,7 @@ export default function HealthFlagsPicker({ value, onChange }: IProps) {
       {hasFlags && (
         <Text className="text-xs text-muted-foreground">
           {
-            "We'll keep your targets conservative. Please check with a doctor too."
+            "Please check your targets with a doctor too."
           }
         </Text>
       )}

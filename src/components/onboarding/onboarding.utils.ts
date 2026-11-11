@@ -30,8 +30,8 @@ export const getWeeklyRate = (goalType: GoalType, pace: Pace) =>
 // maintenance; until a goal is picked it counts, so the total is 6.
 export const getSteps = (goalType: GoalType | null): StepId[] =>
   goalType === GoalType.Maintenance
-    ? ["about", "body", "goal", "week", "food"]
-    : ["about", "body", "goal", "pace", "week", "food"];
+    ? ["about", "body", "goal", "week", "health"]
+    : ["about", "body", "goal", "pace", "week", "health"];
 
 // How far past the current weight a target must be. Within it the server
 // treats the target as reached and plans for maintenance, so a closer one
@@ -101,8 +101,6 @@ export const toPlanRequest = (values: OnboardingValues): PlanRequest => {
       trainingType: values.trainingType!,
       avgSessionMinutes: values.avgSessionMinutes!,
     }),
-    dietType: values.dietType!,
-    allergies: values.allergies ?? [],
     healthFlags: values.healthFlags ?? [],
   };
 };

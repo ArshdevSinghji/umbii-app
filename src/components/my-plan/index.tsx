@@ -175,7 +175,7 @@ export default function MyPlan() {
             />
             <SettingsRow
               label="Diet"
-              value={DIET_LABELS[profile.dietType]}
+              value={profile.dietType ? DIET_LABELS[profile.dietType] : "Not set"}
               onPress={() => edit("diet")}
             />
             <SettingsRow
@@ -187,15 +187,16 @@ export default function MyPlan() {
               }
               onPress={() => edit("health")}
             />
-            {/* PATCH /profile can't change allergies: read-only. */}
-            <SettingsRow
-              label="Allergies"
-              value={
-                profile.allergies.length > 0
-                  ? profile.allergies.map((a) => ALLERGY_LABELS[a]).join(", ")
-                  : "None"
-              }
-            />
+            {/* Onboarding no longer asks, and PATCH /profile can't change
+                them: shown read-only, only for accounts that have some. */}
+            {profile.allergies && profile.allergies.length > 0 && (
+              <SettingsRow
+                label="Allergies"
+                value={profile.allergies
+                  .map((a) => ALLERGY_LABELS[a])
+                  .join(", ")}
+              />
+            )}
           </SettingsGroup>
         )}
 
