@@ -17,8 +17,11 @@ const STEPS = [
 
 // Counts up to 90% while the plan is being saved and generated, then the
 // rest once it's done, so the ring never claims "100%" early.
+// The server answers almost instantly, so the whole count is ~1.2 s
+// (2% every 24 ms): long enough to read the steps, short enough not to stall.
 const WAITING_CAP = 90;
-const TICK_MS = 30;
+const STEP = 2;
+const TICK_MS = 24;
 
 interface IProps {
   firstName?: string;
@@ -38,7 +41,7 @@ export default function BuildingStep({ firstName, isDone, onSeePlan }: IProps) {
 
   useEffect(() => {
     if (percent >= cap) return;
-    const timer = setTimeout(() => setPercent((value) => value + 1), TICK_MS);
+    const timer = setTimeout(() => setPercent((value) => Math.min(cap, value + STEP)), TICK_MS);
     return () => clearTimeout(timer);
   }, [percent, cap]);
 
