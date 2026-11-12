@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <filter id="mkwob">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+    </filter>
+  </defs>
+  <g filter="url(#mkwob)">
+    <path d="M26 36 V56 Q26 80 50 80 Q74 80 74 56 V36" fill="none" stroke="#0B0B0C" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26" cy="18" r="7" fill="#F07A5F"/>
+    <circle cx="74" cy="18" r="7" fill="#33B8A8"/>
+  </g>
+</svg>

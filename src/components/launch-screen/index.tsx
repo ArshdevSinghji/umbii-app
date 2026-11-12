@@ -14,15 +14,15 @@ import { scheduleOnRN } from "react-native-worklets";
 
 // Must match the expo-splash-screen config in app.json (image, imageWidth,
 // backgroundColor), so the handoff from the native splash is invisible.
-const WORDMARK_WIDTH = 150;
+const MARK_WIDTH = 150;
 const SPLASH = {
   light: {
     background: "#F4F4F5",
-    wordmark: require("../../../assets/images/splash-wordmark.png"),
+    mark: require("../../../assets/images/splash-mark.png"),
   },
   dark: {
     background: "#0C0C0E",
-    wordmark: require("../../../assets/images/splash-wordmark-dark.png"),
+    mark: require("../../../assets/images/splash-mark-dark.png"),
   },
 };
 
@@ -37,9 +37,9 @@ interface IProps {
 
 // A copy of the native splash drawn by the app, so the launch can animate
 // out (Android only allows a static icon). It swaps in for the native one
-// once the wordmark is on screen, then zooms and fades into the app.
+// once the logo mark is on screen, then zooms and fades into the app.
 export default function LaunchScreen({ onDone }: IProps) {
-  const { background, wordmark } = SPLASH[LAUNCH_SCHEME];
+  const { background, mark } = SPLASH[LAUNCH_SCHEME];
   const progress = useSharedValue(0);
 
   // expo-image can report display more than once; animate only the first.
@@ -66,7 +66,7 @@ export default function LaunchScreen({ onDone }: IProps) {
     opacity: interpolate(progress.get(), [0.4, 1], [1, 0], "clamp"),
   }));
 
-  const wordmarkStyle = useAnimatedStyle(() => ({
+  const markStyle = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(progress.get(), [0, 1], [1, 1.3]) }],
   }));
 
@@ -80,10 +80,10 @@ export default function LaunchScreen({ onDone }: IProps) {
         screenStyle,
       ]}
     >
-      <Animated.View style={wordmarkStyle}>
+      <Animated.View style={markStyle}>
         <Image
-          source={wordmark}
-          style={styles.wordmark}
+          source={mark}
+          style={styles.mark}
           contentFit="contain"
           // Hide the native splash only once this one looks the same.
           onDisplay={start}
@@ -96,5 +96,5 @@ export default function LaunchScreen({ onDone }: IProps) {
 
 const styles = StyleSheet.create({
   center: { alignItems: "center", justifyContent: "center" },
-  wordmark: { width: WORDMARK_WIDTH, height: WORDMARK_WIDTH },
+  mark: { width: MARK_WIDTH, height: MARK_WIDTH },
 });

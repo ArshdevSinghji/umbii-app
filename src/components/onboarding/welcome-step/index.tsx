@@ -1,3 +1,4 @@
+import Logo from "@/components/ui/logo";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
@@ -28,9 +29,9 @@ export default function WelcomeStep({ onBack, onStart }: IProps) {
           <View className="size-10" />
         )}
         {/* Centred over the whole row; the spacer balances the button. */}
-        <Text className="flex-1 text-center font-sans-bold text-2xl">
-          umbii
-        </Text>
+        <View className="flex-1 items-center">
+          <Logo size="sm" />
+        </View>
         <View className="size-10" />
       </View>
 
