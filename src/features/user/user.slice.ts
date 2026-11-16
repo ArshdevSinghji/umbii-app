@@ -1,7 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { deleteUserAction } from "./delete-user/delete-user.action";
 import { patchUserProfileAction } from "./patch-user-profile/patch-user-profile.action";
 import { getUserAction } from "./get-user/get-user.action";
+import { getUserProfileAction } from "./get-user-profile/get-user-profile.action";
 import { saveUserOnboardingAction } from "./save-user-onboarding/save-user-onboarding.action";
 import { signInAction } from "./sign-in/sign-in.action";
 import { updateUserAction } from "./update-user/update-user.action";
@@ -14,7 +14,6 @@ const initialState: UserState = {
   profile: null,
   profileStatus: "idle",
   isSavingOnboarding: false,
-  isDeleting: false,
   isPatchingProfile: false,
 };
 
@@ -23,7 +22,7 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     // At launch, from the saved session; the rest of the account is loaded
-    // with GET /users/{id}.
+    // with GET /users/{id}, the profile with GET .../nutrition-profile.
     setUserId: (state, action: PayloadAction<number>) => {
       state.user = { id: action.payload } as IUser;
     },
@@ -34,7 +33,6 @@ const userSlice = createSlice({
       state.profile = null;
       state.profileStatus = "idle";
       state.isSavingOnboarding = false;
-      state.isDeleting = false;
       state.isPatchingProfile = false;
     },
   },
@@ -63,39 +61,30 @@ const userSlice = createSlice({
       .addCase(updateUserAction.rejected, (state) => {
         state.isUpdating = false;
       })
-      .addCase(getUserAction.pending, (state) => {
+      .addCase(getUserAction.fulfilled, (state, action) => {
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(getUserProfileAction.pending, (state) => {
         // A refresh keeps showing what's already loaded.
         if (state.profileStatus !== "ready") state.profileStatus = "loading";
       })
-      // Refreshes the account and holds the profile apart.
-      .addCase(getUserAction.fulfilled, (state, action) => {
-        const { profile, ...account } = action.payload;
-        state.user = { ...state.user, ...account };
-        state.profile = profile;
+      // Null before onboarding.
+      .addCase(getUserProfileAction.fulfilled, (state, action) => {
+        state.profile = action.payload;
         state.profileStatus = "ready";
       })
-      .addCase(getUserAction.rejected, (state) => {
+      .addCase(getUserProfileAction.rejected, (state) => {
         if (state.profileStatus !== "ready") state.profileStatus = "error";
       })
       .addCase(saveUserOnboardingAction.pending, (state) => {
         state.isSavingOnboarding = true;
       })
       .addCase(saveUserOnboardingAction.fulfilled, (state) => {
-        // The saved profile is reloaded right after (GET /users/{id}).
+        // The saved profile is reloaded right after.
         state.isSavingOnboarding = false;
       })
       .addCase(saveUserOnboardingAction.rejected, (state) => {
         state.isSavingOnboarding = false;
-      })
-      // On success the caller signs out, which clears the user.
-      .addCase(deleteUserAction.pending, (state) => {
-        state.isDeleting = true;
-      })
-      .addCase(deleteUserAction.fulfilled, (state) => {
-        state.isDeleting = false;
-      })
-      .addCase(deleteUserAction.rejected, (state) => {
-        state.isDeleting = false;
       })
       .addCase(patchUserProfileAction.pending, (state) => {
         state.isPatchingProfile = true;

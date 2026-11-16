@@ -9,7 +9,8 @@ import type {
   TrainingType,
 } from "../user.types";
 
-// The onboarding answers (POST /users/{userId}, an upsert). Conditional
+// The onboarding answers (POST /users/{userId}/nutrition-profile, an
+// upsert). Conditional
 // fields are left out, not sent as null.
 export interface UserOnboardingAnswers {
   sex: Sex;

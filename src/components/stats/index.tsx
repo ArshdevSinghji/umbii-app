@@ -28,7 +28,7 @@ export default function GoalProgress() {
     fetchWeightChart,
   } = useWeightJournalsActionsHook();
   // Goal weight and height live on the profile (saved by onboarding).
-  const { profile, profileStatus, fetchUser } = useUserActionsHook();
+  const { profile, profileStatus, fetchProfile } = useUserActionsHook();
   const router = useRouter();
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -36,7 +36,7 @@ export default function GoalProgress() {
   // what the page shows; the chart fills in independently and can fail
   // without taking the page down.
   const loadLatest = () =>
-    Promise.all([fetchLatestWeightJournal(user.id), fetchUser(user.id)]).catch(
+    Promise.all([fetchLatestWeightJournal(user.id), fetchProfile(user.id)]).catch(
       (error) => reportRequestError("Error fetching weight or profile:", error),
     );
   const loadChart = () =>
@@ -55,7 +55,7 @@ export default function GoalProgress() {
   useRefresh(() =>
     Promise.all([
       fetchLatestWeightJournal(user.id),
-      fetchUser(user.id),
+      fetchProfile(user.id),
       fetchWeightChart(user.id, getWeightPeriodRange("week")),
     ]),
   );

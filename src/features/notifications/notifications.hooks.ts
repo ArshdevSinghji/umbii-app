@@ -3,18 +3,20 @@ import {
   getPushPermission,
   requestPushPermission,
 } from "@/lib/push-notifications";
-import { getTimezone } from "@/lib/timezone";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Platform } from "react-native";
 import { getNotificationPreferencesAction } from "./get-notification-preferences/get-notification-preferences.action";
+import { getReminderPreferencesAction } from "./get-reminder-preferences/get-reminder-preferences.action";
 import {
   loadPushSetting,
   markPushPrompted,
   savePushSetting,
   wasPushPrompted,
 } from "./notifications.storage";
-import { INotificationPreferences } from "./notifications.types";
 import { patchNotificationPreferencesAction } from "./patch-notification-preferences/patch-notification-preferences.action";
+import { NotificationPreferenceChanges } from "./patch-notification-preferences/patch-notification-preferences.types";
+import { patchReminderPreferencesAction } from "./patch-reminder-preferences/patch-reminder-preferences.action";
+import { ReminderPreferenceChanges } from "./patch-reminder-preferences/patch-reminder-preferences.types";
 import { registerPushDeviceAction } from "./register-push-device/register-push-device.action";
 import { unregisterPushDeviceAction } from "./unregister-push-device/unregister-push-device.action";
 
@@ -31,9 +33,8 @@ export type PushRegistrationResult =
 
 export function useNotificationsActionsHook() {
   const dispatch = useAppDispatch();
-  const { pushDeviceId, preferences, isPreferencesLoading } = useAppSelector(
-    (state) => state.notificationsSlice,
-  );
+  const { pushDeviceId, notificationPreferences, reminderPreferences } =
+    useAppSelector((state) => state.notificationsSlice);
 
   // Registers this device for push if the user hasn't turned it off and the
   // OS allows it. Safe to repeat: the server upserts.
@@ -62,7 +63,6 @@ export function useNotificationsActionsHook() {
         userId,
         expoPushToken,
         platform: Platform.OS === "ios" ? "ios" : "android",
-        timezone: getTimezone(),
       }),
     ).unwrap();
     return "registered";
@@ -83,15 +83,34 @@ export function useNotificationsActionsHook() {
     ).unwrap();
   };
 
+  // Both halves of the Notifications screen: which reminders (and when),
+  // and how they're delivered (quiet hours).
   const fetchPreferences = async (userId: number) => {
-    await dispatch(getNotificationPreferencesAction({ userId })).unwrap();
+    await Promise.all([
+      dispatch(getReminderPreferencesAction({ userId })).unwrap(),
+      dispatch(getNotificationPreferencesAction({ userId })).unwrap(),
+    ]);
   };
 
-  // Saves only the changed fields. Shown at once; if the save fails, the
+  // Both save only the changed fields. Shown at once; if the save fails, the
   // saved values are reloaded and the error rethrown.
-  const updatePreferences = async (
+  const updateReminderPreferences = async (
     userId: number,
-    changes: Partial<INotificationPreferences>,
+    changes: ReminderPreferenceChanges,
+  ) => {
+    try {
+      await dispatch(
+        patchReminderPreferencesAction({ userId, ...changes }),
+      ).unwrap();
+    } catch (error) {
+      dispatch(getReminderPreferencesAction({ userId }));
+      throw error;
+    }
+  };
+
+  const updateNotificationPreferences = async (
+    userId: number,
+    changes: NotificationPreferenceChanges,
   ) => {
     try {
       await dispatch(
@@ -105,12 +124,13 @@ export function useNotificationsActionsHook() {
 
   return {
     pushDeviceId,
-    preferences,
-    isPreferencesLoading,
+    notificationPreferences,
+    reminderPreferences,
     registerPushDevice,
     enablePush,
     disablePush,
     fetchPreferences,
-    updatePreferences,
+    updateReminderPreferences,
+    updateNotificationPreferences,
   };
 }

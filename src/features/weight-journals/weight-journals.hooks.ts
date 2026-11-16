@@ -2,7 +2,6 @@ import { getNutritionTargetAction } from "@/features/nutrition-target/get-nutrit
 import { reportRequestError } from "@/lib/http-client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createWeightJournalAction } from "./create-weight-journal/create-weight-journal.action";
-import { deleteWeightJournalAction } from "./delete-weight-journal/delete-weight-journal.action";
 import { getWeightJournalAction } from "./get-weight-journal/get-weight-journal.action";
 import { getLatestWeightJournalAction } from "./get-latest-weight-journal/get-latest-weight-journal.action";
 import { listWeightJournalsAction } from "./list-weight-journals/list-weight-journals.action";
@@ -78,20 +77,6 @@ export function useWeightJournalsActionsHook() {
     if (latestWeightJournal?.id === weightJournalId) refreshTarget(userId);
   };
 
-  const deleteWeightJournal = async (
-    userId: number,
-    weightJournalId: number,
-  ) => {
-    await dispatch(
-      deleteWeightJournalAction({ userId, weightJournalId }),
-    ).unwrap();
-    // If it was the latest, the next one may be outside the chart's range;
-    // only the server knows, so ask again.
-    if (latestWeightJournal?.id === weightJournalId) {
-      await fetchLatestWeightJournal(userId);
-    }
-  };
-
   return {
     isSaving,
     latestWeightJournal,
@@ -105,6 +90,5 @@ export function useWeightJournalsActionsHook() {
     createWeightJournal,
     fetchWeightJournalById,
     updateWeightJournal,
-    deleteWeightJournal,
   };
 }

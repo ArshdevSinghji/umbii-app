@@ -3,9 +3,9 @@ import type { LoadStatus } from "@/features/weight-journals/weight-journals.type
 export enum UserActionTypes {
   SIGN_IN = "auth/sign-in",
   GET_USER = "user/get-user",
+  GET_USER_PROFILE = "user/get-user-profile",
   SAVE_USER_ONBOARDING = "user/save-user-onboarding",
   UPDATE_USER = "user/update-user",
-  DELETE_USER = "user/delete-user",
   PATCH_USER_PROFILE = "user/patch-user-profile",
   LIST_FOOD_LOGS = "user/list-food-logs",
   CREATE_FOOD_LOGS = "user/create-food-logs",
@@ -75,8 +75,8 @@ export enum HealthFlag {
   EatingDisorderHistory = "eating_disorder_history",
 }
 
-// The onboarding answers, nested in GET /users/{userId} as `profile` (null
-// before onboarding). Targets are generated from it.
+// The onboarding answers (GET /users/{userId}/nutrition-profile, 404 before
+// onboarding). Targets are generated from it.
 export interface IUserProfile {
   sex: Sex;
   // "YYYY-MM-DD".
@@ -113,7 +113,6 @@ export interface UserState {
   profile: IUserProfile | null;
   profileStatus: LoadStatus;
   isSavingOnboarding: boolean;
-  isDeleting: boolean;
   // Saving a change to the profile (PATCH).
   isPatchingProfile: boolean;
 }

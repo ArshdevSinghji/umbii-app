@@ -1,8 +1,8 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { deleteUserAction } from "./delete-user/delete-user.action";
 import { patchUserProfileAction } from "./patch-user-profile/patch-user-profile.action";
 import type { ProfileChanges } from "./patch-user-profile/patch-user-profile.types";
 import { getUserAction } from "./get-user/get-user.action";
+import { getUserProfileAction } from "./get-user-profile/get-user-profile.action";
 import { saveUserOnboardingAction } from "./save-user-onboarding/save-user-onboarding.action";
 import { UserOnboardingAnswers } from "./save-user-onboarding/save-user-onboarding.types";
 
@@ -14,15 +14,18 @@ export function useUserActionsHook() {
     profile,
     profileStatus,
     isSavingOnboarding,
-    isDeleting,
     isPatchingProfile,
   } = useAppSelector((state) => state.userSlice);
 
-  // The account and its onboarding profile. Resolves with the profile, or
-  // null before onboarding.
+  // The account (name, email, picture).
   const fetchUser = async (userId: number) => {
-    const response = await dispatch(getUserAction({ userId })).unwrap();
-    return response.profile;
+    return await dispatch(getUserAction({ userId })).unwrap();
+  };
+
+  // The onboarding answers. Resolves with the profile, or null before
+  // onboarding.
+  const fetchProfile = async (userId: number) => {
+    return await dispatch(getUserProfileAction({ userId })).unwrap();
   };
 
   // Saves the onboarding answers. Resolves with the generated target.
@@ -33,11 +36,6 @@ export function useUserActionsHook() {
     return await dispatch(
       saveUserOnboardingAction({ userId, ...answers }),
     ).unwrap();
-  };
-
-  // Deletes the account for good. Sign out afterwards.
-  const deleteUser = async (userId: number) => {
-    await dispatch(deleteUserAction({ userId })).unwrap();
   };
 
   // Changes any onboarding answers (allergies aside). This regenerates the
@@ -51,14 +49,13 @@ export function useUserActionsHook() {
   return {
     isPatchingProfile,
     patchUserProfile,
-    isDeleting,
-    deleteUser,
     user,
     isUpdating,
     profile,
     profileStatus,
     isSavingOnboarding,
     fetchUser,
+    fetchProfile,
     saveUserOnboarding,
   };
 }

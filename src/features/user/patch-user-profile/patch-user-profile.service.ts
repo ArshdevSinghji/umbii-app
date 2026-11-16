@@ -9,7 +9,7 @@ export const patchUserProfileService = async (
 ) => {
   const { userId, ...changes } = request;
   return await http.patch<ApiResponse<PatchUserProfileResponse>>(
-    `/users/${userId}/profile`,
+    `/users/${userId}/nutrition-profile`,
     changes,
   );
 };

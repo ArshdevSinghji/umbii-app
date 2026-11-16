@@ -33,7 +33,7 @@ import { View } from "react-native";
 // answer they're based on, and the ways to change them.
 export default function MyPlan() {
   const router = useRouter();
-  const { user, profile, profileStatus, fetchUser } = useUserActionsHook();
+  const { user, profile, profileStatus, fetchProfile } = useUserActionsHook();
   const { nutritionTarget, fetchNutritionTarget } =
     useNutritionTargetActionsHook();
   const { latestWeightJournal, fetchLatestWeightJournal } =
@@ -53,7 +53,7 @@ export default function MyPlan() {
       );
     }
     if (profileStatus !== "ready") {
-      fetchUser(user.id).catch((error) =>
+      fetchProfile(user.id).catch((error) =>
         reportRequestError("Error fetching profile:", error),
       );
     }

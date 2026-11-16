@@ -8,10 +8,9 @@ import {
   PushRegistrationResult,
   useNotificationsActionsHook,
 } from "@/features/notifications/notifications.hooks";
-import {
-  INotificationPreferences,
-  WeighInFrequency,
-} from "@/features/notifications/notifications.types";
+import { WeighInFrequency } from "@/features/notifications/notifications.types";
+import { NotificationPreferenceChanges } from "@/features/notifications/patch-notification-preferences/patch-notification-preferences.types";
+import { ReminderPreferenceChanges } from "@/features/notifications/patch-reminder-preferences/patch-reminder-preferences.types";
 import {
   getErrorMessage,
   isUnauthorizedError,
@@ -47,6 +46,16 @@ const FREQUENCY_OPTIONS: { label: string; value: WeighInFrequency }[] = [
   { label: "Weekly", value: "weekly" },
 ];
 
+// The on/off switches of each preferences endpoint.
+type ReminderSwitch =
+  | "mealRemindersEnabled"
+  | "dailyTargetNudgeEnabled"
+  | "weighInReminderEnabled"
+  | "weeklySummaryEnabled"
+  | "targetUpdateAlertsEnabled"
+  | "milestoneAlertsEnabled";
+type DeliverySwitch = "quietHoursEnabled" | "reEngagementEnabled";
+
 // Why turning push on didn't work, when it's worth saying.
 const PUSH_FAILURES: Partial<
   Record<PushRegistrationResult, { message: string; description: string }>
@@ -73,11 +82,13 @@ export default function Notifications() {
   const { user } = useAppSelector((state) => state.userSlice);
   const {
     pushDeviceId,
-    preferences,
+    reminderPreferences: reminders,
+    notificationPreferences: delivery,
     enablePush,
     disablePush,
     fetchPreferences,
-    updatePreferences,
+    updateReminderPreferences,
+    updateNotificationPreferences,
   } = useNotificationsActionsHook();
 
   const { isInitialLoad, hasError, isRetrying, retry } = useInitialLoad(
@@ -124,18 +135,28 @@ export default function Notifications() {
     }
   };
 
-  const save = (changes: Partial<INotificationPreferences>) =>
-    updatePreferences(user.id, changes).catch((error) => {
-      if (isUnauthorizedError(error)) return;
-      errorToast("Couldn't save that change", {
-        id: "notification-preferences",
-        description: getErrorMessage(error),
-      });
+  const showSaveError = (error: unknown) => {
+    if (isUnauthorizedError(error)) return;
+    errorToast("Couldn't save that change", {
+      id: "notification-preferences",
+      description: getErrorMessage(error),
     });
+  };
 
-  const toggle = (key: keyof INotificationPreferences) => ({
-    value: !!preferences?.[key],
+  // The server keeps these apart: which reminders and when (reminder
+  // preferences) vs how they're delivered (quiet hours, come-back).
+  const save = (changes: ReminderPreferenceChanges) =>
+    updateReminderPreferences(user.id, changes).catch(showSaveError);
+  const saveDelivery = (changes: NotificationPreferenceChanges) =>
+    updateNotificationPreferences(user.id, changes).catch(showSaveError);
+
+  const toggle = (key: ReminderSwitch) => ({
+    value: !!reminders?.[key],
     onChange: (value: boolean) => save({ [key]: value }),
+  });
+  const toggleDelivery = (key: DeliverySwitch) => ({
+    value: !!delivery?.[key],
+    onChange: (value: boolean) => saveDelivery({ [key]: value }),
   });
 
   return (
@@ -164,7 +185,7 @@ export default function Notifications() {
 
         {isInitialLoad ? (
           <NotificationsSkeleton />
-        ) : hasError || !preferences ? (
+        ) : hasError || !reminders || !delivery ? (
           <ErrorState
             title="Couldn't load your reminders"
             onRetry={retry}
@@ -178,27 +199,27 @@ export default function Notifications() {
                 label="Meal reminders"
                 toggle={toggle("mealRemindersEnabled")}
               />
-              {preferences.mealRemindersEnabled && (
+              {reminders.mealRemindersEnabled && (
                 <TimeRow
                   icon={Coffee}
                   label="Breakfast"
-                  value={preferences.breakfastReminderTime}
+                  value={reminders.breakfastReminderTime}
                   onChange={(time) => save({ breakfastReminderTime: time })}
                 />
               )}
-              {preferences.mealRemindersEnabled && (
+              {reminders.mealRemindersEnabled && (
                 <TimeRow
                   icon={Sun}
                   label="Lunch"
-                  value={preferences.lunchReminderTime}
+                  value={reminders.lunchReminderTime}
                   onChange={(time) => save({ lunchReminderTime: time })}
                 />
               )}
-              {preferences.mealRemindersEnabled && (
+              {reminders.mealRemindersEnabled && (
                 <TimeRow
                   icon={SunHorizon}
                   label="Dinner"
-                  value={preferences.dinnerReminderTime}
+                  value={reminders.dinnerReminderTime}
                   onChange={(time) => save({ dinnerReminderTime: time })}
                 />
               )}
@@ -210,11 +231,11 @@ export default function Notifications() {
                 label="Daily goal nudge"
                 toggle={toggle("dailyTargetNudgeEnabled")}
               />
-              {preferences.dailyTargetNudgeEnabled && (
+              {reminders.dailyTargetNudgeEnabled && (
                 <TimeRow
                   icon={Clock}
                   label="Time"
-                  value={preferences.dailyTargetNudgeTime}
+                  value={reminders.dailyTargetNudgeTime}
                   onChange={(time) => save({ dailyTargetNudgeTime: time })}
                 />
               )}
@@ -226,14 +247,14 @@ export default function Notifications() {
                 label="Weigh-in reminder"
                 toggle={toggle("weighInReminderEnabled")}
               />
-              {preferences.weighInReminderEnabled && (
+              {reminders.weighInReminderEnabled && (
                 <SettingsRow
                   icon={Repeat}
                   label="Repeat"
                   accessory={
                     <SegmentedControl
                       options={FREQUENCY_OPTIONS}
-                      value={preferences.weighInFrequency}
+                      value={reminders.weighInFrequency}
                       onChange={(weighInFrequency) =>
                         save({ weighInFrequency })
                       }
@@ -241,18 +262,18 @@ export default function Notifications() {
                   }
                 />
               )}
-              {preferences.weighInReminderEnabled &&
-                preferences.weighInFrequency === "weekly" && (
+              {reminders.weighInReminderEnabled &&
+                reminders.weighInFrequency === "weekly" && (
                   <DayPicker
-                    value={preferences.weighInDayOfWeek}
+                    value={reminders.weighInDayOfWeek}
                     onChange={(weighInDayOfWeek) => save({ weighInDayOfWeek })}
                   />
                 )}
-              {preferences.weighInReminderEnabled && (
+              {reminders.weighInReminderEnabled && (
                 <TimeRow
                   icon={Clock}
                   label="Time"
-                  value={preferences.weighInReminderTime}
+                  value={reminders.weighInReminderTime}
                   onChange={(time) => save({ weighInReminderTime: time })}
                 />
               )}
@@ -277,7 +298,7 @@ export default function Notifications() {
               <SettingsRow
                 icon={HandWaving}
                 label="Come-back reminders"
-                toggle={toggle("reEngagementEnabled")}
+                toggle={toggleDelivery("reEngagementEnabled")}
               />
             </SettingsGroup>
 
@@ -285,30 +306,30 @@ export default function Notifications() {
               <SettingsRow
                 icon={MoonStars}
                 label="Quiet hours"
-                toggle={toggle("quietHoursEnabled")}
+                toggle={toggleDelivery("quietHoursEnabled")}
               />
-              {preferences.quietHoursEnabled && (
+              {delivery.quietHoursEnabled && (
                 <TimeRow
                   icon={Moon}
                   label="From"
-                  value={preferences.quietHoursStart}
-                  onChange={(time) => save({ quietHoursStart: time })}
+                  value={delivery.quietHoursStart}
+                  onChange={(time) => saveDelivery({ quietHoursStart: time })}
                 />
               )}
-              {preferences.quietHoursEnabled && (
+              {delivery.quietHoursEnabled && (
                 <TimeRow
                   icon={Sun}
                   label="Until"
-                  value={preferences.quietHoursEnd}
-                  onChange={(time) => save({ quietHoursEnd: time })}
+                  value={delivery.quietHoursEnd}
+                  onChange={(time) => saveDelivery({ quietHoursEnd: time })}
                 />
               )}
             </SettingsGroup>
 
             <Text className="px-1 text-xs text-muted-foreground">
               Times follow your phone&apos;s time zone
-              {preferences.timezone ? ` (${preferences.timezone})` : ""}. You
-              get at most 3 reminders a day, and none during quiet hours.
+              {reminders.timezone ? ` (${reminders.timezone})` : ""}. Nothing
+              is sent during quiet hours.
             </Text>
           </>
         )}

@@ -12,7 +12,7 @@ export const saveUserOnboardingService = async (
 ) => {
   const { userId, ...answers } = request;
   return await http.post<ApiResponse<SaveUserOnboardingResponse>>(
-    `/users/${userId}`,
+    `/users/${userId}/nutrition-profile`,
     answers,
   );
 };

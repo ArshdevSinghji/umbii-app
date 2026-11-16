@@ -1,8 +1,4 @@
 import { useSignOut } from "@/components/home/hooks/use-sign-out";
-import { errorToast } from "@/components/ui/app-toaster";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { getErrorMessage, isUnauthorizedError } from "@/lib/http-client";
-import { useState } from "react";
 import PageHeader from "@/components/settings-list/page-header";
 import SettingsGroup from "@/components/settings-list/settings-group";
 import SettingsRow from "@/components/settings-list/settings-row";
@@ -20,7 +16,6 @@ import { Question } from "phosphor-react-native/src/icons/Question";
 import { ShieldCheck } from "phosphor-react-native/src/icons/ShieldCheck";
 import { SignOut } from "phosphor-react-native/src/icons/SignOut";
 import { Target } from "phosphor-react-native/src/icons/Target";
-import { Trash } from "phosphor-react-native/src/icons/Trash";
 import { UserPlus } from "phosphor-react-native/src/icons/UserPlus";
 import { Share, View } from "react-native";
 import AppearanceCard from "./appearance-card";
@@ -29,34 +24,17 @@ import ProfileHeader from "./profile-header";
 // The app's Play Store page (package com.umbii); live once published.
 const INVITE_URL = "https://play.google.com/store/apps/details?id=com.umbii";
 
-// The Profile tab: who you are, your plan, app preferences, and out (sign
-// out, or delete the account). There's no separate settings screen.
+// The Profile tab: who you are, your plan, app preferences, and sign out.
+// No delete account: the server has no route for it yet. There's no separate settings screen.
 export default function Profile() {
   const router = useRouter();
-  const { user, fetchUser, deleteUser, isDeleting } = useUserActionsHook();
+  const { user, fetchUser } = useUserActionsHook();
   const { nutritionTarget } = useNutritionTargetActionsHook();
   const { signOut } = useSignOut();
 
   const version = Constants.expoConfig?.version ?? "-";
 
   useRefresh(() => fetchUser(user.id));
-
-  // Deletes the account for good, then signs out (back to sign-in). The
-  // dialog asks first, spelling out that it can't be undone.
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const deleteAccount = async () => {
-    try {
-      await deleteUser(user.id);
-    } catch (error) {
-      if (!isUnauthorizedError(error)) {
-        errorToast("Couldn't delete your account", {
-          description: getErrorMessage(error),
-        });
-      }
-      return;
-    }
-    await signOut();
-  };
 
   // The phone's share sheet (WhatsApp, messages, ...) with an invite.
   // Referral codes and rewards would need the backend; this only shares.
@@ -119,25 +97,8 @@ export default function Profile() {
             destructive
             onPress={signOut}
           />
-          <SettingsRow
-            icon={Trash}
-            label="Delete account"
-            destructive
-            onPress={() => setIsDeleteOpen(true)}
-            isLoading={isDeleting}
-          />
         </SettingsGroup>
       </View>
-
-      <ConfirmDialog
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
-        title="Delete your account?"
-        description="This permanently deletes your account, meals, recipes, weigh-ins and plan. It can't be undone."
-        confirmLabel="Delete account"
-        destructive
-        onConfirm={deleteAccount}
-      />
     </View>
   );
 }

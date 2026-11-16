@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { createWeightJournalAction } from "./create-weight-journal/create-weight-journal.action";
-import { deleteWeightJournalAction } from "./delete-weight-journal/delete-weight-journal.action";
 import { getLatestWeightJournalAction } from "./get-latest-weight-journal/get-latest-weight-journal.action";
 import { getWeightJournalAction } from "./get-weight-journal/get-weight-journal.action";
 import { listWeightJournalsAction } from "./list-weight-journals/list-weight-journals.action";
@@ -105,23 +104,6 @@ const weightJournalsSlice = createSlice({
         }
       })
       .addCase(updateWeightJournalAction.rejected, (state) => {
-        state.isSaving = false;
-      })
-      .addCase(deleteWeightJournalAction.pending, (state) => {
-        state.isSaving = true;
-      })
-      .addCase(deleteWeightJournalAction.fulfilled, (state, action) => {
-        state.isSaving = false;
-        state.chartWeightJournals = state.chartWeightJournals.filter(
-          (entry) => entry.id !== action.payload,
-        );
-        if (state.selectedWeightJournal?.id === action.payload) {
-          state.selectedWeightJournal = null;
-        }
-        // If the latest was deleted, the hook refetches it (the next one may
-        // be outside the chart's range, so only the server knows).
-      })
-      .addCase(deleteWeightJournalAction.rejected, (state) => {
         state.isSaving = false;
       });
   },

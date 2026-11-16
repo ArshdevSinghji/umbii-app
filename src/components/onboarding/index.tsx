@@ -52,7 +52,7 @@ export default function Onboarding() {
     useWeightJournalsActionsHook();
   const {
     profile,
-    fetchUser,
+    fetchProfile,
     isSavingOnboarding: isSubmitting,
     saveUserOnboarding,
   } = useUserActionsHook();
@@ -151,7 +151,7 @@ export default function Onboarding() {
         toPlanRequest(values),
       );
       await Promise.all([
-        fetchUser(user.id),
+        fetchProfile(user.id),
         fetchLatestWeightJournal(user.id),
       ]).catch((error) =>
         reportRequestError("Error refreshing after onboarding:", error),

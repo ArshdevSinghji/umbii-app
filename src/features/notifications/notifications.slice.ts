@@ -1,15 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { clearUser } from "@/features/user/user.slice";
 import { getNotificationPreferencesAction } from "./get-notification-preferences/get-notification-preferences.action";
+import { getReminderPreferencesAction } from "./get-reminder-preferences/get-reminder-preferences.action";
 import { NotificationsState } from "./notifications.types";
 import { patchNotificationPreferencesAction } from "./patch-notification-preferences/patch-notification-preferences.action";
+import { patchReminderPreferencesAction } from "./patch-reminder-preferences/patch-reminder-preferences.action";
 import { registerPushDeviceAction } from "./register-push-device/register-push-device.action";
 import { unregisterPushDeviceAction } from "./unregister-push-device/unregister-push-device.action";
 
 const initialState: NotificationsState = {
   pushDeviceId: null,
-  preferences: null,
-  isPreferencesLoading: false,
+  notificationPreferences: null,
+  reminderPreferences: null,
 };
 
 const notificationsSlice = createSlice({
@@ -27,29 +29,39 @@ const notificationsSlice = createSlice({
       .addCase(unregisterPushDeviceAction.pending, (state) => {
         state.pushDeviceId = null;
       })
-      .addCase(getNotificationPreferencesAction.pending, (state) => {
-        state.isPreferencesLoading = true;
-      })
       .addCase(getNotificationPreferencesAction.fulfilled, (state, action) => {
-        state.isPreferencesLoading = false;
-        state.preferences = action.payload;
+        state.notificationPreferences = action.payload;
       })
-      .addCase(getNotificationPreferencesAction.rejected, (state) => {
-        state.isPreferencesLoading = false;
+      .addCase(getReminderPreferencesAction.fulfilled, (state, action) => {
+        state.reminderPreferences = action.payload;
       })
       // Optimistic: switches and times change on tap. A failed save is
       // undone by refetching (see the hook).
       .addCase(patchNotificationPreferencesAction.pending, (state, action) => {
-        if (!state.preferences) return;
+        if (!state.notificationPreferences) return;
         const { userId, ...changes } = action.meta.arg;
-        state.preferences = { ...state.preferences, ...changes };
+        state.notificationPreferences = {
+          ...state.notificationPreferences,
+          ...changes,
+        };
       })
       .addCase(
         patchNotificationPreferencesAction.fulfilled,
         (state, action) => {
-          state.preferences = action.payload;
+          state.notificationPreferences = action.payload;
         },
-      );
+      )
+      .addCase(patchReminderPreferencesAction.pending, (state, action) => {
+        if (!state.reminderPreferences) return;
+        const { userId, ...changes } = action.meta.arg;
+        state.reminderPreferences = {
+          ...state.reminderPreferences,
+          ...changes,
+        };
+      })
+      .addCase(patchReminderPreferencesAction.fulfilled, (state, action) => {
+        state.reminderPreferences = action.payload;
+      });
   },
 });
 

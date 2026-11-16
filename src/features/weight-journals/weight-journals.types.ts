@@ -3,7 +3,6 @@ export enum WeightJournalActionTypes {
   CREATE_WEIGHT_JOURNAL = "weight-journals/create-weight-journal",
   GET_WEIGHT_JOURNAL = "weight-journals/get-weight-journal",
   UPDATE_WEIGHT_JOURNAL = "weight-journals/update-weight-journal",
-  DELETE_WEIGHT_JOURNAL = "weight-journals/delete-weight-journal",
   GET_LATEST_WEIGHT_JOURNAL = "weight-journals/get-latest-weight-journal",
 }
 
