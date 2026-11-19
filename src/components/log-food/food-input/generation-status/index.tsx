@@ -12,7 +12,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { GENERATION_STAGES } from "../../hooks/use-meal-generation";
+import { getGenerationStages } from "../../hooks/use-meal-generation";
 
 // A gentle breathing pulse: the status is clearly alive, never a frozen
 // spinner.
@@ -33,12 +33,14 @@ function usePulse() {
 
 interface IProps {
   stage: number;
+  // Photos get their own first step.
+  hasImage: boolean;
 }
 
 // Shown in the composer, where the placeholder sits, while a meal is worked
 // out: a chip with a pulsing dot and the current step. Brighter than a
 // placeholder so it reads as something happening.
-export default function GenerationStatus({ stage }: IProps) {
+export default function GenerationStatus({ stage, hasImage }: IProps) {
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme ?? "light"];
   const pulse = usePulse();
@@ -64,7 +66,7 @@ export default function GenerationStatus({ stage }: IProps) {
       {/* Remounted per stage, so each new step fades in. */}
       <Animated.View key={stage} entering={FadeIn.duration(250)}>
         <Animated.View style={pulse}>
-          <Text className="font-sans text-sm">{GENERATION_STAGES[stage]}…</Text>
+          <Text className="font-sans text-sm">{getGenerationStages(hasImage)[stage]}…</Text>
         </Animated.View>
       </Animated.View>
     </Animated.View>

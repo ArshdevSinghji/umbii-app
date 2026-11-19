@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { listFoodLogsAction } from "./list-food-logs/list-food-logs.action";
 import { createFoodLogsAction } from "./create-food-logs/create-food-logs.action";
 import { generateFoodLogsAction } from "./generate-food-logs/generate-food-logs.action";
+import { IMealImage } from "./generate-food-logs/generate-food-logs.types";
 import { getFoodLogAction } from "./get-food-log/get-food-log.action";
 import { deleteFoodLogAction } from "./delete-food-log/delete-food-log.action";
 import { IFoodLogDetail } from "./food-logs.types";
@@ -93,8 +94,12 @@ export function useFoodLogsActionsHook() {
     ).unwrap();
   };
 
-  const generateFoodLogs = async (userId: number, rawInputText: string) => {
-    await dispatch(generateFoodLogsAction({ userId, rawInputText })).unwrap();
+  // Text, up to 3 photos, or both.
+  const generateFoodLogs = async (
+    userId: number,
+    meal: { rawInputText?: string; images?: IMealImage[] },
+  ) => {
+    await dispatch(generateFoodLogsAction({ userId, ...meal })).unwrap();
   };
 
   const fetchFoodLogById = async (userId: number, foodLogId: number) => {

@@ -29,6 +29,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { errorToast } from "@/components/ui/app-toaster";
+import { getErrorName } from "@/lib/http-client";
 import { useFocusEffect } from "expo-router";
 import { useMealGeneration } from "../hooks/use-meal-generation";
 import GenerationStatus from "./generation-status";
@@ -36,10 +37,13 @@ import { useVoiceInput } from "../hooks/use-voice-input";
 import PendingMeal from "./pending-meal";
 import GenerateMealSheet from "./generate-meal-sheet";
 import RecordingBar from "./recording";
+import AttachMenu from "./attach-menu";
+import AttachedImages from "./attached-images";
+import { useMealImages } from "../hooks/use-meal-images";
 
-// Two states, like ChatGPT's composer: a one-row pill (text, mic, send)
+// Two states, like ChatGPT's composer: a one-row pill (+, text, mic, send)
 // while the text fits on one line, and a box (text on top, actions under it)
-// once it needs more. The field grows a line at a time (20px lines + 8px
+// once it needs more or a photo is attached (shown on top). The field grows a line at a time (20px lines + 8px
 // padding) up to six lines, then scrolls inside itself.
 const LINE_HEIGHT = 20;
 const INPUT_PADDING_X = 12;
@@ -58,6 +62,8 @@ const BUTTON_SIZE = 36;
 const GAP = 8;
 // Mic + send.
 const ACTIONS_WIDTH = BUTTON_SIZE * 2 + GAP;
+// The "+" before the text in the pill.
+const ATTACH_WIDTH = BUTTON_SIZE + GAP;
 // More than half the pill's height, so one row is a full pill; the box has
 // softer corners. Like ChatGPT, it snaps between the two (and grows a line
 // at a time) without animating.
@@ -90,6 +96,7 @@ export default function FoodInput({ onHeightChange }: IProps) {
     composerWidth -
     COMPOSER_PADDING * 2 -
     ACTIONS_WIDTH -
+    ATTACH_WIDTH -
     GAP -
     INPUT_PADDING_X * 2 -
     SWITCH_EARLY_BY;
@@ -109,6 +116,11 @@ export default function FoodInput({ onHeightChange }: IProps) {
   const { pending, isGenerating, generate } = useMealGeneration();
   const voice = useVoiceInput();
   const isRecording = voice.status !== "idle";
+  const photos = useMealImages();
+  const hasAttachment = photos.images.length > 0 || photos.isPreparing;
+  // Text, photos, or both; not while a photo is still being resized.
+  const canSend =
+    (hasText || photos.images.length > 0) && !photos.isPreparing;
 
   // Log Food stays mounted behind other tabs: drop a recording on leaving it.
   useFocusEffect(
@@ -118,24 +130,32 @@ export default function FoodInput({ onHeightChange }: IProps) {
     }, []),
   );
 
-  // Clears only once the meal is generated; on failure the text stays to
-  // retry or edit.
-  // Like a chat: the message floats up above the composer and the field
-  // shows its progress, so a slow reply never looks stuck. On failure the
-  // text comes back to retry or edit.
+  // Like a chat: the message (and photos) float up above the composer and
+  // the field shows its progress, so a slow reply never looks stuck. On
+  // failure the text and photos come back to retry or edit.
   const submit = async (text: string) => {
     const message = text.trim();
-    if (!message || isGenerating) return;
+    const images = photos.images;
+    if ((!message && !images.length) || photos.isPreparing || isGenerating) {
+      return;
+    }
     setLog("");
+    photos.clear();
 
     try {
-      if (await generate(user.id, message)) setIsSheetVisible(true);
+      if (await generate(user.id, { text: message, images })) {
+        setIsSheetVisible(true);
+      }
     } catch (error) {
       console.error("Error generating food logs:", error);
       setLog((current) => current || message);
+      if (images.length) photos.restore(images);
       errorToast("Couldn't work out that meal", {
         id: "generate-meal",
-        description: "Check your connection and try again.",
+        description:
+          getErrorName(error) === "TimeoutError"
+            ? "That took too long. Try again."
+            : "Check your connection and try again.",
       });
     }
   };
@@ -171,6 +191,9 @@ export default function FoodInput({ onHeightChange }: IProps) {
     if (text) await submit(text);
   };
 
+  // No items = the photo wasn't recognised as food: only the remark shows.
+  const canSaveMeal = generatedFoodLogsDetails.details.length > 0;
+
   const handleSaveMeal = async () => {
     try {
       const { rawInputText, details } = generatedFoodLogsDetails;
@@ -205,9 +228,10 @@ export default function FoodInput({ onHeightChange }: IProps) {
 
   // Recording always shows the pill with just the recording bar; typed text
   // is kept (hidden) and the words are appended to it when recording ends.
-  const isExpanded = needsMoreLines && !isRecording;
+  const isExpanded = (needsMoreLines || hasAttachment) && !isRecording;
 
-  const radius = isExpanded ? BOX_RADIUS : PILL_RADIUS;
+  // The photo stays on top while recording, so it keeps the box's corners.
+  const radius = isExpanded || hasAttachment ? BOX_RADIUS : PILL_RADIUS;
 
   return (
     <>
@@ -267,6 +291,21 @@ export default function FoodInput({ onHeightChange }: IProps) {
             end={{ x: 1, y: 1 }}
             style={{ borderRadius: radius - 1 }}
           >
+            {hasAttachment && (
+              <View
+                style={{
+                  paddingHorizontal: COMPOSER_PADDING + 4,
+                  paddingTop: COMPOSER_PADDING + 4,
+                }}
+              >
+                <AttachedImages
+                  images={photos.images}
+                  preparingCount={photos.preparingCount}
+                  onRemove={photos.remove}
+                />
+              </View>
+            )}
+
             {/* One wrapping row, so the input is never remounted (that would
             close the keyboard): in the box the input takes the whole width
             and the actions wrap under it. */}
@@ -306,19 +345,54 @@ export default function FoodInput({ onHeightChange }: IProps) {
               )}
 
               {/* Over the (empty, read-only) field, lined up with where its
-                  text starts. */}
+                  text starts: after the "+" in the pill. */}
               {pending && (
                 <View
                   pointerEvents="none"
                   style={{
                     position: "absolute",
-                    left: COMPOSER_PADDING,
+                    left: COMPOSER_PADDING + (isExpanded ? 0 : ATTACH_WIDTH),
                     top: COMPOSER_PADDING,
                     height: MIN_INPUT_HEIGHT,
                     justifyContent: "center",
                   }}
                 >
-                  <GenerationStatus stage={pending.stage} />
+                  <GenerationStatus
+                    stage={pending.stage}
+                    hasImage={pending.images.length > 0}
+                  />
+                </View>
+              )}
+
+              {/* Pill: before the text. Box: pinned to the bottom left, on the
+                  actions' row (the row wraps in order, so in flow it would
+                  sit above the text). Hidden while recording. */}
+              {!isRecording && (
+                <View
+                  style={[
+                    isExpanded && {
+                      position: "absolute",
+                      left: COMPOSER_PADDING,
+                      bottom: COMPOSER_PADDING,
+                    },
+                    // Dimmed while it can't be used: a meal is being worked
+                    // out, or 3 photos are already attached.
+                    (isGenerating || photos.isFull) && { opacity: 0.4 },
+                  ]}
+                >
+                  <AttachMenu
+                    size={BUTTON_SIZE}
+                    // Full at 3 photos.
+                    disabled={isGenerating || photos.isFull}
+                    onTakePhoto={() => {
+                      inputRef.current?.blur();
+                      photos.takePhoto();
+                    }}
+                    onPickPhoto={() => {
+                      inputRef.current?.blur();
+                      photos.pickPhotos();
+                    }}
+                  />
                 </View>
               )}
 
@@ -328,7 +402,13 @@ export default function FoodInput({ onHeightChange }: IProps) {
                 value={log}
                 // While a meal is worked out, a status chip takes the
                 // placeholder's place (below) rather than a blank field.
-                placeholder={pending ? "" : "What did you eat?"}
+                placeholder={
+                  pending
+                    ? ""
+                    : hasAttachment
+                      ? "Add details (e.g. I had half)"
+                      : "What did you eat?"
+                }
                 onChangeText={setLog}
                 // Read-only while recording (and hidden, below), so the words
                 // land after exactly what was there; and while generating, so
@@ -409,29 +489,33 @@ export default function FoodInput({ onHeightChange }: IProps) {
                       hitSlop={6}
                       accessibilityLabel="Log by voice"
                       className="items-center justify-center rounded-full"
-                      style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }}
+                      style={{
+                        width: BUTTON_SIZE,
+                        height: BUTTON_SIZE,
+                        opacity: isGenerating ? 0.4 : 1,
+                      }}
                     >
                       <Microphone size={22} color={theme.foreground} />
                     </Pressable>
 
-                    {/* Always there; only real text enables it (spaces alone
-                        can't be sent). */}
+                    {/* Always there; only real text or a photo enables it
+                        (spaces alone can't be sent). */}
                     <Pressable
                       onPress={handleSendText}
                       // No spinner here: progress shows under the sent
                       // message instead.
-                      disabled={!hasText || isGenerating}
+                      disabled={!canSend || isGenerating}
                       accessibilityLabel="Log this meal"
                       className={cn(
                         "items-center justify-center rounded-full",
-                        hasText ? "bg-blue-500" : "bg-muted",
+                        canSend ? "bg-blue-500" : "bg-muted",
                       )}
                       style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }}
                     >
                       <ArrowUp
                         size={18}
                         weight="bold"
-                        color={hasText ? "white" : theme.mutedForeground}
+                        color={canSend ? "white" : theme.mutedForeground}
                       />
                     </Pressable>
                   </>
@@ -461,12 +545,14 @@ export default function FoodInput({ onHeightChange }: IProps) {
                 onPress={() => setIsSheetVisible(false)}
                 disabled={isLoading}
               />
-              <ActionButton
-                className="flex-1"
-                label="Save Meal"
-                onPress={handleSaveMeal}
-                isLoading={isLoading}
-              />
+              {canSaveMeal && (
+                <ActionButton
+                  className="flex-1"
+                  label="Save Meal"
+                  onPress={handleSaveMeal}
+                  isLoading={isLoading}
+                />
+              )}
             </View>
           </View>
         </View>

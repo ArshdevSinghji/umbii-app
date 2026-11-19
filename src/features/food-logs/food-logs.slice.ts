@@ -4,11 +4,7 @@ import { deleteRecipeAction } from "@/features/recipes/delete-recipe/delete-reci
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createFoodLogsAction } from "./create-food-logs/create-food-logs.action";
 import { deleteFoodLogAction } from "./delete-food-log/delete-food-log.action";
-import {
-  FoodLogState,
-  GenerateFoodLogsDetails,
-  IFoodLog,
-} from "./food-logs.types";
+import { FoodLogState, IFoodLog } from "./food-logs.types";
 import { getFoodLogAction } from "./get-food-log/get-food-log.action";
 import { listFoodLogsAction } from "./list-food-logs/list-food-logs.action";
 import { generateFoodLogsAction } from "./generate-food-logs/generate-food-logs.action";
@@ -53,7 +49,9 @@ const initialState: FoodLogState = {
   isListLoading: false,
   periodFoodLogs: [],
   isPeriodFoodLogsLoading: false,
-  generatedFoodLogsDetails: {} as GenerateFoodLogsDetails,
+  // A real empty result (not `{}`): Log Food reads `details` before any
+  // meal is generated.
+  generatedFoodLogsDetails: { remark: "", rawInputText: "", details: [] },
   selectedFoodLog: null,
   isFoodLogLoading: false,
   recentFoodLogs: [],
@@ -137,7 +135,11 @@ const foodLogsSlice = createSlice({
       })
       .addCase(generateFoodLogsAction.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.generatedFoodLogsDetails = action.payload;
+        // An image that isn't food may come back without items.
+        state.generatedFoodLogsDetails = {
+          ...action.payload,
+          details: action.payload.details ?? [],
+        };
       })
       .addCase(generateFoodLogsAction.rejected, (state) => {
         state.isLoading = false;

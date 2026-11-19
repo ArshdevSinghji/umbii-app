@@ -77,7 +77,14 @@
           "defaultChannel": "default"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Umbii to use your photos to log meals.",
+          "cameraPermission": "Allow Umbii to use the camera to snap your meals and food bills."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

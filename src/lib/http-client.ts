@@ -47,6 +47,12 @@ export function isUnauthorizedError(error: unknown) {
   return (error as { name?: string } | null)?.name === 'UnauthorizedError';
 }
 
+// Error name, from the Error instance or its plain RequestError form.
+export function getErrorName(error: unknown) {
+  const name = (error as { name?: unknown } | null)?.name;
+  return typeof name === 'string' ? name : undefined;
+}
+
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong.') {
   const message = (error as { message?: unknown } | null)?.message;
   return typeof message === 'string' && message ? message : fallback;
@@ -68,10 +74,20 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  body?: Record<string, unknown>;
+  // JSON, or FormData for multipart uploads (e.g. a meal photo).
+  body?: Record<string, unknown> | FormData;
   headers?: Record<string, string>;
   params?: Record<string, string | number | boolean | undefined>;
+  // Aborts the request after this long. None by default.
+  timeoutMs?: number;
 };
+
+export class TimeoutError extends Error {
+  constructor() {
+    super('The request took too long.');
+    this.name = 'TimeoutError';
+  }
+}
 
 
 // 401 messages the client acts on.
@@ -149,8 +165,11 @@ async function request<T>(
 ): Promise<T> {
   const token = await getToken();
 
+  // FormData sets its own multipart Content-Type (with the boundary), so it
+  // must not be set by hand.
+  const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(!isFormData && { 'Content-Type': 'application/json' }),
     ...options.headers,
   };
 
@@ -176,11 +195,27 @@ async function request<T>(
     if (queryString) url += `?${queryString}`;
   }
 
-  const response = await fetch(url, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  const controller = options.timeoutMs ? new AbortController() : undefined;
+  const timer = controller && setTimeout(() => controller.abort(), options.timeoutMs);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: options.method ?? 'GET',
+      headers,
+      body: isFormData
+        ? (options.body as FormData)
+        : options.body
+          ? JSON.stringify(options.body)
+          : undefined,
+      signal: controller?.signal,
+    });
+  } catch (error) {
+    if (controller?.signal.aborted) throw new TimeoutError();
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (response.status === 401) {
     const error = await response.json().catch(() => ({}));
@@ -205,7 +240,7 @@ export const http = {
   get: <T>(endpoint: string, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(endpoint, { ...options, method: 'GET' }),
 
-  post: <T>(endpoint: string, body: Record<string, unknown>, options?: Omit<RequestOptions, 'method' | 'body'>) =>
+  post: <T>(endpoint: string, body: Record<string, unknown> | FormData, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(endpoint, { ...options, method: 'POST', body }),
 
   put: <T>(endpoint: string, body: Record<string, unknown>, options?: Omit<RequestOptions, 'method' | 'body'>) =>
